@@ -130,7 +130,7 @@ module Geminize
         created_at = hash["created_at"] ? Time.parse(hash["created_at"]) : Time.now
 
         messages = []
-        if hash["messages"] && hash["messages"].is_a?(Array)
+        if hash["messages"]&.is_a?(Array)
           messages = hash["messages"].map { |msg_hash| Message.from_hash(msg_hash) }
         end
 

@@ -117,7 +117,62 @@ response = client.generate_text("Explain quantum computing", model: "gemini-1.5-
 puts response.text
 ```
 
-See the `examples` directory for more usage examples.
+## Multimodal Support
+
+Geminize allows you to send mixed content including text and images to the Gemini API:
+
+```ruby
+# Generate content with an image from a file
+response = Geminize.generate_multimodal(
+  "Describe this image in detail:",
+  [{ source_type: 'file', data: 'path/to/image.jpg' }]
+)
+puts response.text
+
+# Using an image URL
+response = Geminize.generate_multimodal(
+  "What's in this image?",
+  [{ source_type: 'url', data: 'https://example.com/sample-image.jpg' }]
+)
+puts response.text
+
+# Using multiple images
+response = Geminize.generate_multimodal(
+  "Compare these two images:",
+  [
+    { source_type: 'file', data: 'path/to/image1.jpg' },
+    { source_type: 'file', data: 'path/to/image2.jpg' }
+  ]
+)
+puts response.text
+```
+
+Alternatively, you can use the more flexible ContentRequest API:
+
+```ruby
+# Create a content request
+request = Geminize::Models::ContentRequest.new(
+  "Tell me about these images:",
+  "gemini-1.5-pro-latest"
+)
+
+# Add images using different methods
+request.add_image_from_file('path/to/image1.jpg')
+request.add_image_from_url('https://example.com/image2.jpg')
+
+# Read image directly into bytes
+image_bytes = File.binread('path/to/image3.jpg')
+request.add_image_from_bytes(image_bytes, 'image/jpeg')
+
+# Generate the response
+generator = Geminize::TextGeneration.new
+response = generator.generate(request)
+puts response.text
+```
+
+Supported image formats include JPEG, PNG, GIF, and WEBP. Maximum image size is 10MB.
+
+See the `examples/multimodal.rb` file for more comprehensive examples.
 
 ## Development
 

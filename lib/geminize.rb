@@ -118,6 +118,76 @@ module Geminize
       end
     end
 
+    # Generate content with both text and images using the Gemini API
+    # @param prompt [String] The input prompt text
+    # @param images [Array<Hash>] Array of image data hashes
+    # @param model_name [String, nil] The model to use (optional)
+    # @param params [Hash] Additional generation parameters
+    # @option params [Float] :temperature Controls randomness (0.0-1.0)
+    # @option params [Integer] :max_tokens Maximum tokens to generate
+    # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
+    # @option params [Integer] :top_k Top-k value for sampling
+    # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+    # @option params [Boolean] :with_retries Enable retries for transient errors (default: true)
+    # @option params [Integer] :max_retries Maximum retry attempts (default: 3)
+    # @option params [Float] :retry_delay Initial delay between retries in seconds (default: 1.0)
+    # @option params [Hash] :client_options Options to pass to the client
+    # @option images [Hash] :source_type Source type for image ('file', 'bytes', or 'url')
+    # @option images [String] :data File path, raw bytes, or URL depending on source_type
+    # @option images [String] :mime_type MIME type for the image (optional for file and url)
+    # @return [Geminize::Models::ContentResponse] The generation response
+    # @raise [Geminize::GeminizeError] If the request fails
+    # @example Generate with an image file
+    #   Geminize.generate_multimodal("Describe this image", [{source_type: 'file', data: 'path/to/image.jpg'}])
+    # @example Generate with multiple images
+    #   Geminize.generate_multimodal("Compare these images", [
+    #     {source_type: 'file', data: 'path/to/image1.jpg'},
+    #     {source_type: 'url', data: 'https://example.com/image2.jpg'}
+    #   ])
+    def generate_multimodal(prompt, images, model_name = nil, params = {})
+      validate_configuration!
+
+      # Extract special options
+      with_retries = params.delete(:with_retries) != false # Default to true
+      max_retries = params.delete(:max_retries) || 3
+      retry_delay = params.delete(:retry_delay) || 1.0
+      client_options = params.delete(:client_options) || {}
+
+      # Create the generator
+      generator = TextGeneration.new(nil, client_options)
+
+      # Create a content request first
+      content_request = Models::ContentRequest.new(
+        prompt,
+        model_name || configuration.default_model,
+        params
+      )
+
+      # Add each image to the request
+      images.each do |image|
+        case image[:source_type]
+        when "file"
+          content_request.add_image_from_file(image[:data])
+        when "bytes"
+          content_request.add_image_from_bytes(image[:data], image[:mime_type])
+        when "url"
+          content_request.add_image_from_url(image[:data])
+        else
+          raise Geminize::ValidationError.new(
+            "Invalid image source type: #{image[:source_type]}. Must be 'file', 'bytes', or 'url'",
+            "INVALID_ARGUMENT"
+          )
+        end
+      end
+
+      # Generate with or without retries
+      if with_retries
+        generator.generate_with_retries(content_request, max_retries, retry_delay)
+      else
+        generator.generate(content_request)
+      end
+    end
+
     # Create a new chat conversation
     # @param title [String, nil] Optional title for the conversation
     # @param client_options [Hash] Options to pass to the client

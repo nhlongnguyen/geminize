@@ -116,6 +116,85 @@ RSpec.describe Geminize::TextGeneration do
     end
   end
 
+  describe "#generate_multimodal" do
+    let(:text_generation) { described_class.new(client) }
+    let(:prompt) { "Describe this image" }
+    let(:image_file_path) { "/path/to/image.jpg" }
+    let(:image_url) { "https://example.com/image.jpg" }
+    let(:image_bytes) { "fake-image-bytes" }
+    let(:mime_type) { "image/jpeg" }
+
+    let(:content_request) do
+      instance_double(Geminize::Models::ContentRequest,
+        add_image_from_file: nil,
+        add_image_from_url: nil,
+        add_image_from_bytes: nil)
+    end
+
+    before do
+      allow(Geminize::Models::ContentRequest).to receive(:new).and_return(content_request)
+      allow(text_generation).to receive(:generate).and_return(Geminize::Models::ContentResponse.new(mock_response))
+    end
+
+    context "with image file" do
+      it "adds image from file path to the request" do
+        images = [{source_type: "file", data: image_file_path}]
+
+        expect(content_request).to receive(:add_image_from_file).with(image_file_path)
+
+        response = text_generation.generate_multimodal(prompt, images, model_name)
+        expect(response).to be_a(Geminize::Models::ContentResponse)
+      end
+    end
+
+    context "with image URL" do
+      it "adds image from URL to the request" do
+        images = [{source_type: "url", data: image_url}]
+
+        expect(content_request).to receive(:add_image_from_url).with(image_url)
+
+        response = text_generation.generate_multimodal(prompt, images, model_name)
+        expect(response).to be_a(Geminize::Models::ContentResponse)
+      end
+    end
+
+    context "with raw image bytes" do
+      it "adds image from bytes to the request" do
+        images = [{source_type: "bytes", data: image_bytes, mime_type: mime_type}]
+
+        expect(content_request).to receive(:add_image_from_bytes).with(image_bytes, mime_type)
+
+        response = text_generation.generate_multimodal(prompt, images, model_name)
+        expect(response).to be_a(Geminize::Models::ContentResponse)
+      end
+    end
+
+    context "with multiple images" do
+      it "adds all images to the request" do
+        images = [
+          {source_type: "file", data: image_file_path},
+          {source_type: "url", data: image_url}
+        ]
+
+        expect(content_request).to receive(:add_image_from_file).with(image_file_path)
+        expect(content_request).to receive(:add_image_from_url).with(image_url)
+
+        response = text_generation.generate_multimodal(prompt, images, model_name)
+        expect(response).to be_a(Geminize::Models::ContentResponse)
+      end
+    end
+
+    context "with invalid source type" do
+      it "raises a validation error" do
+        images = [{source_type: "invalid", data: image_file_path}]
+
+        expect {
+          text_generation.generate_multimodal(prompt, images, model_name)
+        }.to raise_error(Geminize::ValidationError, /Invalid image source type/)
+      end
+    end
+  end
+
   describe "#generate_with_retries" do
     let(:text_generation) { described_class.new(client) }
     let(:content_request) do

@@ -79,8 +79,6 @@ module Geminize
         end
       end
 
-      private
-
       # Extract content from a message hash
       # @param hash [Hash] The message hash
       # @return [String] The extracted content
@@ -90,6 +88,8 @@ module Geminize
 
         parts.map { |part| part["text"] }.compact.join(" ")
       end
+
+      private_class_method :extract_content
 
       # Validate the message parameters
       # @raise [Geminize::ValidationError] If any parameter is invalid
