@@ -40,6 +40,11 @@ RSpec.describe Geminize::Models::ContentRequest do
       expect(request.top_k).to eq(40)
       expect(request.stop_sequences).to eq(["THE END"])
     end
+
+    it "initializes content_parts with the prompt as text" do
+      request = described_class.new(prompt)
+      expect(request.content_parts).to eq([{type: "text", text: prompt}])
+    end
   end
 
   describe "#validate!" do
@@ -204,6 +209,40 @@ RSpec.describe Geminize::Models::ContentRequest do
         expect { described_class.new(prompt, model_name, stop_sequences: ["THE END", "FIN"]) }.not_to raise_error
       end
     end
+
+    context "with content_parts validation" do
+      let(:request) { described_class.new(prompt) }
+
+      it "validates content parts types" do
+        request.instance_variable_set(:@content_parts, [
+          {not_type: "text", text: "invalid part"}
+        ])
+
+        expect { request.validate! }.to raise_error(
+          Geminize::ValidationError, "Content part 0 must be a hash with a :type key"
+        )
+      end
+
+      it "validates text content parts" do
+        request.instance_variable_set(:@content_parts, [
+          {type: "text", text: ""}
+        ])
+
+        expect { request.validate! }.to raise_error(
+          Geminize::ValidationError, "Text content for part 0 cannot be empty"
+        )
+      end
+
+      it "validates content part types" do
+        request.instance_variable_set(:@content_parts, [
+          {type: "invalid", text: "some text"}
+        ])
+
+        expect { request.validate! }.to raise_error(
+          Geminize::ValidationError, "Content part 0 has an invalid type: invalid"
+        )
+      end
+    end
   end
 
   describe "#to_hash" do
@@ -245,12 +284,76 @@ RSpec.describe Geminize::Models::ContentRequest do
         stopSequences: ["THE END"]
       )
     end
+
+    it "formats multimodal content correctly" do
+      request = described_class.new(prompt)
+      # Add a second text part to make it multimodal
+      request.add_text("Additional text part")
+
+      hash = request.to_hash
+
+      expect(hash).to include(
+        contents: [
+          {
+            parts: [
+              {type: "text", text: prompt},
+              {type: "text", text: "Additional text part"}
+            ]
+          }
+        ]
+      )
+    end
   end
 
   describe "#to_h" do
     it "is an alias for to_hash" do
       request = described_class.new(prompt)
       expect(request.to_h).to eq(request.to_hash)
+    end
+  end
+
+  describe "#add_text" do
+    let(:request) { described_class.new(prompt) }
+
+    it "adds text content to the request" do
+      request.add_text("Additional text")
+      expect(request.content_parts).to include({type: "text", text: "Additional text"})
+    end
+
+    it "returns self for method chaining" do
+      expect(request.add_text("More text")).to eq(request)
+    end
+
+    it "validates text content" do
+      expect { request.add_text("") }.to raise_error(
+        Geminize::ValidationError, "Text content cannot be empty"
+      )
+    end
+  end
+
+  describe "#multimodal?" do
+    let(:request) { described_class.new(prompt) }
+
+    it "returns false for a text-only request with one part" do
+      expect(request.multimodal?).to be false
+    end
+
+    it "returns true when multiple text parts are added" do
+      request.add_text("Another text part")
+      expect(request.multimodal?).to be true
+    end
+
+    it "returns true when non-text parts are added" do
+      # This assumes the placeholder methods are filled out
+      allow(request).to receive(:add_image_from_file).and_return(request)
+
+      # Simulate adding an image part
+      request.instance_variable_set(:@content_parts, [
+        {type: "text", text: prompt},
+        {type: "image", mime_type: "image/jpeg", data: "fake_image_data"}
+      ])
+
+      expect(request.multimodal?).to be true
     end
   end
 end

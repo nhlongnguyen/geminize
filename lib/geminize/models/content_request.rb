@@ -26,6 +26,9 @@ module Geminize
       # @return [Array<String>] Stop sequences to end generation
       attr_accessor :stop_sequences
 
+      # @return [Array<Hash>] Content parts for multimodal input
+      attr_reader :content_parts
+
       # Initialize a new content generation request
       # @param prompt [String] The input prompt text
       # @param model_name [String] The model name to use
@@ -36,6 +39,9 @@ module Geminize
       # @option params [Integer] :top_k Top-k value for sampling
       # @option params [Array<String>] :stop_sequences Stop sequences to end generation
       def initialize(prompt, model_name = nil, params = {})
+        # Validate prompt first, before even trying to use it
+        validate_prompt!(prompt)
+
         @prompt = prompt
         @model_name = model_name || Geminize.configuration.default_model
         @temperature = params[:temperature]
@@ -44,37 +50,99 @@ module Geminize
         @top_k = params[:top_k]
         @stop_sequences = params[:stop_sequences]
 
+        # Initialize content parts with the prompt as the first text part
+        @content_parts = []
+        add_text(prompt)
+
         validate!
+      end
+
+      # Add text content to the request
+      # @param text [String] The text to add
+      # @return [self] The request object for chaining
+      def add_text(text)
+        Validators.validate_not_empty!(text, "Text content")
+        @content_parts << { type: "text", text: text }
+        self
+      end
+
+      # Add an image to the request from a file path
+      # @param file_path [String] Path to the image file
+      # @return [self] The request object for chaining
+      # @raise [Geminize::ValidationError] If the file is invalid or not found
+      def add_image_from_file(file_path)
+        # This is a placeholder - will be implemented in task 6.2
+        self
+      end
+
+      # Add an image to the request from raw bytes
+      # @param image_bytes [String] Raw binary image data
+      # @param mime_type [String] The MIME type of the image
+      # @return [self] The request object for chaining
+      # @raise [Geminize::ValidationError] If the image data is invalid
+      def add_image_from_bytes(image_bytes, mime_type)
+        # This is a placeholder - will be implemented in task 6.2
+        self
+      end
+
+      # Add an image to the request from a URL
+      # @param url [String] URL of the image
+      # @return [self] The request object for chaining
+      # @raise [Geminize::ValidationError] If the URL is invalid or the image cannot be fetched
+      def add_image_from_url(url)
+        # This is a placeholder - will be implemented in task 6.2
+        self
+      end
+
+      # Check if this request has multimodal content
+      # @return [Boolean] True if the request contains multiple content types
+      def multimodal?
+        return false if @content_parts.empty?
+
+        # Check if we have any non-text parts or multiple text parts
+        @content_parts.any? { |part| part[:type] != "text" } || @content_parts.count > 1
       end
 
       # Validate the request parameters
       # @raise [Geminize::ValidationError] If any parameter is invalid
       # @return [Boolean] true if all parameters are valid
       def validate!
-        validate_prompt!
         validate_temperature!
         validate_max_tokens!
         validate_top_p!
         validate_top_k!
         validate_stop_sequences!
+        validate_content_parts!
         true
       end
 
       # Convert the request to a hash suitable for the API
       # @return [Hash] The request as a hash
       def to_hash
-        {
-          contents: [
-            {
-              parts: [
-                {
-                  text: @prompt
-                }
-              ]
-            }
-          ],
-          generationConfig: generation_config
-        }.compact
+        if multimodal?
+          {
+            contents: [
+              {
+                parts: @content_parts
+              }
+            ],
+            generationConfig: generation_config
+          }.compact
+        else
+          # Keep backward compatibility for text-only requests
+          {
+            contents: [
+              {
+                parts: [
+                  {
+                    text: @prompt
+                  }
+                ]
+              }
+            ],
+            generationConfig: generation_config
+          }.compact
+        end
       end
 
       # Alias for to_hash for consistency with Ruby conventions
@@ -99,9 +167,20 @@ module Geminize
       end
 
       # Validate the prompt parameter
+      # @param prompt_text [String] The prompt text to validate
       # @raise [Geminize::ValidationError] If the prompt is invalid
-      def validate_prompt!
-        Validators.validate_not_empty!(@prompt, "Prompt")
+      def validate_prompt!(prompt_text = @prompt)
+        if prompt_text.nil?
+          raise Geminize::ValidationError.new("Prompt cannot be nil", "INVALID_ARGUMENT")
+        end
+
+        unless prompt_text.is_a?(String)
+          raise Geminize::ValidationError.new("Prompt must be a string", "INVALID_ARGUMENT")
+        end
+
+        if prompt_text.empty?
+          raise Geminize::ValidationError.new("Prompt cannot be empty", "INVALID_ARGUMENT")
+        end
       end
 
       # Validate the temperature parameter
@@ -132,6 +211,33 @@ module Geminize
       # @raise [Geminize::ValidationError] If the stop_sequences is invalid
       def validate_stop_sequences!
         Validators.validate_string_array!(@stop_sequences, "Stop sequences")
+      end
+
+      # Validate the content_parts
+      # @raise [Geminize::ValidationError] If any content part is invalid
+      def validate_content_parts!
+        return if @content_parts.empty?
+
+        @content_parts.each_with_index do |part, index|
+          unless part.is_a?(Hash) && part[:type]
+            raise Geminize::ValidationError.new(
+              "Content part #{index} must be a hash with a :type key",
+              "INVALID_ARGUMENT"
+            )
+          end
+
+          case part[:type]
+          when "text"
+            Validators.validate_not_empty!(part[:text], "Text content for part #{index}")
+          when "image"
+            # Image validation will be implemented in task 6.3
+          else
+            raise Geminize::ValidationError.new(
+              "Content part #{index} has an invalid type: #{part[:type]}",
+              "INVALID_ARGUMENT"
+            )
+          end
+        end
       end
     end
   end
