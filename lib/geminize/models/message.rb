@@ -110,7 +110,7 @@ module Geminize
         allowed_roles = ["user", "model", "system"]
         unless allowed_roles.include?(@role)
           raise Geminize::ValidationError.new(
-            "Role must be one of: #{allowed_roles.join(', ')}",
+            "Role must be one of: #{allowed_roles.join(", ")}",
             "INVALID_ARGUMENT"
           )
         end

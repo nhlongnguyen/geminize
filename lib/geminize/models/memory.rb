@@ -58,9 +58,9 @@ module Geminize
 
         # Handle parts
         parts_data = hash[:parts] || hash["parts"]
-        if parts_data
+        parts = if parts_data
           # Convert string keys to symbols
-          parts = parts_data.map do |part|
+          parts_data.map do |part|
             if part.is_a?(Hash)
               part_with_symbol_keys = {}
               part.each { |k, v| part_with_symbol_keys[k.to_sym] = v }
@@ -70,7 +70,7 @@ module Geminize
             end
           end
         else
-          parts = [{text: ""}]
+          [{text: ""}]
         end
 
         new(role, parts)

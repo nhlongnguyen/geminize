@@ -56,7 +56,7 @@ module Geminize
         file_path = file_path_for(conversation.id)
         File.write(file_path, conversation.to_json)
         true
-      rescue StandardError => e
+      rescue
         false
       end
     end
@@ -71,7 +71,7 @@ module Geminize
       begin
         json = File.read(file_path)
         Models::Conversation.from_json(json)
-      rescue StandardError => e
+      rescue
         nil
       end
     end
@@ -86,7 +86,7 @@ module Geminize
       begin
         File.delete(file_path)
         true
-      rescue StandardError => e
+      rescue
         false
       end
     end
@@ -94,18 +94,14 @@ module Geminize
     # List all available conversations
     # @return [Array<Models::Conversation>] An array of conversations
     def list
-      begin
-        Dir.glob(File.join(@storage_dir, "*.json")).map do |file_path|
-          begin
-            json = File.read(file_path)
-            Models::Conversation.from_json(json)
-          rescue StandardError
-            nil # Skip files that can't be parsed
-          end
-        end.compact.sort_by { |conversation| conversation.updated_at }.reverse
-      rescue StandardError => e
-        []
-      end
+      Dir.glob(File.join(@storage_dir, "*.json")).map do |file_path|
+        json = File.read(file_path)
+        Models::Conversation.from_json(json)
+      rescue
+        nil # Skip files that can't be parsed
+      end.compact.sort_by { |conversation| conversation.updated_at }.reverse
+    rescue
+      []
     end
 
     private

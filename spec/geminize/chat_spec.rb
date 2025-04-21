@@ -63,9 +63,9 @@ RSpec.describe Geminize::Chat do
 
   describe "#generate_response" do
     let(:chat_request) { instance_double(Geminize::Models::ChatRequest, model_name: "model-name") }
-    let(:messages) { [{ role: "user", parts: [{ text: "Hello" }] }] }
-    let(:payload) { { model: "model-name", contents: messages } }
-    let(:response_data) { { "candidates" => [{ "content" => { "parts" => [{ "text" => "Hi there" }] } }] } }
+    let(:messages) { [{role: "user", parts: [{text: "Hello"}]}] }
+    let(:payload) { {model: "model-name", contents: messages} }
+    let(:response_data) { {"candidates" => [{"content" => {"parts" => [{"text" => "Hi there"}]}}]} }
 
     before do
       allow(conversation).to receive(:messages_as_hashes).and_return(messages)
