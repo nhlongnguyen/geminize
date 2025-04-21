@@ -1,11 +1,15 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require "base64"
+require "tempfile"
 
 RSpec.describe Geminize::Models::ContentRequest do
   let(:prompt) { "Tell me a story about a dragon" }
   let(:model_name) { "gemini-1.5-pro-latest" }
   let(:default_model) { "gemini-1.5-pro-latest" }
+  let(:valid_mime_type) { "image/jpeg" }
+  let(:valid_image_data) { "\xFF\xD8\xFF\xE0" + ("X" * 100) } # Mock JPEG header + content
 
   before do
     allow(Geminize.configuration).to receive(:default_model).and_return(default_model)
@@ -242,6 +246,32 @@ RSpec.describe Geminize::Models::ContentRequest do
           Geminize::ValidationError, "Content part 0 has an invalid type: invalid"
         )
       end
+
+      it "validates image content parts" do
+        request.instance_variable_set(:@content_parts, [
+          {type: "image", mime_type: nil, data: "some data"}
+        ])
+
+        expect { request.validate! }.to raise_error(
+          Geminize::ValidationError, "Image part 0 is missing mime_type"
+        )
+
+        request.instance_variable_set(:@content_parts, [
+          {type: "image", mime_type: "image/jpeg", data: nil}
+        ])
+
+        expect { request.validate! }.to raise_error(
+          Geminize::ValidationError, "Image part 0 is missing data"
+        )
+
+        request.instance_variable_set(:@content_parts, [
+          {type: "image", mime_type: "invalid/type", data: "some data"}
+        ])
+
+        expect { request.validate! }.to raise_error(
+          Geminize::ValidationError, /Image part 0 mime_type must be one of:/
+        )
+      end
     end
   end
 
@@ -303,6 +333,31 @@ RSpec.describe Geminize::Models::ContentRequest do
         ]
       )
     end
+
+    it "formats multimodal content with images correctly" do
+      request = described_class.new(prompt)
+      allow(request).to receive(:add_image_from_bytes).and_call_original
+
+      # Add an image part
+      base64_data = Base64.strict_encode64(valid_image_data)
+      request.instance_variable_set(:@content_parts, [
+        {type: "text", text: prompt},
+        {type: "image", mime_type: valid_mime_type, data: base64_data}
+      ])
+
+      hash = request.to_hash
+
+      expect(hash).to include(
+        contents: [
+          {
+            parts: [
+              {type: "text", text: prompt},
+              {type: "image", mime_type: valid_mime_type, data: base64_data}
+            ]
+          }
+        ]
+      )
+    end
   end
 
   describe "#to_h" do
@@ -331,6 +386,161 @@ RSpec.describe Geminize::Models::ContentRequest do
     end
   end
 
+  describe "#add_image_from_bytes" do
+    let(:request) { described_class.new(prompt) }
+
+    it "adds an image from bytes to the request" do
+      request.add_image_from_bytes(valid_image_data, valid_mime_type)
+
+      image_part = request.content_parts.find { |part| part[:type] == "image" }
+      expect(image_part).to be_truthy
+      expect(image_part[:mime_type]).to eq(valid_mime_type)
+      expect(image_part[:data]).to eq(Base64.strict_encode64(valid_image_data))
+    end
+
+    it "returns self for method chaining" do
+      expect(request.add_image_from_bytes(valid_image_data, valid_mime_type)).to eq(request)
+    end
+
+    it "validates image data" do
+      expect { request.add_image_from_bytes(nil, valid_mime_type) }.to raise_error(
+        Geminize::ValidationError, "Image data cannot be nil"
+      )
+
+      expect { request.add_image_from_bytes("", valid_mime_type) }.to raise_error(
+        Geminize::ValidationError, "Image data cannot be empty"
+      )
+
+      expect { request.add_image_from_bytes(123, valid_mime_type) }.to raise_error(
+        Geminize::ValidationError, "Image data must be a binary string"
+      )
+    end
+
+    it "validates MIME type" do
+      expect { request.add_image_from_bytes(valid_image_data, nil) }.to raise_error(
+        Geminize::ValidationError, "MIME type cannot be nil"
+      )
+
+      expect { request.add_image_from_bytes(valid_image_data, "") }.to raise_error(
+        Geminize::ValidationError, "MIME type cannot be empty"
+      )
+
+      expect { request.add_image_from_bytes(valid_image_data, "invalid/type") }.to raise_error(
+        Geminize::ValidationError, /MIME type must be one of:/
+      )
+    end
+  end
+
+  describe "#add_image_from_file" do
+    let(:request) { described_class.new(prompt) }
+    let(:temp_file) do
+      file = Tempfile.new(["test", ".jpg"])
+      file.binmode
+      file.write(valid_image_data)
+      file.rewind
+      file
+    end
+
+    after do
+      temp_file.close
+      temp_file.unlink
+    end
+
+    it "adds an image from a file" do
+      allow(MIME::Types).to receive(:type_for).and_return([double(content_type: valid_mime_type)])
+
+      expect(request).to receive(:add_image_from_bytes).with(anything, valid_mime_type).and_call_original
+      request.add_image_from_file(temp_file.path)
+    end
+
+    it "validates file existence" do
+      expect { request.add_image_from_file("nonexistent.jpg") }.to raise_error(
+        Geminize::ValidationError, /Image file not found/
+      )
+    end
+
+    it "validates file is a file (not directory)" do
+      expect { request.add_image_from_file(Dir.pwd) }.to raise_error(
+        Geminize::ValidationError, /Path is not a file/
+      )
+    end
+
+    it "validates MIME type" do
+      allow(MIME::Types).to receive(:type_for).and_return([double(content_type: "invalid/type")])
+
+      expect { request.add_image_from_file(temp_file.path) }.to raise_error(
+        Geminize::ValidationError, /Unsupported image format/
+      )
+    end
+  end
+
+  describe "#add_image_from_url" do
+    let(:request) { described_class.new(prompt) }
+    let(:valid_url) { "https://example.com/image.jpg" }
+
+    before do
+      # Mock URI.open to avoid actual HTTP requests
+      allow(URI).to receive(:open).with(valid_url, "rb", any_args).and_return(
+        StringIO.new(valid_image_data)
+      )
+    end
+
+    it "adds an image from a URL" do
+      expect(request).to receive(:add_image_from_bytes).with(valid_image_data, "image/jpeg").and_call_original
+      request.add_image_from_url(valid_url)
+    end
+
+    it "validates URL format" do
+      expect { request.add_image_from_url(nil) }.to raise_error(
+        Geminize::ValidationError, "URL cannot be nil"
+      )
+
+      expect { request.add_image_from_url("") }.to raise_error(
+        Geminize::ValidationError, "URL cannot be empty"
+      )
+
+      expect { request.add_image_from_url("invalid-url") }.to raise_error(
+        Geminize::ValidationError, "URL must start with http:// or https://"
+      )
+    end
+
+    it "handles HTTP errors" do
+      allow(URI).to receive(:open).and_raise(OpenURI::HTTPError.new("404 Not Found", nil))
+
+      expect { request.add_image_from_url(valid_url) }.to raise_error(
+        Geminize::ValidationError, /Error fetching image from URL: HTTP error/
+      )
+    end
+
+    it "handles other errors" do
+      allow(URI).to receive(:open).and_raise(StandardError.new("Network error"))
+
+      expect { request.add_image_from_url(valid_url) }.to raise_error(
+        Geminize::ValidationError, /Error fetching image from URL: Network error/
+      )
+    end
+
+    it "detects MIME type from URL" do
+      urls_and_types = {
+        "https://example.com/image.jpg" => "image/jpeg",
+        "https://example.com/image.jpeg" => "image/jpeg",
+        "https://example.com/image.png" => "image/png",
+        "https://example.com/image.gif" => "image/gif",
+        "https://example.com/image.webp" => "image/webp",
+        "https://example.com/image" => "image/jpeg" # fallback
+      }
+
+      urls_and_types.each do |url, mime_type|
+        allow(URI).to receive(:open).with(url, "rb", any_args).and_return(
+          StringIO.new(valid_image_data)
+        )
+
+        expect(request).to receive(:add_image_from_bytes).with(valid_image_data, mime_type).and_call_original
+        request.add_image_from_url(url)
+      end
+    end
+  end
+
   describe "#multimodal?" do
     let(:request) { described_class.new(prompt) }
 
@@ -344,15 +554,7 @@ RSpec.describe Geminize::Models::ContentRequest do
     end
 
     it "returns true when non-text parts are added" do
-      # This assumes the placeholder methods are filled out
-      allow(request).to receive(:add_image_from_file).and_return(request)
-
-      # Simulate adding an image part
-      request.instance_variable_set(:@content_parts, [
-        {type: "text", text: prompt},
-        {type: "image", mime_type: "image/jpeg", data: "fake_image_data"}
-      ])
-
+      request.add_image_from_bytes(valid_image_data, valid_mime_type)
       expect(request.multimodal?).to be true
     end
   end

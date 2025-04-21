@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+require "base64"
+require "mime/types"
+require "open-uri"
+
 module Geminize
   module Models
     # Represents a request for text generation from the Gemini API
@@ -28,6 +32,14 @@ module Geminize
 
       # @return [Array<Hash>] Content parts for multimodal input
       attr_reader :content_parts
+
+      # Supported image MIME types
+      SUPPORTED_IMAGE_MIME_TYPES = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp"
+      ].freeze
 
       # Initialize a new content generation request
       # @param prompt [String] The input prompt text
@@ -71,8 +83,30 @@ module Geminize
       # @return [self] The request object for chaining
       # @raise [Geminize::ValidationError] If the file is invalid or not found
       def add_image_from_file(file_path)
-        # This is a placeholder - will be implemented in task 6.2
-        self
+        unless File.exist?(file_path)
+          raise Geminize::ValidationError.new(
+            "Image file not found: #{file_path}",
+            "INVALID_ARGUMENT"
+          )
+        end
+
+        unless File.file?(file_path)
+          raise Geminize::ValidationError.new(
+            "Path is not a file: #{file_path}",
+            "INVALID_ARGUMENT"
+          )
+        end
+
+        begin
+          image_data = File.binread(file_path)
+          mime_type = detect_mime_type(file_path)
+          add_image_from_bytes(image_data, mime_type)
+        rescue => e
+          raise Geminize::ValidationError.new(
+            "Error reading image file: #{e.message}",
+            "INVALID_ARGUMENT"
+          )
+        end
       end
 
       # Add an image to the request from raw bytes
@@ -81,7 +115,18 @@ module Geminize
       # @return [self] The request object for chaining
       # @raise [Geminize::ValidationError] If the image data is invalid
       def add_image_from_bytes(image_bytes, mime_type)
-        # This is a placeholder - will be implemented in task 6.2
+        validate_image_bytes!(image_bytes)
+        validate_mime_type!(mime_type)
+
+        # Encode the image as base64
+        base64_data = Base64.strict_encode64(image_bytes)
+
+        @content_parts << {
+          type: "image",
+          mime_type: mime_type,
+          data: base64_data
+        }
+
         self
       end
 
@@ -90,8 +135,29 @@ module Geminize
       # @return [self] The request object for chaining
       # @raise [Geminize::ValidationError] If the URL is invalid or the image cannot be fetched
       def add_image_from_url(url)
-        # This is a placeholder - will be implemented in task 6.2
-        self
+        validate_url!(url)
+
+        begin
+          # Open the URL and read the binary data
+          uri_object = URI.open(url, "rb")
+          image_data = uri_object.read
+          uri_object.close if uri_object.respond_to?(:close)
+
+          # Try to detect MIME type from URL extension, fallback to jpeg if can't detect
+          mime_type = detect_mime_type_from_url(url) || "image/jpeg"
+
+          add_image_from_bytes(image_data, mime_type)
+        rescue OpenURI::HTTPError => e
+          raise Geminize::ValidationError.new(
+            "Error fetching image from URL: HTTP error #{e.message}",
+            "INVALID_ARGUMENT"
+          )
+        rescue => e
+          raise Geminize::ValidationError.new(
+            "Error fetching image from URL: #{e.message}",
+            "INVALID_ARGUMENT"
+          )
+        end
       end
 
       # Check if this request has multimodal content
@@ -230,13 +296,136 @@ module Geminize
           when "text"
             Validators.validate_not_empty!(part[:text], "Text content for part #{index}")
           when "image"
-            # Image validation will be implemented in task 6.3
+            validate_image_part!(part, index)
           else
             raise Geminize::ValidationError.new(
               "Content part #{index} has an invalid type: #{part[:type]}",
               "INVALID_ARGUMENT"
             )
           end
+        end
+      end
+
+      # Validate an image part
+      # @param part [Hash] The image part to validate
+      # @param index [Integer] The index of the part in the content_parts array
+      # @raise [Geminize::ValidationError] If the image part is invalid
+      def validate_image_part!(part, index)
+        unless part[:mime_type]
+          raise Geminize::ValidationError.new(
+            "Image part #{index} is missing mime_type",
+            "INVALID_ARGUMENT"
+          )
+        end
+
+        unless part[:data]
+          raise Geminize::ValidationError.new(
+            "Image part #{index} is missing data",
+            "INVALID_ARGUMENT"
+          )
+        end
+
+        validate_mime_type!(part[:mime_type], "Image part #{index} mime_type")
+      end
+
+      # Validate image bytes
+      # @param image_bytes [String] The image bytes to validate
+      # @raise [Geminize::ValidationError] If the image bytes are invalid
+      def validate_image_bytes!(image_bytes)
+        if image_bytes.nil?
+          raise Geminize::ValidationError.new(
+            "Image data cannot be nil",
+            "INVALID_ARGUMENT"
+          )
+        end
+
+        unless image_bytes.is_a?(String)
+          raise Geminize::ValidationError.new(
+            "Image data must be a binary string",
+            "INVALID_ARGUMENT"
+          )
+        end
+
+        if image_bytes.empty?
+          raise Geminize::ValidationError.new(
+            "Image data cannot be empty",
+            "INVALID_ARGUMENT"
+          )
+        end
+      end
+
+      # Validate a MIME type
+      # @param mime_type [String] The MIME type to validate
+      # @param name [String] The name of the parameter for error messages
+      # @raise [Geminize::ValidationError] If the MIME type is invalid
+      def validate_mime_type!(mime_type, name = "MIME type")
+        Validators.validate_not_empty!(mime_type, name)
+
+        unless SUPPORTED_IMAGE_MIME_TYPES.include?(mime_type)
+          raise Geminize::ValidationError.new(
+            "#{name} must be one of: #{SUPPORTED_IMAGE_MIME_TYPES.join(", ")}",
+            "INVALID_ARGUMENT"
+          )
+        end
+      end
+
+      # Validate a URL
+      # @param url [String] The URL to validate
+      # @raise [Geminize::ValidationError] If the URL is invalid
+      def validate_url!(url)
+        Validators.validate_not_empty!(url, "URL")
+
+        # Simple URL validation
+        unless url =~ %r{\A(http|https)://}
+          raise Geminize::ValidationError.new(
+            "URL must start with http:// or https://",
+            "INVALID_ARGUMENT"
+          )
+        end
+      end
+
+      # Detect MIME type from file path
+      # @param file_path [String] The file path
+      # @return [String] The detected MIME type
+      # @raise [Geminize::ValidationError] If the MIME type is not supported
+      def detect_mime_type(file_path)
+        types = MIME::Types.type_for(file_path)
+        mime_type = types.first&.content_type if types.any?
+
+        # If we couldn't detect MIME type or it's not supported, raise an error
+        unless mime_type && SUPPORTED_IMAGE_MIME_TYPES.include?(mime_type)
+          raise Geminize::ValidationError.new(
+            "Unsupported image format. Supported formats: #{SUPPORTED_IMAGE_MIME_TYPES.join(", ")}",
+            "INVALID_ARGUMENT"
+          )
+        end
+
+        mime_type
+      end
+
+      # Detect MIME type from URL
+      # @param url [String] The URL
+      # @return [String, nil] The detected MIME type or nil if not detected
+      def detect_mime_type_from_url(url)
+        # Extract file extension from URL
+        extension = File.extname(url).downcase
+        return nil if extension.empty?
+
+        # Remove the leading dot
+        extension = extension[1..]
+
+        # Map extensions to MIME types
+        case extension
+        when "jpg", "jpeg"
+          "image/jpeg"
+        when "png"
+          "image/png"
+        when "gif"
+          "image/gif"
+        when "webp"
+          "image/webp"
+        else
+          nil
         end
       end
     end
