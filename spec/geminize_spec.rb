@@ -70,4 +70,100 @@ RSpec.describe Geminize do
       expect { described_class.validate_configuration! }.to raise_error(Geminize::ConfigurationError, "Test error")
     end
   end
+
+  describe ".generate_text" do
+    let(:mock_generator) { instance_double(Geminize::TextGeneration) }
+    let(:mock_response) { instance_double(Geminize::Models::ContentResponse) }
+    let(:prompt) { "Tell me a story about a dragon" }
+    let(:model_name) { "gemini-1.5-pro-latest" }
+
+    before do
+      allow(Geminize::TextGeneration).to receive(:new).and_return(mock_generator)
+      allow(mock_generator).to receive(:generate).and_return(mock_response)
+      allow(mock_generator).to receive(:generate_with_retries).and_return(mock_response)
+
+      # Configure with valid API key
+      Geminize.configure do |config|
+        config.api_key = "test-api-key"
+        config.default_model = "gemini-1.5-flash-latest"
+      end
+    end
+
+    after do
+      Geminize.reset_configuration!
+    end
+
+    it "validates the configuration" do
+      expect(Geminize).to receive(:validate_configuration!)
+      Geminize.generate_text(prompt)
+    end
+
+    it "uses the default model if none provided" do
+      expect(Geminize::Models::ContentRequest).to receive(:new).with(
+        prompt,
+        "gemini-1.5-flash-latest",
+        {}
+      ).and_call_original
+
+      Geminize.generate_text(prompt)
+    end
+
+    it "uses the provided model if specified" do
+      expect(Geminize::Models::ContentRequest).to receive(:new).with(
+        prompt,
+        model_name,
+        {}
+      ).and_call_original
+
+      Geminize.generate_text(prompt, model_name)
+    end
+
+    it "passes generation parameters to the content request" do
+      params = {temperature: 0.8, max_tokens: 200}
+
+      expect(Geminize::Models::ContentRequest).to receive(:new).with(
+        prompt,
+        model_name,
+        params
+      ).and_call_original
+
+      Geminize.generate_text(prompt, model_name, params)
+    end
+
+    it "uses generate_with_retries by default" do
+      content_request = instance_double(Geminize::Models::ContentRequest)
+      allow(Geminize::Models::ContentRequest).to receive(:new).and_return(content_request)
+
+      expect(mock_generator).to receive(:generate_with_retries).with(content_request, 3, 1.0)
+      Geminize.generate_text(prompt)
+    end
+
+    it "disables retries when with_retries is false" do
+      content_request = instance_double(Geminize::Models::ContentRequest)
+      allow(Geminize::Models::ContentRequest).to receive(:new).and_return(content_request)
+
+      expect(mock_generator).to receive(:generate).with(content_request)
+      Geminize.generate_text(prompt, nil, with_retries: false)
+    end
+
+    it "uses custom retry parameters when provided" do
+      content_request = instance_double(Geminize::Models::ContentRequest)
+      allow(Geminize::Models::ContentRequest).to receive(:new).and_return(content_request)
+
+      expect(mock_generator).to receive(:generate_with_retries).with(content_request, 5, 2.0)
+      Geminize.generate_text(prompt, nil, max_retries: 5, retry_delay: 2.0)
+    end
+
+    it "passes client options to the TextGeneration constructor" do
+      client_options = {timeout: 30}
+
+      expect(Geminize::TextGeneration).to receive(:new).with(nil, client_options)
+      Geminize.generate_text(prompt, nil, client_options: client_options)
+    end
+
+    it "returns the response from the generator" do
+      result = Geminize.generate_text(prompt)
+      expect(result).to eq(mock_response)
+    end
+  end
 end
