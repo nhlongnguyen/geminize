@@ -39,3 +39,4 @@ tasks/
 scripts/
 .windsurfrules
 README-task-master.md
+.env.example
