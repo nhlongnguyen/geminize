@@ -41,6 +41,10 @@ module Geminize
         "image/webp"
       ].freeze
 
+      # Maximum image size in bytes (10MB)
+      # Gemini API has limits on image sizes to prevent abuse and ensure performance
+      MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024
+
       # Initialize a new content generation request
       # @param prompt [String] The input prompt text
       # @param model_name [String] The model name to use
@@ -352,6 +356,16 @@ module Geminize
             "INVALID_ARGUMENT"
           )
         end
+
+        # Check image size against the maximum limit
+        if image_bytes.bytesize > MAX_IMAGE_SIZE_BYTES
+          max_size_mb = MAX_IMAGE_SIZE_BYTES / (1024 * 1024)
+          actual_size_mb = (image_bytes.bytesize.to_f / (1024 * 1024)).round(2)
+          raise Geminize::ValidationError.new(
+            "Image size exceeds maximum limit of #{max_size_mb}MB. Actual size: #{actual_size_mb}MB",
+            "INVALID_ARGUMENT"
+          )
+        end
       end
 
       # Validate a MIME type
@@ -389,10 +403,16 @@ module Geminize
       # @return [String] The detected MIME type
       # @raise [Geminize::ValidationError] If the MIME type is not supported
       def detect_mime_type(file_path)
+        # First try to detect MIME type from file extension
         types = MIME::Types.type_for(file_path)
         mime_type = types.first&.content_type if types.any?
 
-        # If we couldn't detect MIME type or it's not supported, raise an error
+        # If we couldn't detect MIME type from extension, try to detect from file content
+        unless mime_type && SUPPORTED_IMAGE_MIME_TYPES.include?(mime_type)
+          mime_type = detect_mime_type_from_content(file_path)
+        end
+
+        # If we still couldn't detect a supported MIME type, raise an error
         unless mime_type && SUPPORTED_IMAGE_MIME_TYPES.include?(mime_type)
           raise Geminize::ValidationError.new(
             "Unsupported image format. Supported formats: #{SUPPORTED_IMAGE_MIME_TYPES.join(", ")}",
@@ -401,6 +421,43 @@ module Geminize
         end
 
         mime_type
+      end
+
+      # Detect MIME type from file content by checking the file signature/magic bytes
+      # @param file_path [String] The file path
+      # @return [String, nil] The detected MIME type or nil if not detected
+      def detect_mime_type_from_content(file_path)
+        # Read the first few bytes of the file to check the signature
+        begin
+          file_signature = File.binread(file_path, 12)
+
+          # Check for JPEG signature: starts with FF D8 FF
+          if file_signature.bytes[0..2] == [0xFF, 0xD8, 0xFF]
+            return "image/jpeg"
+          end
+
+          # Check for PNG signature: starts with 89 50 4E 47 0D 0A 1A 0A (the PNG magic number)
+          if file_signature.bytes[0..7] == [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+            return "image/png"
+          end
+
+          # Check for GIF signature: starts with GIF87a or GIF89a
+          if file_signature[0..5] == "GIF87a" || file_signature[0..5] == "GIF89a"
+            return "image/gif"
+          end
+
+          # Check for WEBP signature: has WEBP at offset 8
+          if file_signature.length >= 12 && file_signature[8..11] == "WEBP"
+            return "image/webp"
+          end
+        rescue => e
+          # If we can't read the file or another error occurs, just return nil
+          # and let the caller handle it
+          return nil
+        end
+
+        # If no supported format was detected, return nil
+        nil
       end
 
       # Detect MIME type from URL

@@ -17,6 +17,20 @@ module Geminize
         }
       end
 
+      # Build a chat request for the Gemini API
+      # @param chat_request [Geminize::Models::ChatRequest] The chat request
+      # @param message_history [Array<Hash>] The message history from the conversation
+      # @return [Hash] The complete request hash ready to send to the API
+      def build_chat_request(chat_request, message_history = [])
+        model_name = chat_request.model_name
+        Validators.validate_not_empty!(model_name, "Model name")
+
+        {
+          model: model_name,
+          **chat_request.to_hash(message_history)
+        }
+      end
+
       # Build a complete API endpoint path for a model
       # @param model_name [String] The name of the model
       # @param action [String] The action to perform (e.g., "generateContent")
