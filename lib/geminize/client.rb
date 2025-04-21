@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'faraday'
-require 'faraday/retry'
-require 'json'
-require 'logger'
+require "faraday"
+require "faraday/retry"
+require "json"
+require "logger"
 
 module Geminize
   # Client for making HTTP requests to the Gemini API
@@ -36,8 +36,6 @@ module Geminize
         default_headers.merge(headers)
       )
       parse_response(response)
-    rescue Faraday::Error => e
-      handle_request_error(e)
     end
 
     # Make a POST request to the specified endpoint
@@ -50,13 +48,11 @@ module Geminize
       response = connection.post(
         build_url(endpoint),
         payload.to_json,
-        default_headers.merge(headers).merge({ 'Content-Type' => 'application/json' })
+        default_headers.merge(headers).merge({"Content-Type" => "application/json"})
       ) do |req|
         req.params.merge!(add_api_key(params))
       end
       parse_response(response)
-    rescue Faraday::Error => e
-      handle_request_error(e)
     end
 
     private
@@ -68,8 +64,11 @@ module Geminize
         conn.options.timeout = @options[:timeout] || @config.timeout
         conn.options.open_timeout = @options[:open_timeout] || @config.open_timeout
 
-        # Add response middleware
-        conn.response :raise_error # Raise exceptions on 4xx and 5xx responses
+        # Add JSON response parsing
+        conn.response :json, content_type: /\bjson$/
+
+        # Add our custom error handling middleware
+        conn.response :geminize_error_handler
 
         # Add retry middleware
         conn.request :retry, {
@@ -100,7 +99,7 @@ module Geminize
     # @return [Hash] Default headers
     def default_headers
       {
-        'Accept' => 'application/json'
+        "Accept" => "application/json"
       }
     end
 
@@ -118,27 +117,13 @@ module Geminize
     def parse_response(response)
       return {} if response.body.to_s.empty?
 
-      JSON.parse(response.body)
-    rescue JSON::ParserError => e
-      raise Geminize::RequestError, "Invalid JSON response: #{e.message}"
-    end
-
-    # Handle request errors and raise appropriate exceptions
-    # @param error [Faraday::Error] The Faraday error
-    # @raise [Geminize::BadRequestError] For client errors (4xx)
-    # @raise [Geminize::ServerError] For server errors (5xx)
-    # @raise [Geminize::RequestError] For other errors
-    def handle_request_error(error)
-      case error
-      when Faraday::ConnectionFailed, Faraday::TimeoutError
-        raise Geminize::RequestError, "Network error: #{error.message}"
-      when Faraday::BadRequestError, Faraday::UnauthorizedError, Faraday::ForbiddenError, Faraday::ResourceNotFound
-        raise Geminize::BadRequestError, "Client error: #{error.message}"
-      when Faraday::ServerError
-        raise Geminize::ServerError, "Server error: #{error.message}"
+      if response.body.is_a?(Hash)
+        response.body
       else
-        raise Geminize::RequestError, "Request error: #{error.message}"
+        JSON.parse(response.body)
       end
+    rescue JSON::ParserError => e
+      raise Geminize::RequestError.new("Invalid JSON response: #{e.message}", "INVALID_JSON", nil)
     end
   end
 end
