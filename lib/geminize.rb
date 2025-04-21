@@ -1,24 +1,16 @@
 # frozen_string_literal: true
 
-require_relative 'geminize/version'
-require_relative 'geminize/configuration'
-require_relative 'geminize/client'
+require_relative "geminize/version"
+require_relative "geminize/errors"
+require_relative "geminize/configuration"
+require_relative "geminize/error_parser"
+require_relative "geminize/error_mapper"
+require_relative "geminize/middleware/error_handler"
+require_relative "geminize/client"
 
 # Main module for the Geminize gem
 module Geminize
   class Error < StandardError; end
-
-  # Base error class for all Geminize errors
-  class GeminizeError < Error; end
-
-  # Error for bad requests (4xx)
-  class BadRequestError < GeminizeError; end
-
-  # Error for server errors (5xx)
-  class ServerError < GeminizeError; end
-
-  # Error for network/request issues
-  class RequestError < GeminizeError; end
 
   class << self
     # @return [Geminize::Configuration]
