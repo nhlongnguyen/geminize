@@ -416,6 +416,16 @@ RSpec.describe Geminize::Models::ContentRequest do
       )
     end
 
+    it "validates image size" do
+      # Create oversized image data that exceeds the maximum size
+      max_size = described_class::MAX_IMAGE_SIZE_BYTES
+      oversized_data = "X" * (max_size + 1)
+
+      expect { request.add_image_from_bytes(oversized_data, valid_mime_type) }.to raise_error(
+        Geminize::ValidationError, /Image size exceeds maximum limit/
+      )
+    end
+
     it "validates MIME type" do
       expect { request.add_image_from_bytes(valid_image_data, nil) }.to raise_error(
         Geminize::ValidationError, "MIME type cannot be nil"
@@ -468,6 +478,9 @@ RSpec.describe Geminize::Models::ContentRequest do
     it "validates MIME type" do
       allow(MIME::Types).to receive(:type_for).and_return([double(content_type: "invalid/type")])
 
+      # Make sure detect_mime_type_from_content also returns an unsupported type
+      allow(request).to receive(:detect_mime_type_from_content).and_return(nil)
+
       expect { request.add_image_from_file(temp_file.path) }.to raise_error(
         Geminize::ValidationError, /Unsupported image format/
       )
@@ -479,15 +492,24 @@ RSpec.describe Geminize::Models::ContentRequest do
     let(:valid_url) { "https://example.com/image.jpg" }
 
     before do
-      # Mock URI.open to avoid actual HTTP requests
-      allow(URI).to receive(:open).with(valid_url, "rb", any_args).and_return(
-        StringIO.new(valid_image_data)
-      )
+      # Stub the URL request with WebMock with exact headers
+      stub_request(:get, valid_url)
+        .with(headers: {
+          "Accept" => "*/*",
+          "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
+          "Host" => "example.com",
+          "User-Agent" => "Ruby"
+        })
+        .to_return(status: 200, body: valid_image_data, headers: {"Content-Type" => "image/jpeg"})
     end
 
     it "adds an image from a URL" do
-      expect(request).to receive(:add_image_from_bytes).with(valid_image_data, "image/jpeg").and_call_original
       request.add_image_from_url(valid_url)
+
+      image_part = request.content_parts.find { |part| part[:type] == "image" }
+      expect(image_part).to be_truthy
+      expect(image_part[:mime_type]).to eq("image/jpeg")
+      expect(image_part[:data]).to eq(Base64.strict_encode64(valid_image_data))
     end
 
     it "validates URL format" do
@@ -505,18 +527,36 @@ RSpec.describe Geminize::Models::ContentRequest do
     end
 
     it "handles HTTP errors" do
-      allow(URI).to receive(:open).and_raise(OpenURI::HTTPError.new("404 Not Found", nil))
+      error_url = "https://example.com/not-found.jpg"
 
-      expect { request.add_image_from_url(valid_url) }.to raise_error(
+      stub_request(:get, error_url)
+        .with(headers: {
+          "Accept" => "*/*",
+          "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
+          "Host" => "example.com",
+          "User-Agent" => "Ruby"
+        })
+        .to_return(status: 404, body: "Not Found", headers: {})
+
+      expect { request.add_image_from_url(error_url) }.to raise_error(
         Geminize::ValidationError, /Error fetching image from URL: HTTP error/
       )
     end
 
     it "handles other errors" do
-      allow(URI).to receive(:open).and_raise(StandardError.new("Network error"))
+      timeout_url = "https://example.com/timeout.jpg"
 
-      expect { request.add_image_from_url(valid_url) }.to raise_error(
-        Geminize::ValidationError, /Error fetching image from URL: Network error/
+      stub_request(:get, timeout_url)
+        .with(headers: {
+          "Accept" => "*/*",
+          "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
+          "Host" => "example.com",
+          "User-Agent" => "Ruby"
+        })
+        .to_timeout
+
+      expect { request.add_image_from_url(timeout_url) }.to raise_error(
+        Geminize::ValidationError, /Error fetching image from URL/
       )
     end
 
@@ -531,12 +571,23 @@ RSpec.describe Geminize::Models::ContentRequest do
       }
 
       urls_and_types.each do |url, mime_type|
-        allow(URI).to receive(:open).with(url, "rb", any_args).and_return(
-          StringIO.new(valid_image_data)
-        )
+        # Reset content parts first
+        request.instance_variable_set(:@content_parts, [{type: "text", text: prompt}])
 
-        expect(request).to receive(:add_image_from_bytes).with(valid_image_data, mime_type).and_call_original
+        # Stub the specific URL
+        stub_request(:get, url)
+          .with(headers: {
+            "Accept" => "*/*",
+            "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
+            "Host" => "example.com",
+            "User-Agent" => "Ruby"
+          })
+          .to_return(status: 200, body: valid_image_data, headers: {"Content-Type" => mime_type})
+
         request.add_image_from_url(url)
+
+        image_part = request.content_parts.last
+        expect(image_part[:mime_type]).to eq(mime_type)
       end
     end
   end
@@ -556,6 +607,91 @@ RSpec.describe Geminize::Models::ContentRequest do
     it "returns true when non-text parts are added" do
       request.add_image_from_bytes(valid_image_data, valid_mime_type)
       expect(request.multimodal?).to be true
+    end
+  end
+
+  describe "#detect_mime_type" do
+    let(:request) { described_class.new(prompt) }
+
+    context "with file extensions" do
+      it "detects MIME type from file extension" do
+        # Create temp files with different extensions
+        files_and_types = {
+          ".jpg" => "image/jpeg",
+          ".jpeg" => "image/jpeg",
+          ".png" => "image/png",
+          ".gif" => "image/gif",
+          ".webp" => "image/webp"
+        }
+
+        files_and_types.each do |extension, mime_type|
+          temp_file = Tempfile.new(["test", extension])
+          temp_file.close
+
+          allow(MIME::Types).to receive(:type_for).with(temp_file.path).and_return(
+            [double(content_type: mime_type)]
+          )
+
+          expect(request.send(:detect_mime_type, temp_file.path)).to eq(mime_type)
+          temp_file.unlink
+        end
+      end
+    end
+
+    context "with file signatures" do
+      it "detects JPEG from file signature" do
+        temp_file = Tempfile.new(["test", ".bin"])
+        temp_file.binmode
+        temp_file.write([0xFF, 0xD8, 0xFF].pack("C*"))
+        temp_file.close
+
+        # Disable extension detection
+        allow(MIME::Types).to receive(:type_for).with(temp_file.path).and_return([])
+
+        expect(request.send(:detect_mime_type, temp_file.path)).to eq("image/jpeg")
+        temp_file.unlink
+      end
+
+      it "detects PNG from file signature" do
+        temp_file = Tempfile.new(["test", ".bin"])
+        temp_file.binmode
+        temp_file.write([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A].pack("C*"))
+        temp_file.close
+
+        # Disable extension detection
+        allow(MIME::Types).to receive(:type_for).with(temp_file.path).and_return([])
+
+        expect(request.send(:detect_mime_type, temp_file.path)).to eq("image/png")
+        temp_file.unlink
+      end
+
+      it "detects GIF from file signature" do
+        temp_file = Tempfile.new(["test", ".bin"])
+        temp_file.binmode
+        temp_file.write("GIF89a")
+        temp_file.close
+
+        # Disable extension detection
+        allow(MIME::Types).to receive(:type_for).with(temp_file.path).and_return([])
+
+        expect(request.send(:detect_mime_type, temp_file.path)).to eq("image/gif")
+        temp_file.unlink
+      end
+
+      it "raises an error for unsupported file formats" do
+        temp_file = Tempfile.new(["test", ".bin"])
+        temp_file.binmode
+        temp_file.write("INVALID")
+        temp_file.close
+
+        # Disable extension detection
+        allow(MIME::Types).to receive(:type_for).with(temp_file.path).and_return([])
+
+        expect { request.send(:detect_mime_type, temp_file.path) }.to raise_error(
+          Geminize::ValidationError, /Unsupported image format/
+        )
+        temp_file.unlink
+      end
     end
   end
 end

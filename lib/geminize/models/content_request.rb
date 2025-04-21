@@ -3,6 +3,7 @@
 require "base64"
 require "mime/types"
 require "open-uri"
+require "net/http"
 
 module Geminize
   module Models
@@ -78,7 +79,7 @@ module Geminize
       # @return [self] The request object for chaining
       def add_text(text)
         Validators.validate_not_empty!(text, "Text content")
-        @content_parts << { type: "text", text: text }
+        @content_parts << {type: "text", text: text}
         self
       end
 
@@ -142,13 +143,28 @@ module Geminize
         validate_url!(url)
 
         begin
-          # Open the URL and read the binary data
-          uri_object = URI.open(url, "rb")
-          image_data = uri_object.read
-          uri_object.close if uri_object.respond_to?(:close)
+          # Use Net::HTTP to fetch the image instead of URI.open
+          uri = URI.parse(url)
+          response = Net::HTTP.get_response(uri)
 
-          # Try to detect MIME type from URL extension, fallback to jpeg if can't detect
-          mime_type = detect_mime_type_from_url(url) || "image/jpeg"
+          # Check for HTTP errors
+          unless response.is_a?(Net::HTTPSuccess)
+            raise OpenURI::HTTPError.new(response.message, response)
+          end
+
+          # Read the response body
+          image_data = response.body
+
+          # Try to detect MIME type from URL extension or Content-Type header
+          content_type = response["Content-Type"]
+
+          # If Content-Type header exists and is a supported image type, use it
+          mime_type = if content_type && SUPPORTED_IMAGE_MIME_TYPES.include?(content_type)
+            content_type
+          else
+            # Otherwise try to detect from URL
+            detect_mime_type_from_url(url) || "image/jpeg"
+          end
 
           add_image_from_bytes(image_data, mime_type)
         rescue OpenURI::HTTPError => e
@@ -390,7 +406,7 @@ module Geminize
         Validators.validate_not_empty!(url, "URL")
 
         # Simple URL validation
-        unless url =~ %r{\A(http|https)://}
+        unless url.match?(%r{\A(http|https)://})
           raise Geminize::ValidationError.new(
             "URL must start with http:// or https://",
             "INVALID_ARGUMENT"
@@ -450,7 +466,7 @@ module Geminize
           if file_signature.length >= 12 && file_signature[8..11] == "WEBP"
             return "image/webp"
           end
-        rescue => e
+        rescue
           # If we can't read the file or another error occurs, just return nil
           # and let the caller handle it
           return nil
@@ -481,8 +497,6 @@ module Geminize
           "image/gif"
         when "webp"
           "image/webp"
-        else
-          nil
         end
       end
     end
