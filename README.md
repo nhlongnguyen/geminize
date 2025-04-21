@@ -67,6 +67,34 @@ Geminize.configure do |config|
 end
 ```
 
+### Available Configuration Options
+
+| Option          | Required | Default                   | Description                                         |
+| --------------- | -------- | ------------------------- | --------------------------------------------------- |
+| `api_key`       | Yes      | `ENV["GEMINI_API_KEY"]`   | Your Google Gemini API key                          |
+| `api_version`   | No       | `"v1beta"`                | API version to use                                  |
+| `default_model` | No       | `"gemini-1.5-pro-latest"` | Default model to use when not specified in requests |
+| `timeout`       | No       | `30`                      | Request timeout in seconds                          |
+| `open_timeout`  | No       | `10`                      | Connection open timeout in seconds                  |
+| `log_requests`  | No       | `false`                   | Whether to log API requests (useful for debugging)  |
+
+### Validating Configuration
+
+You can validate your configuration at any time to ensure all required options are set:
+
+```ruby
+# Will raise Geminize::ConfigurationError if invalid
+Geminize.validate_configuration!
+```
+
+### Resetting Configuration
+
+If needed, you can reset the configuration to its defaults:
+
+```ruby
+Geminize.reset_configuration!
+```
+
 ## Basic Usage
 
 ```ruby
