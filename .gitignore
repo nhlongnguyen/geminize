@@ -37,3 +37,5 @@ tasks.json
 tasks/
 .cursor/
 scripts/
+.windsurfrules
+README-task-master.md
