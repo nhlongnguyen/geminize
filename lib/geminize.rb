@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative "geminize/version"
-require_relative "geminize/configuration"
-require_relative "geminize/client"
+require_relative 'geminize/version'
+require_relative 'geminize/configuration'
+require_relative 'geminize/client'
 
 # Main module for the Geminize gem
 module Geminize

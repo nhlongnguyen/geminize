@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "faraday"
-require "faraday/retry"
-require "json"
-require "logger"
+require 'faraday'
+require 'faraday/retry'
+require 'json'
+require 'logger'
 
 module Geminize
   # Client for making HTTP requests to the Gemini API
@@ -50,7 +50,7 @@ module Geminize
       response = connection.post(
         build_url(endpoint),
         payload.to_json,
-        default_headers.merge(headers).merge({"Content-Type" => "application/json"})
+        default_headers.merge(headers).merge({ 'Content-Type' => 'application/json' })
       ) do |req|
         req.params.merge!(add_api_key(params))
       end
@@ -100,7 +100,7 @@ module Geminize
     # @return [Hash] Default headers
     def default_headers
       {
-        "Accept" => "application/json"
+        'Accept' => 'application/json'
       }
     end
 

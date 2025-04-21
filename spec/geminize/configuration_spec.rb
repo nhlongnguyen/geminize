@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
 RSpec.describe Geminize::Configuration do
-  let(:api_key) { "test-api-key" }
-  let(:api_version) { "v2" }
-  let(:default_model) { "test-model" }
+  let(:api_key) { 'test-api-key' }
+  let(:api_version) { 'v2' }
+  let(:default_model) { 'test-model' }
 
   # Reset singleton before each test to ensure clean state
   before do
     described_class.instance.reset!
   end
 
-  describe "#initialize" do
-    context "with environment variables" do
+  describe '#initialize' do
+    context 'with environment variables' do
       around do |example|
         ClimateControl.modify GEMINI_API_KEY: api_key do
           described_class.instance.reset!
@@ -19,13 +19,13 @@ RSpec.describe Geminize::Configuration do
         end
       end
 
-      it "loads API key from environment variable" do
+      it 'loads API key from environment variable' do
         config = described_class.instance
         expect(config.api_key).to eq(api_key)
       end
     end
 
-    it "sets default values" do
+    it 'sets default values' do
       config = described_class.instance
       expect(config.api_version).to eq(Geminize::Configuration::DEFAULT_API_VERSION)
       expect(config.default_model).to eq(Geminize::Configuration::DEFAULT_MODEL)
@@ -35,8 +35,8 @@ RSpec.describe Geminize::Configuration do
     end
   end
 
-  describe "attributes" do
-    it "allows setting and getting attributes" do
+  describe 'attributes' do
+    it 'allows setting and getting attributes' do
       config = described_class.instance
       config.api_key = api_key
       config.api_version = api_version
@@ -54,8 +54,8 @@ RSpec.describe Geminize::Configuration do
     end
   end
 
-  describe "#reset!" do
-    it "resets all values to defaults" do
+  describe '#reset!' do
+    it 'resets all values to defaults' do
       config = described_class.instance
       config.api_key = api_key
       config.api_version = api_version
@@ -74,45 +74,45 @@ RSpec.describe Geminize::Configuration do
     end
   end
 
-  describe "#api_base_url" do
-    it "returns the API base URL" do
+  describe '#api_base_url' do
+    it 'returns the API base URL' do
       config = described_class.instance
       expect(config.api_base_url).to eq(Geminize::Configuration::API_BASE_URL)
     end
   end
 
-  describe "#validate!" do
+  describe '#validate!' do
     let(:config) { described_class.instance }
 
     before do
       config.reset!
     end
 
-    it "returns true when configuration is valid" do
+    it 'returns true when configuration is valid' do
       config.api_key = api_key
       expect(config.validate!).to be true
     end
 
-    it "raises ConfigurationError when API key is missing" do
+    it 'raises ConfigurationError when API key is missing' do
       config.api_key = nil
-      expect { config.validate! }.to raise_error(Geminize::ConfigurationError, "API key must be set")
+      expect { config.validate! }.to raise_error(Geminize::ConfigurationError, 'API key must be set')
     end
 
-    it "raises ConfigurationError when API key is empty" do
-      config.api_key = ""
-      expect { config.validate! }.to raise_error(Geminize::ConfigurationError, "API key must be set")
+    it 'raises ConfigurationError when API key is empty' do
+      config.api_key = ''
+      expect { config.validate! }.to raise_error(Geminize::ConfigurationError, 'API key must be set')
     end
 
-    it "raises ConfigurationError when API version is missing" do
+    it 'raises ConfigurationError when API version is missing' do
       config.api_key = api_key
       config.api_version = nil
-      expect { config.validate! }.to raise_error(Geminize::ConfigurationError, "API version must be set")
+      expect { config.validate! }.to raise_error(Geminize::ConfigurationError, 'API version must be set')
     end
 
-    it "raises ConfigurationError when API version is empty" do
+    it 'raises ConfigurationError when API version is empty' do
       config.api_key = api_key
-      config.api_version = ""
-      expect { config.validate! }.to raise_error(Geminize::ConfigurationError, "API version must be set")
+      config.api_version = ''
+      expect { config.validate! }.to raise_error(Geminize::ConfigurationError, 'API version must be set')
     end
   end
 end

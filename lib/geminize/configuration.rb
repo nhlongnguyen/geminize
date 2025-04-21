@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "singleton"
+require 'singleton'
 
 module Geminize
   # Handles configuration options for the Geminize gem
@@ -8,13 +8,13 @@ module Geminize
     include Singleton
 
     # Base URL for the Google Gemini API
-    API_BASE_URL = "https://generativelanguage.googleapis.com"
+    API_BASE_URL = 'https://generativelanguage.googleapis.com'
 
     # Default API version
-    DEFAULT_API_VERSION = "v1beta"
+    DEFAULT_API_VERSION = 'v1beta'
 
     # Default model
-    DEFAULT_MODEL = "gemini-1.5-pro-latest"
+    DEFAULT_MODEL = 'gemini-1.5-pro-latest'
 
     # Default timeout values (in seconds)
     DEFAULT_TIMEOUT = 30
@@ -51,7 +51,7 @@ module Geminize
     # Reset configuration to default values
     # @return [void]
     def reset!
-      @api_key = ENV["GEMINI_API_KEY"]
+      @api_key = ENV['GEMINI_API_KEY']
       @api_version = DEFAULT_API_VERSION
       @default_model = DEFAULT_MODEL
       @timeout = DEFAULT_TIMEOUT
@@ -69,8 +69,8 @@ module Geminize
     # @return [Boolean]
     # @raise [ConfigurationError] if the configuration is invalid
     def validate!
-      raise ConfigurationError, "API key must be set" if @api_key.nil? || @api_key.empty?
-      raise ConfigurationError, "API version must be set" if @api_version.nil? || @api_version.empty?
+      raise ConfigurationError, 'API key must be set' if @api_key.nil? || @api_key.empty?
+      raise ConfigurationError, 'API version must be set' if @api_version.nil? || @api_version.empty?
 
       true
     end

@@ -13,15 +13,15 @@ Geminize.configure do |config|
   # config.api_key = ENV["GEMINI_API_KEY"]
 
   # Or set it directly (not recommended for production)
-  config.api_key = "your-api-key-here"
+  config.api_key = 'your-api-key-here'
 
   # Optional settings with defaults
 
   # API version to use
-  config.api_version = "v1beta"
+  config.api_version = 'v1beta'
 
   # Default model to use when not specified in requests
-  config.default_model = "gemini-1.5-pro-latest"
+  config.default_model = 'gemini-1.5-pro-latest'
 
   # Request timeout in seconds
   config.timeout = 30
@@ -38,7 +38,7 @@ end
 # This will raise Geminize::ConfigurationError if the configuration is invalid
 begin
   Geminize.validate_configuration!
-  Rails.logger.info "Geminize configured successfully"
+  Rails.logger.info 'Geminize configured successfully'
 rescue Geminize::ConfigurationError => e
   Rails.logger.error "Geminize configuration error: #{e.message}"
   # You might want to raise the error in development but not in production
