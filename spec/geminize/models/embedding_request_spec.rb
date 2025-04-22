@@ -49,7 +49,7 @@ RSpec.describe Geminize::Models::EmbeddingRequest do
       expect(hash).to eq({
         content: {
           parts: [
-            { text: text }
+            {text: text}
           ]
         },
         taskType: "RETRIEVAL_DOCUMENT"
@@ -70,9 +70,9 @@ RSpec.describe Geminize::Models::EmbeddingRequest do
       hash = request.to_hash
 
       expect(hash[:content][:parts].size).to eq(3)
-      expect(hash[:content][:parts][0]).to eq({ text: texts[0] })
-      expect(hash[:content][:parts][1]).to eq({ text: texts[1] })
-      expect(hash[:content][:parts][2]).to eq({ text: texts[2] })
+      expect(hash[:content][:parts][0]).to eq({text: texts[0]})
+      expect(hash[:content][:parts][1]).to eq({text: texts[1]})
+      expect(hash[:content][:parts][2]).to eq({text: texts[2]})
     end
   end
 

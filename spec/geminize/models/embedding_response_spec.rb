@@ -31,9 +31,9 @@ RSpec.describe Geminize::Models::EmbeddingResponse do
       let(:raw_response) do
         {
           "embeddings" => [
-            { "values" => [0.1, 0.2, 0.3] },
-            { "values" => [0.4, 0.5, 0.6] },
-            { "values" => [0.7, 0.8, 0.9] }
+            {"values" => [0.1, 0.2, 0.3]},
+            {"values" => [0.4, 0.5, 0.6]},
+            {"values" => [0.7, 0.8, 0.9]}
           ]
         }
       end
@@ -61,15 +61,15 @@ RSpec.describe Geminize::Models::EmbeddingResponse do
 
   describe "#embedding_size" do
     it "returns the size of a single embedding" do
-      response = described_class.new({ "embedding" => { "values" => [0.1, 0.2, 0.3, 0.4] } })
+      response = described_class.new({"embedding" => {"values" => [0.1, 0.2, 0.3, 0.4]}})
       expect(response.embedding_size).to eq(4)
     end
 
     it "returns the size of the first embedding in a batch" do
       response = described_class.new({
         "embeddings" => [
-          { "values" => [0.1, 0.2, 0.3, 0.4, 0.5] },
-          { "values" => [0.6, 0.7, 0.8, 0.9, 1.0] }
+          {"values" => [0.1, 0.2, 0.3, 0.4, 0.5]},
+          {"values" => [0.6, 0.7, 0.8, 0.9, 1.0]}
         ]
       })
       expect(response.embedding_size).to eq(5)
@@ -78,16 +78,16 @@ RSpec.describe Geminize::Models::EmbeddingResponse do
 
   describe "#batch_size" do
     it "returns 1 for a single embedding" do
-      response = described_class.new({ "embedding" => { "values" => [0.1, 0.2, 0.3] } })
+      response = described_class.new({"embedding" => {"values" => [0.1, 0.2, 0.3]}})
       expect(response.batch_size).to eq(1)
     end
 
     it "returns the number of embeddings in a batch" do
       response = described_class.new({
         "embeddings" => [
-          { "values" => [0.1, 0.2, 0.3] },
-          { "values" => [0.4, 0.5, 0.6] },
-          { "values" => [0.7, 0.8, 0.9] }
+          {"values" => [0.1, 0.2, 0.3]},
+          {"values" => [0.4, 0.5, 0.6]},
+          {"values" => [0.7, 0.8, 0.9]}
         ]
       })
       expect(response.batch_size).to eq(3)
@@ -103,7 +103,7 @@ RSpec.describe Geminize::Models::EmbeddingResponse do
 
     it "raises an error when embedding values are not an array" do
       expect {
-        described_class.new({ "embedding" => { "values" => "not_an_array" } })
+        described_class.new({"embedding" => {"values" => "not_an_array"}})
       }.to raise_error(Geminize::ValidationError, /Embedding values must be an array/)
     end
 
@@ -111,8 +111,8 @@ RSpec.describe Geminize::Models::EmbeddingResponse do
       expect {
         described_class.new({
           "embeddings" => [
-            { "values" => [0.1, 0.2, 0.3] },
-            { "values" => [0.4, 0.5] } # Different size
+            {"values" => [0.1, 0.2, 0.3]},
+            {"values" => [0.4, 0.5]} # Different size
           ]
         })
       }.to raise_error(Geminize::ValidationError, /Inconsistent embedding sizes/)
@@ -124,8 +124,8 @@ RSpec.describe Geminize::Models::EmbeddingResponse do
     let(:response) do
       described_class.new({
         "embeddings" => [
-          { "values" => [0.1, 0.2, 0.3] },
-          { "values" => [0.4, 0.5, 0.6] }
+          {"values" => [0.1, 0.2, 0.3]},
+          {"values" => [0.4, 0.5, 0.6]}
         ]
       })
     end
@@ -142,8 +142,8 @@ RSpec.describe Geminize::Models::EmbeddingResponse do
     let(:response) do
       described_class.new({
         "embeddings" => [
-          { "values" => [0.1, 0.2, 0.3, 0.4, 0.5] },
-          { "values" => [0.6, 0.7, 0.8, 0.9, 1.0] }
+          {"values" => [0.1, 0.2, 0.3, 0.4, 0.5]},
+          {"values" => [0.6, 0.7, 0.8, 0.9, 1.0]}
         ]
       })
     end
@@ -164,8 +164,8 @@ RSpec.describe Geminize::Models::EmbeddingResponse do
     let(:response) do
       described_class.new({
         "embeddings" => [
-          { "values" => [0.1, 0.2, 0.3] },
-          { "values" => [0.4, 0.5, 0.6] }
+          {"values" => [0.1, 0.2, 0.3]},
+          {"values" => [0.4, 0.5, 0.6]}
         ],
         "usageMetadata" => {
           "promptTokenCount" => 10,
@@ -189,7 +189,7 @@ RSpec.describe Geminize::Models::EmbeddingResponse do
     let(:raw_data) do
       {
         "embeddings" => [
-          { "values" => [0.1, -0.2, 0.3] }
+          {"values" => [0.1, -0.2, 0.3]}
         ]
       }
     end

@@ -87,7 +87,7 @@ module Geminize
       # @return [ModelList] A new ModelList containing only matching models
       def filter_by_name(pattern)
         pattern = Regexp.new(pattern.to_s, Regexp::IGNORECASE) if pattern.is_a?(String)
-        filtered = @models.select { |model| model.name && model.name.match?(pattern) }
+        filtered = @models.select { |model| model.name&.match?(pattern) }
         ModelList.new(filtered)
       end
 

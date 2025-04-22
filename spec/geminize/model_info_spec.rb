@@ -134,8 +134,8 @@ RSpec.describe Geminize::ModelInfo do
   end
 
   describe "#clear_cache" do
-    let(:models_response) { { "models" => [] } }
-    let(:model_response) { { "name" => "models/gemini-1.5-pro", "displayName" => "Gemini 1.5 Pro" } }
+    let(:models_response) { {"models" => []} }
+    let(:model_response) { {"name" => "models/gemini-1.5-pro", "displayName" => "Gemini 1.5 Pro"} }
 
     before do
       allow(client).to receive(:get).with("models").and_return(models_response)

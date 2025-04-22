@@ -27,10 +27,10 @@ module GeminizeHelper
     is_user = message.role == "user"
 
     message_class = if is_user
-                      options[:user_class] || "gemini-user-message"
-                    else
-                      options[:ai_class] || "gemini-ai-message"
-                    end
+      options[:user_class] || "gemini-user-message"
+    else
+      options[:ai_class] || "gemini-ai-message"
+    end
 
     content_tag(:div, class: "gemini-message #{message_class}") do
       output = []

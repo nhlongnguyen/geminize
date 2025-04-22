@@ -77,8 +77,7 @@ module Geminize
       end
 
       # Combine all responses into a single response object
-      combined_response = combine_responses(responses)
-      combined_response
+      combine_responses(responses)
     end
 
     # Combine multiple embedding responses into a single response

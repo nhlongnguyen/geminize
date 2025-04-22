@@ -142,7 +142,7 @@ module Geminize
         raise StreamingTimeoutError.new("Streaming operation timed out: #{e.message}")
       rescue JSON::ParserError => e
         raise InvalidStreamFormatError.new("Could not parse streaming response: #{e.message}")
-      rescue StandardError => e
+      rescue => e
         # Generic error handler
         error_message = "Streaming error: #{e.message}"
         raise StreamingError.new(error_message, nil, nil)
@@ -154,23 +154,22 @@ module Geminize
 
         # Reset the connection to free resources
         begin
-          streaming_connection.close if streaming_connection.respond_to?(:close)
+          streaming_connection&.close if streaming_connection&.respond_to?(:close)
         rescue => e
           # Just log the error if there's a problem closing the connection
-          if @options[:logger]
-            @options[:logger].warn("Error closing streaming connection: #{e.message}")
-          end
+          @options[:logger]&.warn("Error closing streaming connection: #{e.message}")
         end
       end
     end
 
-    # Cancel any in-progress streaming operation
-    # @return [Boolean] true if a streaming operation was cancelled, false if none was in progress
-    def cancel_streaming
-      return false unless @streaming_in_progress
+    # Set the cancel_streaming flag to cancel an in-progress streaming operation
+    # @param value [Boolean] Value to set
+    # @return [Boolean] The new value
+    def cancel_streaming=(value)
+      # Only set if a streaming operation is in progress
+      return unless @streaming_in_progress
 
-      @cancel_streaming = true
-      true
+      @cancel_streaming = value
     end
 
     private
@@ -194,7 +193,7 @@ module Geminize
         data_lines = []
         message.each_line do |line|
           if line.start_with?("data: ")
-            data_lines << line[6..-1]
+            data_lines << line[6..]
           end
         end
 
@@ -211,14 +210,8 @@ module Geminize
           # Try to parse as JSON
           parsed_data = JSON.parse(data)
 
-          # For raw data, use StreamResponse to handle it
-          if parsed_data.is_a?(Hash) && parsed_data["candidates"]
-            # This is a Gemini API response chunk, process it with StreamResponse
-            yield parsed_data
-          else
-            # This is some other JSON data, yield as-is
-            yield parsed_data
-          end
+          # Yield parsed data regardless of type
+          yield parsed_data
         rescue JSON::ParserError
           # If not valid JSON, yield as raw text
           yield data

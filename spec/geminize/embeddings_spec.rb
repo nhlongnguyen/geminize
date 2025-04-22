@@ -12,7 +12,7 @@ RSpec.describe Geminize::Embeddings do
       instance_double(
         "Geminize::Models::EmbeddingRequest",
         model_name: model,
-        to_hash: { content: { parts: [{ text: sample_text }] } }
+        to_hash: {content: {parts: [{text: sample_text}]}}
       )
     end
 
@@ -63,9 +63,9 @@ RSpec.describe Geminize::Embeddings do
     let(:batch_response_data) do
       {
         "embeddings" => [
-          { "values" => [0.1, 0.2, 0.3, 0.4, 0.5] },
-          { "values" => [0.5, 0.4, 0.3, 0.2, 0.1] },
-          { "values" => [0.3, 0.3, 0.3, 0.3, 0.3] }
+          {"values" => [0.1, 0.2, 0.3, 0.4, 0.5]},
+          {"values" => [0.5, 0.4, 0.3, 0.2, 0.1]},
+          {"values" => [0.3, 0.3, 0.3, 0.3, 0.3]}
         ],
         "usageMetadata" => {
           "promptTokenCount" => 25,

@@ -175,7 +175,8 @@ module Geminize
     def cancel_streaming
       return false unless @client
 
-      @client.cancel_streaming
+      # Set the cancel_streaming flag to true on the client
+      @client.cancel_streaming = true
     end
 
     private
@@ -239,7 +240,7 @@ module Geminize
               accumulated_text += stream_response.text
 
               # Extract only the new content and yield it
-              new_content = accumulated_text[previous_length..-1]
+              new_content = accumulated_text[previous_length..]
               yield new_content unless new_content.empty?
             end
 

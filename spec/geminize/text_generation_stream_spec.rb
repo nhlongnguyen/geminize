@@ -181,7 +181,7 @@ RSpec.describe Geminize::TextGeneration do
       end
 
       it "allows cancellation of streaming" do
-        allow(client).to receive(:cancel_streaming).and_return(true)
+        expect(client).to receive(:cancel_streaming=).with(true).and_return(true)
 
         expect(text_generation.cancel_streaming).to eq(true)
       end

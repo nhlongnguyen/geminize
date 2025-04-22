@@ -15,7 +15,7 @@ class ChatController < ApplicationController
     respond_to do |format|
       format.html { redirect_to chat_path }
       format.turbo_stream
-      format.json { render json: { message: @response.text } }
+      format.json { render json: {message: @response.text} }
     end
   end
 

@@ -86,8 +86,6 @@ module Geminize
     # Set the cache time-to-live (TTL)
     # @param seconds [Integer] TTL in seconds
     # @return [void]
-    def cache_ttl=(seconds)
-      @cache_ttl = seconds
-    end
+    attr_writer :cache_ttl
   end
 end

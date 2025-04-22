@@ -281,7 +281,7 @@ module Geminize
         end
       ensure
         # Clear the reference to allow garbage collection
-        self.last_streaming_generator = nil if self.last_streaming_generator == generator
+        self.last_streaming_generator = nil if last_streaming_generator == generator
       end
     end
 

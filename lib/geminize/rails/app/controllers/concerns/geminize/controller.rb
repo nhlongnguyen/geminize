@@ -20,7 +20,7 @@ module Geminize
         # Try to load existing conversation
         begin
           @current_gemini_conversation = Geminize.load_conversation(session[:gemini_conversation_id])
-        rescue StandardError => e
+        rescue => e
           Rails.logger.error("Failed to load Gemini conversation: #{e.message}")
           # Create a new conversation if loading fails
           create_new_gemini_conversation

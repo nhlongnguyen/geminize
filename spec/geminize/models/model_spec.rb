@@ -84,7 +84,7 @@ RSpec.describe Geminize::Models::Model do
         version: "1.5",
         description: "A powerful model",
         capabilities: ["text", "vision"],
-        limitations: { input_token_limit: 30720 },
+        limitations: {input_token_limit: 30720},
         use_cases: ["content_generation", "image_analysis"]
       )
     end
@@ -97,7 +97,7 @@ RSpec.describe Geminize::Models::Model do
       expect(hash[:version]).to eq("1.5")
       expect(hash[:description]).to eq("A powerful model")
       expect(hash[:capabilities]).to eq(["text", "vision"])
-      expect(hash[:limitations]).to eq({ input_token_limit: 30720 })
+      expect(hash[:limitations]).to eq({input_token_limit: 30720})
       expect(hash[:use_cases]).to eq(["content_generation", "image_analysis"])
     end
   end

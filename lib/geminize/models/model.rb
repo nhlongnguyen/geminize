@@ -122,7 +122,7 @@ module Geminize
         capabilities << "text" if data.dig("supportedGenerationMethods")&.include?("generateText")
         capabilities << "chat" if data.dig("supportedGenerationMethods")&.include?("generateMessage")
         capabilities << "vision" if data.dig("supportedGenerationMethods")&.include?("generateContent") &&
-                                  data.dig("inputSetting", "supportMultiModal")
+          data.dig("inputSetting", "supportMultiModal")
         capabilities << "embedding" if data.dig("supportedGenerationMethods")&.include?("embedContent")
 
         capabilities
