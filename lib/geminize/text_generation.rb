@@ -188,12 +188,18 @@ module Geminize
           yield chunk
         else
           # Incremental mode - extract and accumulate text
-          if chunk.is_a?(Hash) && chunk["candidates"] && chunk["candidates"][0] &&
-             chunk["candidates"][0]["content"] && chunk["candidates"][0]["content"]["parts"] &&
-             chunk["candidates"][0]["content"]["parts"][0] && chunk["candidates"][0]["content"]["parts"][0]["text"]
-            text_chunk = chunk["candidates"][0]["content"]["parts"][0]["text"]
-            accumulated_text += text_chunk
+          stream_response = Models::StreamResponse.from_hash(chunk)
+
+          # Only process and yield if there's text content in this chunk
+          if stream_response.text
+            accumulated_text += stream_response.text
             yield accumulated_text
+          end
+
+          # If this is the final chunk with a finish reason, you could handle it specially
+          # e.g. by yielding an object with the finish reason
+          if stream_response.final_chunk?
+            # You could do something special with the final chunk if needed
           end
         end
       end

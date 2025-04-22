@@ -136,7 +136,15 @@ module Geminize
         begin
           # Try to parse as JSON
           parsed_data = JSON.parse(data)
-          yield parsed_data
+
+          # For raw data, use StreamResponse to handle it
+          if parsed_data.is_a?(Hash) && parsed_data["candidates"]
+            # This is a Gemini API response chunk, process it with StreamResponse
+            yield parsed_data
+          else
+            # This is some other JSON data, yield as-is
+            yield parsed_data
+          end
         rescue JSON::ParserError
           # If not valid JSON, yield as raw text
           yield data
