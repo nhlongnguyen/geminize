@@ -23,6 +23,7 @@ module Geminize
     DEFAULT_TIMEOUT = 30
     DEFAULT_OPEN_TIMEOUT = 10
     DEFAULT_STREAMING_TIMEOUT = 300
+    DEFAULT_ON_DATA_TIMEOUT = 60
 
     # API key for accessing the Gemini API
     # @return [String, nil]
@@ -52,6 +53,10 @@ module Geminize
     # @return [Integer]
     attr_accessor :streaming_timeout
 
+    # Timeout between data chunks in streaming responses
+    # @return [Integer]
+    attr_accessor :on_data_timeout
+
     # @return [Boolean]
     attr_accessor :log_requests
 
@@ -70,6 +75,7 @@ module Geminize
       @timeout = DEFAULT_TIMEOUT
       @open_timeout = DEFAULT_OPEN_TIMEOUT
       @streaming_timeout = DEFAULT_STREAMING_TIMEOUT
+      @on_data_timeout = DEFAULT_ON_DATA_TIMEOUT
       @log_requests = false
     end
 

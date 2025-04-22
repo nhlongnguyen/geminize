@@ -17,6 +17,7 @@ module Geminize
     # @option options [String] :api_version API version to use
     # @option options [Integer] :timeout Request timeout in seconds
     # @option options [Integer] :open_timeout Connection open timeout in seconds
+    # @option options [Integer] :streaming_timeout Timeout for streaming requests in seconds
     # @option options [Logger] :logger Custom logger instance (default: nil)
     def initialize(options = {})
       @config = Geminize.configuration
@@ -76,41 +77,72 @@ module Geminize
       streaming_connection.post(
         build_url(endpoint),
         payload.to_json,
-        default_headers.merge(headers).merge({"Content-Type" => "application/json"})
+        default_headers.merge(headers).merge({
+          "Content-Type" => "application/json",
+          "Accept" => "text/event-stream" # Request SSE format explicitly
+        })
       ) do |req|
         req.params.merge!(add_api_key(params))
+
+        # Configure buffer management and chunked transfer reception
         req.options.on_data = proc do |chunk, size, env|
           # Skip empty chunks
           next if chunk.strip.empty?
 
-          # Process chunks line by line
-          chunk.split("\n").each do |line|
-            # Skip empty lines
-            next if line.strip.empty?
+          # Use a buffer for handling partial SSE messages
+          @buffer ||= ""
+          @buffer += chunk
 
-            # Check if this is an SSE data line
-            if line.start_with?("data: ")
-              # Extract data part
-              data = line[6..-1]
-
-              # Skip "[DONE]" marker
-              next if data == "[DONE]"
-
-              begin
-                # Try to parse as JSON
-                parsed_data = JSON.parse(data)
-                yield parsed_data
-              rescue JSON::ParserError
-                # If not valid JSON, yield as raw text
-                yield data
-              end
-            end
-          end
+          # Process complete SSE messages in buffer
+          process_buffer(&block)
         end
       end
     end
 
     private
+
+    # Process the buffer for complete SSE messages
+    # @yield [data] Yields each parsed SSE data chunk
+    # @return [void]
+    def process_buffer
+      # Split the buffer by double newlines, which separate SSE messages
+      messages = @buffer.split(/\r\n\r\n|\n\n|\r\r/)
+
+      # The last element might be incomplete, so keep it in the buffer
+      @buffer = messages.pop || ""
+
+      # Process each complete message
+      messages.each do |message|
+        # Skip empty messages
+        next if message.strip.empty?
+
+        # Extract data lines
+        data_lines = []
+        message.each_line do |line|
+          if line.start_with?("data: ")
+            data_lines << line[6..-1]
+          end
+        end
+
+        # Skip if no data lines found
+        next if data_lines.empty?
+
+        # Join data lines for multi-line data
+        data = data_lines.join("")
+
+        # Skip "[DONE]" marker
+        next if data.strip == "[DONE]"
+
+        begin
+          # Try to parse as JSON
+          parsed_data = JSON.parse(data)
+          yield parsed_data
+        rescue JSON::ParserError
+          # If not valid JSON, yield as raw text
+          yield data
+        end
+      end
+    end
 
     # Build the Faraday connection with the configured URL and default headers
     # @return [Faraday::Connection]
@@ -149,6 +181,20 @@ module Geminize
         # Set longer timeouts for streaming connections which may stay open longer
         conn.options.timeout = (@options[:streaming_timeout] || @config.streaming_timeout || 300)
         conn.options.open_timeout = (@options[:open_timeout] || @config.open_timeout)
+
+        # Configure streaming-specific options
+        conn.options.on_data_timeout = (@options[:on_data_timeout] || 60) # Timeout between data chunks
+
+        # Disable response parsing middleware for raw streaming
+        conn.adapter :net_http do |http|
+          # Configure Net::HTTP for streaming
+          http.read_timeout = (@options[:streaming_timeout] || @config.streaming_timeout || 300)
+          http.keep_alive_timeout = 60
+          http.max_retries = 0 # Disable retries for streaming connections
+
+          # Enable persistent connections
+          http.start unless http.started?
+        end
 
         # Error handling for streaming connections
         conn.response :geminize_error_handler
