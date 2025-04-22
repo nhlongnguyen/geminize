@@ -50,6 +50,18 @@ module Geminize
       @conversation_repository = repository
     end
 
+    # Track the last streaming generator for cancellation support
+    # @return [Geminize::TextGeneration, nil]
+    attr_accessor :last_streaming_generator
+
+    # Cancel the current streaming operation, if any
+    # @return [Boolean] true if a streaming operation was cancelled, false if none was in progress
+    def cancel_streaming
+      return false unless last_streaming_generator
+
+      last_streaming_generator.cancel_streaming
+    end
+
     # Default conversation service
     # @return [Geminize::ConversationService]
     def conversation_service
@@ -251,6 +263,9 @@ module Geminize
       # Create the generator
       generator = TextGeneration.new(nil, client_options)
 
+      # Store the generator for potential cancellation
+      self.last_streaming_generator = generator
+
       # Generate with streaming
       begin
         generator.generate_text_stream(prompt, model_name || configuration.default_model, params, &block)
@@ -261,6 +276,9 @@ module Geminize
         else
           raise GeminizeError.new("Error during text generation streaming: #{e.message}")
         end
+      ensure
+        # Clear the reference to allow garbage collection
+        self.last_streaming_generator = nil if self.last_streaming_generator == generator
       end
     end
 

@@ -11,6 +11,12 @@ module Geminize
     # @return [Faraday::Connection] The Faraday connection
     attr_reader :connection
 
+    # @return [Boolean] Flag indicating if a streaming operation is in progress
+    attr_reader :streaming_in_progress
+
+    # @return [Boolean] Flag indicating if a streaming operation should be cancelled
+    attr_reader :cancel_streaming
+
     # Initialize a new client
     # @param options [Hash] Additional options to override the defaults
     # @option options [String] :api_key API key for Gemini API
@@ -23,6 +29,8 @@ module Geminize
       @config = Geminize.configuration
       @options = options
       @connection = build_connection
+      @streaming_in_progress = false
+      @cancel_streaming = false
     end
 
     # Make a GET request to the specified endpoint
@@ -71,6 +79,14 @@ module Geminize
     def post_stream(endpoint, payload = {}, params = {}, headers = {}, &block)
       raise ArgumentError, "A block is required for streaming requests" unless block_given?
 
+      # Check if another streaming operation is in progress
+      if @streaming_in_progress
+        raise StreamingError.new("Another streaming operation is already in progress")
+      end
+
+      @streaming_in_progress = true
+      @cancel_streaming = false
+
       # Ensure we have stream=true parameter for the API
       params = params.merge(stream: true)
 
@@ -97,6 +113,12 @@ module Geminize
 
           # Configure buffer management and chunked transfer reception
           req.options.on_data = proc do |chunk, size, env|
+            # Check if cancellation is requested
+            if @cancel_streaming
+              env[:request].http_connection.close
+              raise StreamingInterruptedError.new("Streaming was cancelled by the client")
+            end
+
             received_data = true
 
             # Skip empty chunks
@@ -125,9 +147,30 @@ module Geminize
         error_message = "Streaming error: #{e.message}"
         raise StreamingError.new(error_message, nil, nil)
       ensure
-        # Always clean up the buffer
+        # Always clean up resources
         @buffer = nil
+        @streaming_in_progress = false
+        @cancel_streaming = false
+
+        # Reset the connection to free resources
+        begin
+          streaming_connection.close if streaming_connection.respond_to?(:close)
+        rescue => e
+          # Just log the error if there's a problem closing the connection
+          if @options[:logger]
+            @options[:logger].warn("Error closing streaming connection: #{e.message}")
+          end
+        end
       end
+    end
+
+    # Cancel any in-progress streaming operation
+    # @return [Boolean] true if a streaming operation was cancelled, false if none was in progress
+    def cancel_streaming
+      return false unless @streaming_in_progress
+
+      @cancel_streaming = true
+      true
     end
 
     private

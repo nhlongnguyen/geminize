@@ -59,7 +59,7 @@ module Geminize
     # @option params [Array<String>] :stop_sequences Stop sequences to end generation
     # @option params [Symbol] :stream_mode Mode for processing stream chunks (:raw, :incremental, or :delta)
     # @yield [chunk] Yields each chunk of the streaming response
-    # @yieldparam chunk [String, Hash] A chunk of the response
+    # @yieldparam chunk [String, Hash, StreamResponse] A chunk of the response
     # @return [void]
     # @raise [Geminize::GeminizeError] If the request fails
     # @example Generate text with streaming, yielding each chunk
@@ -168,6 +168,14 @@ module Geminize
           raise e
         end
       end
+    end
+
+    # Cancel the current streaming operation, if any
+    # @return [Boolean] true if a streaming operation was cancelled, false if none was in progress
+    def cancel_streaming
+      return false unless @client
+
+      @client.cancel_streaming
     end
 
     private
