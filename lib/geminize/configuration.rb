@@ -16,6 +16,9 @@ module Geminize
     # Default model
     DEFAULT_MODEL = "gemini-1.5-pro-latest"
 
+    # Default embedding model
+    DEFAULT_EMBEDDING_MODEL = "embedding-001"
+
     # Default timeout values (in seconds)
     DEFAULT_TIMEOUT = 30
     DEFAULT_OPEN_TIMEOUT = 10
@@ -31,6 +34,10 @@ module Geminize
     # Default model to use if not specified in requests
     # @return [String]
     attr_accessor :default_model
+
+    # Default embedding model to use if not specified in embedding requests
+    # @return [String]
+    attr_accessor :default_embedding_model
 
     # Request timeout in seconds
     # @return [Integer]
@@ -54,6 +61,7 @@ module Geminize
       @api_key = ENV["GEMINI_API_KEY"]
       @api_version = DEFAULT_API_VERSION
       @default_model = DEFAULT_MODEL
+      @default_embedding_model = DEFAULT_EMBEDDING_MODEL
       @timeout = DEFAULT_TIMEOUT
       @open_timeout = DEFAULT_OPEN_TIMEOUT
       @log_requests = false
