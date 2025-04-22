@@ -1,0 +1,31 @@
+===============================================================================
+
+Geminize has been successfully installed!
+
+A configuration initializer has been created at:
+  config/initializers/geminize.rb
+
+You need to edit the initializer and add your Google Gemini API key.
+You can get an API key from https://ai.google.dev/
+
+===============================================================================
+
+Usage Examples:
+
+# Basic text generation
+text = Geminize.generate_text("What is Ruby on Rails?").text
+puts text
+
+# Create a chat session
+chat = Geminize.create_chat("My Support Chat")
+response = Geminize.chat("How can I create a Ruby gem?", chat)
+puts response.text
+
+# Follow-up question (keeps conversation context)
+response = Geminize.chat("What about adding a Rails engine to my gem?", chat)
+puts response.text
+
+# For more examples, see the documentation at:
+# https://github.com/nhlongnguyen/geminize
+
+===============================================================================

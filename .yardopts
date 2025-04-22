@@ -1,0 +1,14 @@
+--markup markdown
+--markup-provider redcarpet
+--title "Geminize Documentation"
+--protected
+--no-private
+--exclude /spec/
+--exclude /bin/
+--hide-void-return
+--embed-mixins
+--readme README.md
+lib/**/*.rb
+-
+LICENSE.txt
+CHANGELOG.md

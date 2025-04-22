@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email = ["nhatlongnguyen1992@gmail.com"]
 
   spec.summary = "Ruby interface for Google's Gemini AI API"
-  spec.description = "A convenient and robust Ruby interface for the Google Gemini API, enabling easy integration of powerful generative AI models into your applications."
+  spec.description = "A convenient and robust Ruby interface for the Google Gemini API, enabling easy integration of powerful generative AI models into your applications. Includes support for text generation, chat conversations, embeddings, multimodal content, and Rails integration."
   spec.homepage = "https://github.com/nhlongnguyen/geminize"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.1.0"

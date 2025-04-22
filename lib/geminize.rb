@@ -8,18 +8,29 @@ require_relative "geminize/error_parser"
 require_relative "geminize/error_mapper"
 require_relative "geminize/middleware/error_handler"
 require_relative "geminize/client"
+require_relative "geminize/models/model"
+require_relative "geminize/models/model_list"
 require_relative "geminize/models/content_request"
 require_relative "geminize/models/content_response"
+require_relative "geminize/models/stream_response"
 require_relative "geminize/models/chat_request"
 require_relative "geminize/models/chat_response"
 require_relative "geminize/models/message"
 require_relative "geminize/models/memory"
 require_relative "geminize/models/conversation"
+require_relative "geminize/models/embedding_request"
+require_relative "geminize/models/embedding_response"
 require_relative "geminize/request_builder"
+require_relative "geminize/vector_utils"
 require_relative "geminize/text_generation"
+require_relative "geminize/embeddings"
 require_relative "geminize/chat"
 require_relative "geminize/conversation_repository"
 require_relative "geminize/conversation_service"
+require_relative "geminize/model_info"
+
+# Conditionally load Rails integration if Rails is defined
+require_relative "geminize/rails" if defined?(::Rails)
 
 # Main module for the Geminize gem
 module Geminize
@@ -40,6 +51,18 @@ module Geminize
       end
 
       @conversation_repository = repository
+    end
+
+    # Track the last streaming generator for cancellation support
+    # @return [Geminize::TextGeneration, nil]
+    attr_accessor :last_streaming_generator
+
+    # Cancel the current streaming operation, if any
+    # @return [Boolean] true if a streaming operation was cancelled, false if none was in progress
+    def cancel_streaming
+      return false unless last_streaming_generator
+
+      last_streaming_generator.cancel_streaming
     end
 
     # Default conversation service
@@ -188,6 +211,166 @@ module Geminize
       end
     end
 
+    # Generate streaming text from a prompt using the Gemini API
+    # @param prompt [String] The input prompt
+    # @param model_name [String, nil] The model to use (optional)
+    # @param params [Hash] Additional generation parameters
+    # @option params [Float] :temperature Controls randomness (0.0-1.0)
+    # @option params [Integer] :max_tokens Maximum tokens to generate
+    # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
+    # @option params [Integer] :top_k Top-k value for sampling
+    # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+    # @option params [Symbol] :stream_mode Mode for processing stream chunks (:raw, :incremental, or :delta)
+    # @option params [Hash] :client_options Options to pass to the client
+    # @yield [chunk] Yields each chunk of the streaming response
+    # @yieldparam chunk [String, Hash] A chunk of the response
+    # @return [void]
+    # @raise [Geminize::GeminizeError] If the request fails
+    # @raise [Geminize::StreamingError] If the streaming request fails
+    # @raise [Geminize::StreamingInterruptedError] If the connection is interrupted
+    # @raise [Geminize::StreamingTimeoutError] If the streaming connection times out
+    # @raise [Geminize::InvalidStreamFormatError] If the stream format is invalid
+    # @example Stream text with incremental mode (default)
+    #   Geminize.generate_text_stream("Tell me a story") do |text|
+    #     # text contains full response accumulated so far
+    #     print "\r#{text}"
+    #   end
+    # @example Stream text with delta mode (only new content in each chunk)
+    #   Geminize.generate_text_stream("Tell me a story", nil, stream_mode: :delta) do |chunk|
+    #     # chunk contains only the new content in this chunk
+    #     print chunk
+    #   end
+    # @example Stream text with raw mode (original API response chunks)
+    #   Geminize.generate_text_stream("Tell me a story", nil, stream_mode: :raw) do |chunk|
+    #     # Process raw API response chunks
+    #     puts chunk.inspect
+    #   end
+    # @example Handle the final response with usage metrics
+    #   Geminize.generate_text_stream("Tell me a story") do |chunk|
+    #     if chunk.is_a?(Hash) && chunk[:usage]
+    #       # This is the final chunk with usage metrics
+    #       puts "\nUsage: #{chunk[:usage][:total_tokens]} tokens"
+    #     else
+    #       # Regular text chunk
+    #       print chunk
+    #     end
+    #   end
+    def generate_text_stream(prompt, model_name = nil, params = {}, &block)
+      raise ArgumentError, "A block is required for streaming" unless block_given?
+
+      validate_configuration!
+
+      # Extract client options
+      client_options = params.delete(:client_options) || {}
+
+      # Create the generator
+      generator = TextGeneration.new(nil, client_options)
+
+      # Store the generator for potential cancellation
+      self.last_streaming_generator = generator
+
+      # Generate with streaming
+      begin
+        generator.generate_text_stream(prompt, model_name || configuration.default_model, params, &block)
+      rescue => e
+        # Ensure all errors are wrapped in a GeminizeError
+        if e.is_a?(GeminizeError)
+          raise
+        else
+          raise GeminizeError.new("Error during text generation streaming: #{e.message}")
+        end
+      ensure
+        # Clear the reference to allow garbage collection
+        self.last_streaming_generator = nil if last_streaming_generator == generator
+      end
+    end
+
+    # Generate embeddings from text using the Gemini API
+    # @param text [String, Array<String>] The input text or array of texts
+    # @param model_name [String, nil] The model to use (optional)
+    # @param params [Hash] Additional generation parameters
+    # @option params [Integer] :dimensions Desired dimensionality of the embeddings
+    # @option params [String] :task_type The embedding task type
+    # @option params [Boolean] :with_retries Enable retries for transient errors (default: true)
+    # @option params [Integer] :max_retries Maximum retry attempts (default: 3)
+    # @option params [Float] :retry_delay Initial delay between retries in seconds (default: 1.0)
+    # @option params [Integer] :batch_size Maximum number of texts to process in one batch (default: 100)
+    # @option params [Hash] :client_options Options to pass to the client
+    # @return [Geminize::Models::EmbeddingResponse] The embedding response
+    # @raise [Geminize::GeminizeError] If the request fails
+    # @example Generate embeddings for a single text
+    #   Geminize.generate_embedding("This is a sample text")
+    # @example Generate embeddings for multiple texts
+    #   Geminize.generate_embedding(["First text", "Second text", "Third text"])
+    # @example Generate embeddings with specific dimensions
+    #   Geminize.generate_embedding("Sample text", "embedding-001", dimensions: 768)
+    # @example Process large batches with custom batch size
+    #   Geminize.generate_embedding(large_text_array, nil, batch_size: 50)
+    def generate_embedding(text, model_name = nil, params = {})
+      validate_configuration!
+
+      # Extract special options
+      with_retries = params.delete(:with_retries) != false # Default to true
+      max_retries = params.delete(:max_retries) || 3
+      retry_delay = params.delete(:retry_delay) || 1.0
+      client_options = params.delete(:client_options) || {}
+
+      # Create the embeddings generator
+      generator = Embeddings.new(nil, client_options)
+
+      # Create the embedding request - batch processing is handled in the generator
+      if with_retries
+        # Implement retry logic for embeddings
+        retries = 0
+        begin
+          generator.generate_embedding(text, model_name || configuration.default_embedding_model, params)
+        rescue Geminize::RateLimitError, Geminize::ServerError => e
+          if retries < max_retries
+            retries += 1
+            sleep retry_delay * retries # Exponential backoff
+            retry
+          else
+            raise e
+          end
+        end
+      else
+        generator.generate_embedding(text, model_name || configuration.default_embedding_model, params)
+      end
+    end
+
+    # Calculate cosine similarity between two vectors
+    # @param vec1 [Array<Float>] First vector
+    # @param vec2 [Array<Float>] Second vector
+    # @return [Float] Cosine similarity (-1 to 1)
+    # @raise [Geminize::ValidationError] If vectors have different dimensions
+    def cosine_similarity(vec1, vec2)
+      VectorUtils.cosine_similarity(vec1, vec2)
+    end
+
+    # Calculate Euclidean distance between two vectors
+    # @param vec1 [Array<Float>] First vector
+    # @param vec2 [Array<Float>] Second vector
+    # @return [Float] Euclidean distance
+    # @raise [Geminize::ValidationError] If vectors have different dimensions
+    def euclidean_distance(vec1, vec2)
+      VectorUtils.euclidean_distance(vec1, vec2)
+    end
+
+    # Normalize a vector to unit length
+    # @param vec [Array<Float>] Vector to normalize
+    # @return [Array<Float>] Normalized vector
+    def normalize_vector(vec)
+      VectorUtils.normalize(vec)
+    end
+
+    # Average multiple vectors
+    # @param vectors [Array<Array<Float>>] Array of vectors
+    # @return [Array<Float>] Average vector
+    # @raise [Geminize::ValidationError] If vectors have different dimensions or no vectors provided
+    def average_vectors(vectors)
+      VectorUtils.average_vectors(vectors)
+    end
+
     # Create a new chat conversation
     # @param title [String, nil] Optional title for the conversation
     # @param client_options [Hash] Options to pass to the client
@@ -253,15 +436,15 @@ module Geminize
       conversation_repository.delete(id)
     end
 
-    # List all available conversations
-    # @return [Array<Hash>] An array of conversation metadata
+    # List all saved conversations
+    # @return [Array<Hash>] Array of conversation metadata
     def list_conversations
       conversation_repository.list
     end
 
-    # Create a new conversation using the conversation service
+    # Create a managed conversation
     # @param title [String, nil] Optional title for the conversation
-    # @return [Geminize::Models::Conversation] The new conversation
+    # @return [Hash] The created conversation data including ID
     def create_managed_conversation(title = nil)
       validate_configuration!
       conversation_service.create_conversation(title)
@@ -272,11 +455,46 @@ module Geminize
     # @param message [String] The message to send
     # @param model_name [String, nil] The model to use (optional)
     # @param params [Hash] Additional generation parameters
-    # @return [Hash] The response and updated conversation
-    # @raise [Geminize::GeminizeError] If the request fails
+    # @return [Hash] The response data
     def send_message_in_conversation(conversation_id, message, model_name = nil, params = {})
       validate_configuration!
-      conversation_service.send_message(conversation_id, message, model_name, params)
+      conversation_service.send_message(
+        conversation_id,
+        message,
+        model_name || configuration.default_model,
+        params
+      )
+    end
+
+    # Get a list of available models from the Gemini API
+    # @param force_refresh [Boolean] Force a refresh from the API instead of using cache
+    # @param client_options [Hash] Options to pass to the client
+    # @return [Geminize::Models::ModelList] List of available models
+    # @raise [Geminize::GeminizeError] If the request fails
+    # @example Get a list of all available models
+    #   models = Geminize.list_models
+    # @example Get a fresh list bypassing cache
+    #   models = Geminize.list_models(force_refresh: true)
+    # @example Filter models by capability
+    #   vision_models = Geminize.list_models.vision_models
+    def list_models(force_refresh: false, client_options: {})
+      validate_configuration!
+      model_info = ModelInfo.new(nil, client_options)
+      model_info.list_models(force_refresh: force_refresh)
+    end
+
+    # Get information about a specific model
+    # @param model_id [String] The model ID to retrieve
+    # @param force_refresh [Boolean] Force a refresh from the API instead of using cache
+    # @param client_options [Hash] Options to pass to the client
+    # @return [Geminize::Models::Model] The model information
+    # @raise [Geminize::GeminizeError] If the request fails or model is not found
+    # @example Get information about a specific model
+    #   model = Geminize.get_model("gemini-1.5-pro")
+    def get_model(model_id, force_refresh: false, client_options: {})
+      validate_configuration!
+      model_info = ModelInfo.new(nil, client_options)
+      model_info.get_model(model_id, force_refresh: force_refresh)
     end
   end
 end

@@ -133,4 +133,53 @@ module Geminize
       )
     end
   end
+
+  # Error specific to streaming operations
+  class StreamingError < GeminizeError
+    def initialize(message = nil, code = nil, http_status = nil)
+      super(
+        message || "Streaming operation failed",
+        code || "STREAMING_ERROR",
+        http_status
+      )
+    end
+  end
+
+  # Error during connection interrupted during streaming
+  class StreamingInterruptedError < StreamingError
+    def initialize(message = nil, code = nil, http_status = nil)
+      super(
+        message || "Streaming connection was interrupted",
+        code || "STREAMING_INTERRUPTED",
+        http_status
+      )
+    end
+  end
+
+  # Error when the stream format is invalid
+  class InvalidStreamFormatError < StreamingError
+    def initialize(message = nil, code = nil, http_status = 400)
+      super(
+        message || "Invalid stream format or response structure",
+        code || "INVALID_STREAM_FORMAT",
+        http_status
+      )
+    end
+  end
+
+  # Error for timeout during streaming
+  class StreamingTimeoutError < StreamingError
+    def initialize(message = nil, code = nil, http_status = 408)
+      super(
+        message || "Streaming operation timed out",
+        code || "STREAMING_TIMEOUT",
+        http_status
+      )
+    end
+  end
+
+  # Error raised when a requested resource is not found (alias for ResourceNotFoundError)
+  class NotFoundError < ResourceNotFoundError
+    # Uses the same implementation as ResourceNotFoundError
+  end
 end
