@@ -29,6 +29,9 @@ require_relative "geminize/conversation_repository"
 require_relative "geminize/conversation_service"
 require_relative "geminize/model_info"
 
+# Conditionally load Rails integration if Rails is defined
+require_relative "geminize/rails" if defined?(::Rails)
+
 # Main module for the Geminize gem
 module Geminize
   class Error < StandardError; end

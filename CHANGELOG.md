@@ -2,6 +2,12 @@
 
 ### Added
 
+- Rails integration for easy use in Rails applications
+  - Rails engine for seamless integration
+  - Generator for creating configuration initializers
+  - Controller concerns for Gemini operations
+  - View helpers for rendering conversations and chat interfaces
+  - Comprehensive documentation and examples
 - Multimodal support for sending mixed content including text and images to the Gemini API
 - New `generate_multimodal` method at module level for simplified multimodal requests
 - Methods for adding images to content requests from files, URLs, or raw bytes
