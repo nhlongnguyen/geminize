@@ -195,6 +195,45 @@ module Geminize
       end
     end
 
+    # Generate streaming text from a prompt using the Gemini API
+    # @param prompt [String] The input prompt
+    # @param model_name [String, nil] The model to use (optional)
+    # @param params [Hash] Additional generation parameters
+    # @option params [Float] :temperature Controls randomness (0.0-1.0)
+    # @option params [Integer] :max_tokens Maximum tokens to generate
+    # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
+    # @option params [Integer] :top_k Top-k value for sampling
+    # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+    # @option params [Symbol] :stream_mode Mode for processing stream chunks (:raw or :incremental)
+    # @option params [Hash] :client_options Options to pass to the client
+    # @yield [chunk] Yields each chunk of the streaming response
+    # @yieldparam chunk [String, Hash] A chunk of the response (String for incremental mode, Hash for raw mode)
+    # @return [void]
+    # @raise [Geminize::GeminizeError] If the request fails
+    # @example Stream text with incremental mode
+    #   Geminize.generate_text_stream("Tell me a story") do |text|
+    #     print text
+    #   end
+    # @example Stream text with raw mode
+    #   Geminize.generate_text_stream("Tell me a story", nil, stream_mode: :raw) do |chunk|
+    #     # Process raw API response chunks
+    #     puts chunk.inspect
+    #   end
+    def generate_text_stream(prompt, model_name = nil, params = {}, &block)
+      raise ArgumentError, "A block is required for streaming" unless block_given?
+
+      validate_configuration!
+
+      # Extract client options
+      client_options = params.delete(:client_options) || {}
+
+      # Create the generator
+      generator = TextGeneration.new(nil, client_options)
+
+      # Generate with streaming
+      generator.generate_text_stream(prompt, model_name || configuration.default_model, params, &block)
+    end
+
     # Generate embeddings from text using the Gemini API
     # @param text [String, Array<String>] The input text or array of texts
     # @param model_name [String, nil] The model to use (optional)

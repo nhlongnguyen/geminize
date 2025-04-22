@@ -22,6 +22,7 @@ module Geminize
     # Default timeout values (in seconds)
     DEFAULT_TIMEOUT = 30
     DEFAULT_OPEN_TIMEOUT = 10
+    DEFAULT_STREAMING_TIMEOUT = 300
 
     # API key for accessing the Gemini API
     # @return [String, nil]
@@ -47,6 +48,10 @@ module Geminize
     # @return [Integer]
     attr_accessor :open_timeout
 
+    # Streaming request timeout in seconds
+    # @return [Integer]
+    attr_accessor :streaming_timeout
+
     # @return [Boolean]
     attr_accessor :log_requests
 
@@ -64,6 +69,7 @@ module Geminize
       @default_embedding_model = DEFAULT_EMBEDDING_MODEL
       @timeout = DEFAULT_TIMEOUT
       @open_timeout = DEFAULT_OPEN_TIMEOUT
+      @streaming_timeout = DEFAULT_STREAMING_TIMEOUT
       @log_requests = false
     end
 

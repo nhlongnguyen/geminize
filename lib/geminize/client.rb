@@ -55,6 +55,61 @@ module Geminize
       parse_response(response)
     end
 
+    # Make a streaming POST request to the specified endpoint
+    # @param endpoint [String] The API endpoint path
+    # @param payload [Hash] The request body
+    # @param params [Hash] Optional query parameters
+    # @param headers [Hash] Optional headers
+    # @yield [chunk] Yields each chunk of the streaming response
+    # @yieldparam chunk [String, Hash] A chunk of the response (raw text or parsed JSON)
+    # @return [void]
+    def post_stream(endpoint, payload = {}, params = {}, headers = {}, &block)
+      raise ArgumentError, "A block is required for streaming requests" unless block_given?
+
+      # Ensure we have stream=true parameter for the API
+      params = params.merge(stream: true)
+
+      # Create a separate connection for streaming
+      streaming_connection = build_streaming_connection
+
+      # Make the streaming request
+      streaming_connection.post(
+        build_url(endpoint),
+        payload.to_json,
+        default_headers.merge(headers).merge({"Content-Type" => "application/json"})
+      ) do |req|
+        req.params.merge!(add_api_key(params))
+        req.options.on_data = proc do |chunk, size, env|
+          # Skip empty chunks
+          next if chunk.strip.empty?
+
+          # Process chunks line by line
+          chunk.split("\n").each do |line|
+            # Skip empty lines
+            next if line.strip.empty?
+
+            # Check if this is an SSE data line
+            if line.start_with?("data: ")
+              # Extract data part
+              data = line[6..-1]
+
+              # Skip "[DONE]" marker
+              next if data == "[DONE]"
+
+              begin
+                # Try to parse as JSON
+                parsed_data = JSON.parse(data)
+                yield parsed_data
+              rescue JSON::ParserError
+                # If not valid JSON, yield as raw text
+                yield data
+              end
+            end
+          end
+        end
+      end
+    end
+
     private
 
     # Build the Faraday connection with the configured URL and default headers
@@ -83,6 +138,25 @@ module Geminize
         if @config.log_requests || @options[:logger]
           logger = @options[:logger] || Logger.new($stdout)
           conn.response :logger, logger, bodies: true
+        end
+      end
+    end
+
+    # Build the Faraday connection optimized for streaming with the configured URL
+    # @return [Faraday::Connection]
+    def build_streaming_connection
+      Faraday.new(url: @config.api_base_url) do |conn|
+        # Set longer timeouts for streaming connections which may stay open longer
+        conn.options.timeout = (@options[:streaming_timeout] || @config.streaming_timeout || 300)
+        conn.options.open_timeout = (@options[:open_timeout] || @config.open_timeout)
+
+        # Error handling for streaming connections
+        conn.response :geminize_error_handler
+
+        # Add logging if enabled
+        if @config.log_requests || @options[:logger]
+          logger = @options[:logger] || Logger.new($stdout)
+          conn.response :logger, logger, bodies: false
         end
       end
     end

@@ -48,6 +48,50 @@ module Geminize
       generate(content_request)
     end
 
+    # Generate a streaming text response from a prompt string with optional parameters
+    # @param prompt [String] The input prompt
+    # @param model_name [String, nil] The model to use (optional)
+    # @param params [Hash] Additional generation parameters
+    # @option params [Float] :temperature Controls randomness (0.0-1.0)
+    # @option params [Integer] :max_tokens Maximum tokens to generate
+    # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
+    # @option params [Integer] :top_k Top-k value for sampling
+    # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+    # @option params [Symbol] :stream_mode Mode for processing stream chunks (:raw or :incremental)
+    # @yield [chunk] Yields each chunk of the streaming response
+    # @yieldparam chunk [String, Hash] A chunk of the response
+    # @return [void]
+    # @raise [Geminize::GeminizeError] If the request fails
+    # @example Generate text with streaming, yielding each chunk
+    #   text_generation.generate_text_stream("Tell me a story") do |chunk|
+    #     puts chunk
+    #   end
+    # @example Generate text with incremental mode
+    #   accumulated_text = ""
+    #   text_generation.generate_text_stream("Tell me a story", nil, stream_mode: :incremental) do |text|
+    #     # text contains the full response so far
+    #     print "\r#{text}"
+    #   end
+    def generate_text_stream(prompt, model_name = nil, params = {}, &block)
+      raise ArgumentError, "A block is required for streaming" unless block_given?
+
+      # Extract stream processing mode
+      stream_mode = params.delete(:stream_mode) || :incremental
+      unless [:raw, :incremental].include?(stream_mode)
+        raise ArgumentError, "Invalid stream_mode. Must be :raw or :incremental"
+      end
+
+      # Create the content request
+      content_request = Models::ContentRequest.new(
+        prompt,
+        model_name || Geminize.configuration.default_model,
+        params
+      )
+
+      # Generate with streaming
+      generate_stream(content_request, stream_mode, &block)
+    end
+
     # Generate content with both text and images
     # @param prompt [String] The input prompt text
     # @param images [Array<Hash>] Array of image data hashes
@@ -117,6 +161,40 @@ module Geminize
           retry
         else
           raise e
+        end
+      end
+    end
+
+    private
+
+    # Generate text with streaming from a content request
+    # @param content_request [Geminize::Models::ContentRequest] The content request
+    # @param stream_mode [Symbol] The stream processing mode (:raw or :incremental)
+    # @yield [chunk] Yields each chunk of the streaming response
+    # @yieldparam chunk [String, Hash] A chunk of the response
+    # @return [void]
+    # @raise [Geminize::GeminizeError] If the request fails
+    def generate_stream(content_request, stream_mode = :incremental, &block)
+      model_name = content_request.model_name
+      endpoint = RequestBuilder.build_text_generation_endpoint(model_name)
+      payload = RequestBuilder.build_text_generation_request(content_request)
+
+      # For incremental mode, we'll accumulate the response
+      accumulated_text = "" if stream_mode == :incremental
+
+      @client.post_stream(endpoint, payload) do |chunk|
+        if stream_mode == :raw
+          # Raw mode - yield the chunk as-is
+          yield chunk
+        else
+          # Incremental mode - extract and accumulate text
+          if chunk.is_a?(Hash) && chunk["candidates"] && chunk["candidates"][0] &&
+             chunk["candidates"][0]["content"] && chunk["candidates"][0]["content"]["parts"] &&
+             chunk["candidates"][0]["content"]["parts"][0] && chunk["candidates"][0]["content"]["parts"][0]["text"]
+            text_chunk = chunk["candidates"][0]["content"]["parts"][0]["text"]
+            accumulated_text += text_chunk
+            yield accumulated_text
+          end
         end
       end
     end
