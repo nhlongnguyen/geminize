@@ -205,20 +205,36 @@ module Geminize
     # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
     # @option params [Integer] :top_k Top-k value for sampling
     # @option params [Array<String>] :stop_sequences Stop sequences to end generation
-    # @option params [Symbol] :stream_mode Mode for processing stream chunks (:raw or :incremental)
+    # @option params [Symbol] :stream_mode Mode for processing stream chunks (:raw, :incremental, or :delta)
     # @option params [Hash] :client_options Options to pass to the client
     # @yield [chunk] Yields each chunk of the streaming response
-    # @yieldparam chunk [String, Hash] A chunk of the response (String for incremental mode, Hash for raw mode)
+    # @yieldparam chunk [String, Hash] A chunk of the response
     # @return [void]
     # @raise [Geminize::GeminizeError] If the request fails
-    # @example Stream text with incremental mode
+    # @example Stream text with incremental mode (default)
     #   Geminize.generate_text_stream("Tell me a story") do |text|
-    #     print text
+    #     # text contains full response accumulated so far
+    #     print "\r#{text}"
     #   end
-    # @example Stream text with raw mode
+    # @example Stream text with delta mode (only new content in each chunk)
+    #   Geminize.generate_text_stream("Tell me a story", nil, stream_mode: :delta) do |chunk|
+    #     # chunk contains only the new content in this chunk
+    #     print chunk
+    #   end
+    # @example Stream text with raw mode (original API response chunks)
     #   Geminize.generate_text_stream("Tell me a story", nil, stream_mode: :raw) do |chunk|
     #     # Process raw API response chunks
     #     puts chunk.inspect
+    #   end
+    # @example Handle the final response with usage metrics
+    #   Geminize.generate_text_stream("Tell me a story") do |chunk|
+    #     if chunk.is_a?(Hash) && chunk[:usage]
+    #       # This is the final chunk with usage metrics
+    #       puts "\nUsage: #{chunk[:usage][:total_tokens]} tokens"
+    #     else
+    #       # Regular text chunk
+    #       print chunk
+    #     end
     #   end
     def generate_text_stream(prompt, model_name = nil, params = {}, &block)
       raise ArgumentError, "A block is required for streaming" unless block_given?

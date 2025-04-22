@@ -57,7 +57,7 @@ module Geminize
     # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
     # @option params [Integer] :top_k Top-k value for sampling
     # @option params [Array<String>] :stop_sequences Stop sequences to end generation
-    # @option params [Symbol] :stream_mode Mode for processing stream chunks (:raw or :incremental)
+    # @option params [Symbol] :stream_mode Mode for processing stream chunks (:raw, :incremental, or :delta)
     # @yield [chunk] Yields each chunk of the streaming response
     # @yieldparam chunk [String, Hash] A chunk of the response
     # @return [void]
@@ -72,13 +72,18 @@ module Geminize
     #     # text contains the full response so far
     #     print "\r#{text}"
     #   end
+    # @example Generate text with delta mode (only new content)
+    #   text_generation.generate_text_stream("Tell me a story", nil, stream_mode: :delta) do |new_text|
+    #     # new_text contains only the new content in this chunk
+    #     print new_text
+    #   end
     def generate_text_stream(prompt, model_name = nil, params = {}, &block)
       raise ArgumentError, "A block is required for streaming" unless block_given?
 
       # Extract stream processing mode
       stream_mode = params.delete(:stream_mode) || :incremental
-      unless [:raw, :incremental].include?(stream_mode)
-        raise ArgumentError, "Invalid stream_mode. Must be :raw or :incremental"
+      unless [:raw, :incremental, :delta].include?(stream_mode)
+        raise ArgumentError, "Invalid stream_mode. Must be :raw, :incremental, or :delta"
       end
 
       # Create the content request
@@ -169,9 +174,9 @@ module Geminize
 
     # Generate text with streaming from a content request
     # @param content_request [Geminize::Models::ContentRequest] The content request
-    # @param stream_mode [Symbol] The stream processing mode (:raw or :incremental)
+    # @param stream_mode [Symbol] The stream processing mode (:raw, :incremental, or :delta)
     # @yield [chunk] Yields each chunk of the streaming response
-    # @yieldparam chunk [String, Hash] A chunk of the response
+    # @yieldparam chunk [String, Hash, StreamResponse] A chunk of the response
     # @return [void]
     # @raise [Geminize::GeminizeError] If the request fails
     def generate_stream(content_request, stream_mode = :incremental, &block)
@@ -180,13 +185,14 @@ module Geminize
       payload = RequestBuilder.build_text_generation_request(content_request)
 
       # For incremental mode, we'll accumulate the response
-      accumulated_text = "" if stream_mode == :incremental
+      accumulated_text = "" if [:incremental, :delta].include?(stream_mode)
 
       @client.post_stream(endpoint, payload) do |chunk|
-        if stream_mode == :raw
+        case stream_mode
+        when :raw
           # Raw mode - yield the chunk as-is
           yield chunk
-        else
+        when :incremental
           # Incremental mode - extract and accumulate text
           stream_response = Models::StreamResponse.from_hash(chunk)
 
@@ -196,10 +202,45 @@ module Geminize
             yield accumulated_text
           end
 
-          # If this is the final chunk with a finish reason, you could handle it specially
-          # e.g. by yielding an object with the finish reason
-          if stream_response.final_chunk?
-            # You could do something special with the final chunk if needed
+          # If this is the final chunk with a finish reason or usage metrics, yield them
+          if stream_response.final_chunk? && stream_response.has_usage_metrics?
+            # Yield a hash with usage metrics and the final text
+            yield({
+              text: accumulated_text,
+              finish_reason: stream_response.finish_reason,
+              usage: {
+                prompt_tokens: stream_response.prompt_tokens,
+                completion_tokens: stream_response.completion_tokens,
+                total_tokens: stream_response.total_tokens
+              }
+            })
+          end
+        when :delta
+          # Delta mode - extract and yield only the new text
+          stream_response = Models::StreamResponse.from_hash(chunk)
+
+          # Only process and yield if there's text content in this chunk
+          if stream_response.text
+            previous_length = accumulated_text.length
+            accumulated_text += stream_response.text
+
+            # Extract only the new content and yield it
+            new_content = accumulated_text[previous_length..-1]
+            yield new_content unless new_content.empty?
+          end
+
+          # If this is the final chunk with a finish reason or usage metrics, yield them
+          if stream_response.final_chunk? && stream_response.has_usage_metrics?
+            # Yield a hash with usage metrics and the final text
+            yield({
+              text: accumulated_text,
+              finish_reason: stream_response.finish_reason,
+              usage: {
+                prompt_tokens: stream_response.prompt_tokens,
+                completion_tokens: stream_response.completion_tokens,
+                total_tokens: stream_response.total_tokens
+              }
+            })
           end
         end
       end
