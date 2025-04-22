@@ -133,4 +133,9 @@ module Geminize
       )
     end
   end
+
+  # Error raised when a requested resource is not found (alias for ResourceNotFoundError)
+  class NotFoundError < ResourceNotFoundError
+    # Uses the same implementation as ResourceNotFoundError
+  end
 end

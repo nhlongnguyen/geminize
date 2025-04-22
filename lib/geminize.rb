@@ -8,6 +8,8 @@ require_relative "geminize/error_parser"
 require_relative "geminize/error_mapper"
 require_relative "geminize/middleware/error_handler"
 require_relative "geminize/client"
+require_relative "geminize/models/model"
+require_relative "geminize/models/model_list"
 require_relative "geminize/models/content_request"
 require_relative "geminize/models/content_response"
 require_relative "geminize/models/chat_request"
@@ -24,6 +26,7 @@ require_relative "geminize/embeddings"
 require_relative "geminize/chat"
 require_relative "geminize/conversation_repository"
 require_relative "geminize/conversation_service"
+require_relative "geminize/model_info"
 
 # Main module for the Geminize gem
 module Geminize
@@ -371,6 +374,37 @@ module Geminize
         model_name || configuration.default_model,
         params
       )
+    end
+
+    # Get a list of available models from the Gemini API
+    # @param force_refresh [Boolean] Force a refresh from the API instead of using cache
+    # @param client_options [Hash] Options to pass to the client
+    # @return [Geminize::Models::ModelList] List of available models
+    # @raise [Geminize::GeminizeError] If the request fails
+    # @example Get a list of all available models
+    #   models = Geminize.list_models
+    # @example Get a fresh list bypassing cache
+    #   models = Geminize.list_models(force_refresh: true)
+    # @example Filter models by capability
+    #   vision_models = Geminize.list_models.vision_models
+    def list_models(force_refresh: false, client_options: {})
+      validate_configuration!
+      model_info = ModelInfo.new(nil, client_options)
+      model_info.list_models(force_refresh: force_refresh)
+    end
+
+    # Get information about a specific model
+    # @param model_id [String] The model ID to retrieve
+    # @param force_refresh [Boolean] Force a refresh from the API instead of using cache
+    # @param client_options [Hash] Options to pass to the client
+    # @return [Geminize::Models::Model] The model information
+    # @raise [Geminize::GeminizeError] If the request fails or model is not found
+    # @example Get information about a specific model
+    #   model = Geminize.get_model("gemini-1.5-pro")
+    def get_model(model_id, force_refresh: false, client_options: {})
+      validate_configuration!
+      model_info = ModelInfo.new(nil, client_options)
+      model_info.get_model(model_id, force_refresh: force_refresh)
     end
   end
 end
