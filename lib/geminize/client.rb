@@ -64,6 +64,10 @@ module Geminize
     # @yield [chunk] Yields each chunk of the streaming response
     # @yieldparam chunk [String, Hash] A chunk of the response (raw text or parsed JSON)
     # @return [void]
+    # @raise [Geminize::StreamingError] If the streaming request fails
+    # @raise [Geminize::StreamingInterruptedError] If the connection is interrupted
+    # @raise [Geminize::StreamingTimeoutError] If the streaming connection times out
+    # @raise [Geminize::InvalidStreamFormatError] If the stream format is invalid
     def post_stream(endpoint, payload = {}, params = {}, headers = {}, &block)
       raise ArgumentError, "A block is required for streaming requests" unless block_given?
 
@@ -73,29 +77,56 @@ module Geminize
       # Create a separate connection for streaming
       streaming_connection = build_streaming_connection
 
-      # Make the streaming request
-      streaming_connection.post(
-        build_url(endpoint),
-        payload.to_json,
-        default_headers.merge(headers).merge({
-          "Content-Type" => "application/json",
-          "Accept" => "text/event-stream" # Request SSE format explicitly
-        })
-      ) do |req|
-        req.params.merge!(add_api_key(params))
+      # Initialize buffer for SSE processing
+      @buffer = ""
 
-        # Configure buffer management and chunked transfer reception
-        req.options.on_data = proc do |chunk, size, env|
-          # Skip empty chunks
-          next if chunk.strip.empty?
+      # Track if we've received any data
+      received_data = false
 
-          # Use a buffer for handling partial SSE messages
-          @buffer ||= ""
-          @buffer += chunk
+      begin
+        # Make the streaming request
+        streaming_connection.post(
+          build_url(endpoint),
+          payload.to_json,
+          default_headers.merge(headers).merge({
+            "Content-Type" => "application/json",
+            "Accept" => "text/event-stream" # Request SSE format explicitly
+          })
+        ) do |req|
+          req.params.merge!(add_api_key(params))
 
-          # Process complete SSE messages in buffer
-          process_buffer(&block)
+          # Configure buffer management and chunked transfer reception
+          req.options.on_data = proc do |chunk, size, env|
+            received_data = true
+
+            # Skip empty chunks
+            next if chunk.strip.empty?
+
+            # Use a buffer for handling partial SSE messages
+            @buffer += chunk
+
+            # Process complete SSE messages in buffer
+            process_buffer(&block)
+          end
         end
+      rescue Faraday::ConnectionFailed => e
+        # Connection was established but interrupted
+        if received_data
+          raise StreamingInterruptedError.new("Streaming connection interrupted: #{e.message}")
+        else
+          raise RequestError.new("Failed to establish streaming connection: #{e.message}", "CONNECTION_ERROR", nil)
+        end
+      rescue Faraday::TimeoutError => e
+        raise StreamingTimeoutError.new("Streaming operation timed out: #{e.message}")
+      rescue JSON::ParserError => e
+        raise InvalidStreamFormatError.new("Could not parse streaming response: #{e.message}")
+      rescue StandardError => e
+        # Generic error handler
+        error_message = "Streaming error: #{e.message}"
+        raise StreamingError.new(error_message, nil, nil)
+      ensure
+        # Always clean up the buffer
+        @buffer = nil
       end
     end
 

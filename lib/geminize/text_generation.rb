@@ -187,62 +187,85 @@ module Geminize
       # For incremental mode, we'll accumulate the response
       accumulated_text = "" if [:incremental, :delta].include?(stream_mode)
 
-      @client.post_stream(endpoint, payload) do |chunk|
-        case stream_mode
-        when :raw
-          # Raw mode - yield the chunk as-is
-          yield chunk
-        when :incremental
-          # Incremental mode - extract and accumulate text
-          stream_response = Models::StreamResponse.from_hash(chunk)
+      # Track if we received any non-error chunks
+      received_successful_chunks = false
 
-          # Only process and yield if there's text content in this chunk
-          if stream_response.text
-            accumulated_text += stream_response.text
-            yield accumulated_text
-          end
+      begin
+        @client.post_stream(endpoint, payload) do |chunk|
+          received_successful_chunks = true
 
-          # If this is the final chunk with a finish reason or usage metrics, yield them
-          if stream_response.final_chunk? && stream_response.has_usage_metrics?
-            # Yield a hash with usage metrics and the final text
-            yield({
-              text: accumulated_text,
-              finish_reason: stream_response.finish_reason,
-              usage: {
-                prompt_tokens: stream_response.prompt_tokens,
-                completion_tokens: stream_response.completion_tokens,
-                total_tokens: stream_response.total_tokens
-              }
-            })
-          end
-        when :delta
-          # Delta mode - extract and yield only the new text
-          stream_response = Models::StreamResponse.from_hash(chunk)
+          case stream_mode
+          when :raw
+            # Raw mode - yield the chunk as-is
+            yield chunk
+          when :incremental
+            # Incremental mode - extract and accumulate text
+            stream_response = Models::StreamResponse.from_hash(chunk)
 
-          # Only process and yield if there's text content in this chunk
-          if stream_response.text
-            previous_length = accumulated_text.length
-            accumulated_text += stream_response.text
+            # Only process and yield if there's text content in this chunk
+            if stream_response.text
+              accumulated_text += stream_response.text
+              yield accumulated_text
+            end
 
-            # Extract only the new content and yield it
-            new_content = accumulated_text[previous_length..-1]
-            yield new_content unless new_content.empty?
-          end
+            # If this is the final chunk with a finish reason or usage metrics, yield them
+            if stream_response.final_chunk? && stream_response.has_usage_metrics?
+              # Yield a hash with usage metrics and the final text
+              yield({
+                text: accumulated_text,
+                finish_reason: stream_response.finish_reason,
+                usage: {
+                  prompt_tokens: stream_response.prompt_tokens,
+                  completion_tokens: stream_response.completion_tokens,
+                  total_tokens: stream_response.total_tokens
+                }
+              })
+            end
+          when :delta
+            # Delta mode - extract and yield only the new text
+            stream_response = Models::StreamResponse.from_hash(chunk)
 
-          # If this is the final chunk with a finish reason or usage metrics, yield them
-          if stream_response.final_chunk? && stream_response.has_usage_metrics?
-            # Yield a hash with usage metrics and the final text
-            yield({
-              text: accumulated_text,
-              finish_reason: stream_response.finish_reason,
-              usage: {
-                prompt_tokens: stream_response.prompt_tokens,
-                completion_tokens: stream_response.completion_tokens,
-                total_tokens: stream_response.total_tokens
-              }
-            })
+            # Only process and yield if there's text content in this chunk
+            if stream_response.text
+              previous_length = accumulated_text.length
+              accumulated_text += stream_response.text
+
+              # Extract only the new content and yield it
+              new_content = accumulated_text[previous_length..-1]
+              yield new_content unless new_content.empty?
+            end
+
+            # If this is the final chunk with a finish reason or usage metrics, yield them
+            if stream_response.final_chunk? && stream_response.has_usage_metrics?
+              # Yield a hash with usage metrics and the final text
+              yield({
+                text: accumulated_text,
+                finish_reason: stream_response.finish_reason,
+                usage: {
+                  prompt_tokens: stream_response.prompt_tokens,
+                  completion_tokens: stream_response.completion_tokens,
+                  total_tokens: stream_response.total_tokens
+                }
+              })
+            end
           end
         end
+      rescue StreamingError, StreamingInterruptedError, StreamingTimeoutError, InvalidStreamFormatError => e
+        # For specialized streaming errors, add context and re-raise
+        error_message = "Streaming error: #{e.message}"
+
+        # If we had already received some chunks, add the partial response to the error information
+        if received_successful_chunks && accumulated_text && !accumulated_text.empty?
+          error_message += " (Partial response received: #{accumulated_text.length} characters)"
+          raise e.class.new(error_message, e.code, e.http_status)
+        else
+          # No chunks received, just re-raise the original error
+          raise
+        end
+      rescue => e
+        # For other errors, wrap in a GeminizeError
+        error_message = "Error during text generation streaming: #{e.message}"
+        raise GeminizeError.new(error_message)
       end
     end
   end

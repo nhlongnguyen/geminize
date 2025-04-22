@@ -211,6 +211,10 @@ module Geminize
     # @yieldparam chunk [String, Hash] A chunk of the response
     # @return [void]
     # @raise [Geminize::GeminizeError] If the request fails
+    # @raise [Geminize::StreamingError] If the streaming request fails
+    # @raise [Geminize::StreamingInterruptedError] If the connection is interrupted
+    # @raise [Geminize::StreamingTimeoutError] If the streaming connection times out
+    # @raise [Geminize::InvalidStreamFormatError] If the stream format is invalid
     # @example Stream text with incremental mode (default)
     #   Geminize.generate_text_stream("Tell me a story") do |text|
     #     # text contains full response accumulated so far
@@ -248,7 +252,16 @@ module Geminize
       generator = TextGeneration.new(nil, client_options)
 
       # Generate with streaming
-      generator.generate_text_stream(prompt, model_name || configuration.default_model, params, &block)
+      begin
+        generator.generate_text_stream(prompt, model_name || configuration.default_model, params, &block)
+      rescue => e
+        # Ensure all errors are wrapped in a GeminizeError
+        if e.is_a?(GeminizeError)
+          raise
+        else
+          raise GeminizeError.new("Error during text generation streaming: #{e.message}")
+        end
+      end
     end
 
     # Generate embeddings from text using the Gemini API
