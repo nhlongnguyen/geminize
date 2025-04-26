@@ -74,18 +74,29 @@ module Geminize
 
     # Start a new conversation and store its ID in the session
     # @param title [String, nil] Optional title for the conversation
+    # @param system_instruction [String, nil] Optional system instruction to guide model behavior
     # @return [Geminize::Models::Conversation] The new conversation
-    def reset_gemini_conversation(title = nil)
-      create_new_gemini_conversation(title)
+    def reset_gemini_conversation(title = nil, system_instruction = nil)
+      create_new_gemini_conversation(title, system_instruction)
+    end
+
+    # Set the system instruction for the current conversation
+    # @param system_instruction [String] The system instruction to set
+    # @return [Geminize::Models::Conversation] The updated conversation
+    def set_gemini_system_instruction(system_instruction)
+      current_gemini_conversation.system_instruction = system_instruction
+      Geminize.save_conversation(current_gemini_conversation)
+      current_gemini_conversation
     end
 
     private
 
     # Create a new conversation and store its ID in the session
     # @param title [String, nil] Optional title for the conversation
+    # @param system_instruction [String, nil] Optional system instruction to guide model behavior
     # @return [Geminize::Models::Conversation] The new conversation
-    def create_new_gemini_conversation(title = nil)
-      @current_gemini_conversation = Geminize.create_chat(title)
+    def create_new_gemini_conversation(title = nil, system_instruction = nil)
+      @current_gemini_conversation = Geminize.create_chat(title, system_instruction)
       session[:gemini_conversation_id] = @current_gemini_conversation.id
       Geminize.save_conversation(@current_gemini_conversation)
       @current_gemini_conversation

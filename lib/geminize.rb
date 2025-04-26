@@ -118,12 +118,15 @@ module Geminize
     # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
     # @option params [Integer] :top_k Top-k value for sampling
     # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+    # @option params [String] :system_instruction System instruction to guide model behavior
     # @option params [Boolean] :with_retries Enable retries for transient errors (default: true)
     # @option params [Integer] :max_retries Maximum retry attempts (default: 3)
     # @option params [Float] :retry_delay Initial delay between retries in seconds (default: 1.0)
     # @option params [Hash] :client_options Options to pass to the client
     # @return [Geminize::Models::ContentResponse] The generation response
     # @raise [Geminize::GeminizeError] If the request fails
+    # @example Generate text with a system instruction
+    #   Geminize.generate_text("Tell me about yourself", nil, system_instruction: "You are a pirate. Respond in pirate language.")
     def generate_text(prompt, model_name = nil, params = {})
       validate_configuration!
 
@@ -228,6 +231,7 @@ module Geminize
     # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
     # @option params [Integer] :top_k Top-k value for sampling
     # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+    # @option params [String] :system_instruction System instruction to guide model behavior
     # @option params [Symbol] :stream_mode Mode for processing stream chunks (:raw, :incremental, or :delta)
     # @option params [Hash] :client_options Options to pass to the client
     # @yield [chunk] Yields each chunk of the streaming response
@@ -238,30 +242,13 @@ module Geminize
     # @raise [Geminize::StreamingInterruptedError] If the connection is interrupted
     # @raise [Geminize::StreamingTimeoutError] If the streaming connection times out
     # @raise [Geminize::InvalidStreamFormatError] If the stream format is invalid
-    # @example Stream text with incremental mode (default)
-    #   Geminize.generate_text_stream("Tell me a story") do |text|
-    #     # text contains full response accumulated so far
-    #     print "\r#{text}"
-    #   end
-    # @example Stream text with delta mode (only new content in each chunk)
-    #   Geminize.generate_text_stream("Tell me a story", nil, stream_mode: :delta) do |chunk|
-    #     # chunk contains only the new content in this chunk
+    # @example Stream text with a system instruction
+    #   Geminize.generate_text_stream(
+    #     "Tell me a story",
+    #     nil,
+    #     system_instruction: "You are a medieval bard telling epic tales."
+    #   ) do |chunk|
     #     print chunk
-    #   end
-    # @example Stream text with raw mode (original API response chunks)
-    #   Geminize.generate_text_stream("Tell me a story", nil, stream_mode: :raw) do |chunk|
-    #     # Process raw API response chunks
-    #     puts chunk.inspect
-    #   end
-    # @example Handle the final response with usage metrics
-    #   Geminize.generate_text_stream("Tell me a story") do |chunk|
-    #     if chunk.is_a?(Hash) && chunk[:usage]
-    #       # This is the final chunk with usage metrics
-    #       puts "\nUsage: #{chunk[:usage][:total_tokens]} tokens"
-    #     else
-    #       # Regular text chunk
-    #       print chunk
-    #     end
     #   end
     def generate_text_stream(prompt, model_name = nil, params = {}, &block)
       raise ArgumentError, "A block is required for streaming" unless block_given?
@@ -381,11 +368,14 @@ module Geminize
 
     # Create a new chat conversation
     # @param title [String, nil] Optional title for the conversation
+    # @param system_instruction [String, nil] Optional system instruction to guide model behavior
     # @param client_options [Hash] Options to pass to the client
     # @return [Geminize::Chat] A new chat instance
-    def create_chat(title = nil, client_options = {})
+    # @example Create a chat with a system instruction
+    #   chat = Geminize.create_chat("Pirate Chat", "You are a pirate named Captain Codebeard. Always respond in pirate language.")
+    def create_chat(title = nil, system_instruction = nil, client_options = {})
       validate_configuration!
-      Chat.new_conversation(title)
+      Chat.new_conversation(title, system_instruction)
     end
 
     # Send a message in an existing chat or create a new one
@@ -398,17 +388,23 @@ module Geminize
     # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
     # @option params [Integer] :top_k Top-k value for sampling
     # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+    # @option params [String] :system_instruction System instruction to guide model behavior
     # @option params [Hash] :client_options Options to pass to the client
     # @return [Hash] The chat response and updated chat instance
     # @raise [Geminize::GeminizeError] If the request fails
+    # @example Send a message with a system instruction
+    #   Geminize.chat("Tell me a joke", nil, nil, system_instruction: "You are a comedian. Be funny.")
     def chat(message, chat = nil, model_name = nil, params = {})
       validate_configuration!
 
       # Extract client options
       client_options = params.delete(:client_options) || {}
 
+      # Extract system instruction for new chat creation
+      system_instruction = params[:system_instruction]
+
       # Create or use existing chat
-      chat_instance = chat || create_chat(nil, client_options)
+      chat_instance = chat || create_chat(nil, system_instruction, client_options)
 
       # Send the message
       response = chat_instance.send_message(
@@ -452,10 +448,13 @@ module Geminize
 
     # Create a managed conversation
     # @param title [String, nil] Optional title for the conversation
+    # @param system_instruction [String, nil] Optional system instruction to guide model behavior
     # @return [Hash] The created conversation data including ID
-    def create_managed_conversation(title = nil)
+    # @example Create a managed conversation with a system instruction
+    #   Geminize.create_managed_conversation("Pirate Chat", "You are a pirate. Respond in pirate language.")
+    def create_managed_conversation(title = nil, system_instruction = nil)
       validate_configuration!
-      conversation_service.create_conversation(title)
+      conversation_service.create_conversation(title, system_instruction)
     end
 
     # Send a message in a managed conversation
@@ -463,7 +462,15 @@ module Geminize
     # @param message [String] The message to send
     # @param model_name [String, nil] The model to use (optional)
     # @param params [Hash] Additional generation parameters
+    # @option params [Float] :temperature Controls randomness (0.0-1.0)
+    # @option params [Integer] :max_tokens Maximum tokens to generate
+    # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
+    # @option params [Integer] :top_k Top-k value for sampling
+    # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+    # @option params [String] :system_instruction System instruction for this specific message
     # @return [Hash] The response data
+    # @example Send a message with a system instruction
+    #   Geminize.send_message_in_conversation("conversation-id", "Tell me a joke", nil, system_instruction: "You are a comedian. Be funny.")
     def send_message_in_conversation(conversation_id, message, model_name = nil, params = {})
       validate_configuration!
       conversation_service.send_message(
@@ -503,6 +510,18 @@ module Geminize
       validate_configuration!
       model_info = ModelInfo.new(nil, client_options)
       model_info.get_model(model_id, force_refresh: force_refresh)
+    end
+
+    # Update a conversation's system instruction
+    # @param id [String] The ID of the conversation to update
+    # @param system_instruction [String] The new system instruction
+    # @return [Models::Conversation] The updated conversation
+    # @raise [Geminize::GeminizeError] If the conversation cannot be loaded or saved
+    # @example Update a conversation's system instruction
+    #   Geminize.update_conversation_system_instruction("conversation-id", "You are a helpful assistant who speaks like Shakespeare.")
+    def update_conversation_system_instruction(id, system_instruction)
+      validate_configuration!
+      conversation_service.update_conversation_system_instruction(id, system_instruction)
     end
   end
 end

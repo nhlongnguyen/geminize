@@ -28,6 +28,7 @@ module Geminize
     # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
     # @option params [Integer] :top_k Top-k value for sampling
     # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+    # @option params [String] :system_instruction System instruction to guide model behavior
     # @return [Models::ChatResponse] The chat response
     # @raise [Geminize::GeminizeError] If the request fails
     def send_message(content, model_name = nil, params = {})
@@ -35,11 +36,18 @@ module Geminize
       @conversation.add_user_message(content)
 
       # Create the chat request
+      request_params = params.dup
+
+      # Only include system_instruction in params if explicitly provided or set in conversation
+      if params[:system_instruction] || @conversation.system_instruction
+        request_params[:system_instruction] = params[:system_instruction] || @conversation.system_instruction
+      end
+
       chat_request = Models::ChatRequest.new(
         content,
         model_name || Geminize.configuration.default_model,
         nil, # user_id
-        params
+        request_params
       )
 
       # Generate the response using the conversation history
@@ -51,6 +59,14 @@ module Geminize
       end
 
       response
+    end
+
+    # Set a system instruction for the conversation
+    # @param instruction [String] The system instruction
+    # @return [self] The chat instance
+    def set_system_instruction(instruction)
+      @conversation.system_instruction = instruction
+      self
     end
 
     # Generate a response based on the current conversation
@@ -71,9 +87,11 @@ module Geminize
 
     # Create a new conversation
     # @param title [String, nil] Optional title for the conversation
+    # @param system_instruction [String, nil] Optional system instruction
     # @return [Chat] A new chat instance with a fresh conversation
-    def self.new_conversation(title = nil)
-      conversation = Models::Conversation.new(nil, title)
+    def self.new_conversation(title = nil, system_instruction = nil)
+      # Create a conversation with explicit parameters
+      conversation = Models::Conversation.new(nil, title, nil, nil, system_instruction)
       new(conversation)
     end
   end

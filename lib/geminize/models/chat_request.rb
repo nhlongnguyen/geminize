@@ -31,6 +31,9 @@ module Geminize
       # @return [Array<String>] Stop sequences to end generation
       attr_accessor :stop_sequences
 
+      # @return [String, nil] System instruction to guide model behavior
+      attr_accessor :system_instruction
+
       # Initialize a new chat request
       # @param content [String] The user's message content
       # @param model_name [String, nil] The model name to use
@@ -41,6 +44,7 @@ module Geminize
       # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
       # @option params [Integer] :top_k Top-k value for sampling
       # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+      # @option params [String] :system_instruction System instruction to guide model behavior
       def initialize(content, model_name = nil, user_id = nil, params = {})
         @content = content
         @model_name = model_name || Geminize.configuration.default_model
@@ -51,6 +55,7 @@ module Geminize
         @top_p = params[:top_p]
         @top_k = params[:top_k]
         @stop_sequences = params[:stop_sequences]
+        @system_instruction = params[:system_instruction]
 
         validate!
       end
@@ -65,6 +70,7 @@ module Geminize
         validate_top_p!
         validate_top_k!
         validate_stop_sequences!
+        validate_system_instruction!
         true
       end
 
@@ -85,10 +91,23 @@ module Geminize
       # @param history [Array<Hash>] Previous messages in the conversation
       # @return [Hash] The request as a hash
       def to_hash(history = [])
-        {
+        request = {
           contents: history + [to_message_hash],
           generationConfig: generation_config
         }.compact
+
+        # Add system_instruction if provided
+        if @system_instruction
+          request[:systemInstruction] = {
+            parts: [
+              {
+                text: @system_instruction
+              }
+            ]
+          }
+        end
+
+        request
       end
 
       # Alias for to_hash for consistency with Ruby conventions
@@ -117,6 +136,20 @@ module Geminize
       # @raise [Geminize::ValidationError] If the content is invalid
       def validate_content!
         Validators.validate_not_empty!(@content, "Content")
+      end
+
+      # Validate the system_instruction parameter
+      # @raise [Geminize::ValidationError] If the system_instruction is invalid
+      def validate_system_instruction!
+        return if @system_instruction.nil?
+
+        unless @system_instruction.is_a?(String)
+          raise Geminize::ValidationError.new("System instruction must be a string", "INVALID_ARGUMENT")
+        end
+
+        if @system_instruction.empty?
+          raise Geminize::ValidationError.new("System instruction cannot be empty", "INVALID_ARGUMENT")
+        end
       end
 
       # Validate the temperature parameter

@@ -136,6 +136,14 @@ puts response.text
 # Use a specific model
 response = Geminize.generate_text("Explain quantum computing", "gemini-2.0-flash")
 puts response.text
+
+# Use system instructions to guide the model's behavior
+response = Geminize.generate_text(
+  "Tell me about yourself",
+  "gemini-2.0-flash",
+  system_instruction: "You are a pirate named Captain Codebeard. Always respond in pirate language."
+)
+puts response.text
 ```
 
 ## Multimodal Support
@@ -184,6 +192,9 @@ request.add_image_from_url('https://example.com/image2.jpg')
 # Read image directly into bytes
 image_bytes = File.binread('path/to/image3.jpg')
 request.add_image_from_bytes(image_bytes, 'image/jpeg')
+
+# Set a system instruction to guide model behavior
+request.system_instruction = "You are a professional photography critic. Analyze the composition and technical aspects of these images."
 
 # Generate the response
 generator = Geminize::TextGeneration.new
@@ -264,6 +275,21 @@ Get real-time, token-by-token responses:
 ```ruby
 Geminize.generate_text_stream("Write a short poem about coding") do |chunk|
   print chunk.text
+end
+```
+
+You can also use system instructions with streaming responses:
+
+```ruby
+Geminize.generate_text_stream(
+  "Tell me a story",
+  "gemini-2.0-flash",
+  {
+    stream_mode: :delta,
+    system_instruction: "You are a medieval bard telling epic tales."
+  }
+) do |chunk|
+  print chunk
 end
 ```
 
@@ -369,6 +395,7 @@ Check out these example applications to see Geminize in action:
 - [Basic Chatbot](examples/chatbot.rb)
 - [Image Analysis](examples/image_analysis.rb)
 - [Semantic Search](examples/semantic_search.rb)
+- [System Instructions](examples/system_instructions.rb)
 - [Rails Chat Application](examples/rails_chat) (coming soon)
 
 ## Compatibility

@@ -21,9 +21,15 @@ module Geminize
 
     # Create a new conversation
     # @param title [String, nil] Optional title for the conversation
+    # @param system_instruction [String, nil] Optional system instruction to guide model behavior
     # @return [Models::Conversation] The new conversation
-    def create_conversation(title = nil)
-      conversation = Models::Conversation.new(nil, title)
+    def create_conversation(title = nil, system_instruction = nil)
+      # Create a conversation with the appropriate arguments
+      conversation = if system_instruction
+        Models::Conversation.new(nil, title, nil, nil, system_instruction)
+      else
+        Models::Conversation.new(nil, title)
+      end
       @repository.save(conversation)
       conversation
     end
@@ -99,6 +105,20 @@ module Geminize
       raise Geminize::GeminizeError.new("Conversation not found: #{id}", nil, nil) unless conversation
 
       conversation.clear
+      @repository.save(conversation)
+      conversation
+    end
+
+    # Update a conversation's system instruction
+    # @param id [String] The ID of the conversation to update
+    # @param system_instruction [String] The new system instruction
+    # @return [Models::Conversation] The updated conversation
+    # @raise [Geminize::GeminizeError] If the conversation cannot be loaded or saved
+    def update_conversation_system_instruction(id, system_instruction)
+      conversation = get_conversation(id)
+      raise Geminize::GeminizeError.new("Conversation not found: #{id}", nil, nil) unless conversation
+
+      conversation.system_instruction = system_instruction
       @repository.save(conversation)
       conversation
     end

@@ -36,12 +36,15 @@ module Geminize
     # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
     # @option params [Integer] :top_k Top-k value for sampling
     # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+    # @option params [String] :system_instruction System instruction to guide model behavior
     # @return [Geminize::Models::ContentResponse] The generation response
     # @raise [Geminize::GeminizeError] If the request fails
     def generate_text(prompt, model_name = nil, params = {})
+      model = model_name || Geminize.configuration.default_model
+
       content_request = Models::ContentRequest.new(
         prompt,
-        model_name || Geminize.configuration.default_model,
+        model,
         params
       )
 
@@ -58,6 +61,7 @@ module Geminize
     # @option params [Integer] :top_k Top-k value for sampling
     # @option params [Array<String>] :stop_sequences Stop sequences to end generation
     # @option params [Symbol] :stream_mode Mode for processing stream chunks (:raw, :incremental, or :delta)
+    # @option params [String] :system_instruction System instruction to guide model behavior
     # @yield [chunk] Yields each chunk of the streaming response
     # @yieldparam chunk [String, Hash, StreamResponse] A chunk of the response
     # @return [void]
