@@ -738,12 +738,14 @@ module Geminize
           )
         end
 
-        # Initialize centroids by selecting random embeddings
-        centroid_indices = (0...vecs.length).to_a.sample(k)
-        centroids = centroid_indices.map { |i| vecs[i].dup }
+        # Normalize vectors for better clustering (especially important for cosine similarity)
+        normalized_vecs = vecs.map { |v| VectorUtils.normalize(v) }
+
+        # Initialize centroids using k-means++ algorithm
+        centroids = kmeans_plus_plus_init(normalized_vecs, k, metric)
 
         # Initialize cluster assignments
-        cluster_assignments = Array.new(vecs.length, -1)
+        cluster_assignments = Array.new(normalized_vecs.length, -1)
 
         # Main K-means loop
         iterations = 0
@@ -753,7 +755,7 @@ module Geminize
           changes = false
 
           # Assign points to clusters
-          vecs.each_with_index do |vec, idx|
+          normalized_vecs.each_with_index do |vec, idx|
             best_distance = -Float::INFINITY
             best_cluster = -1
 
@@ -789,7 +791,7 @@ module Geminize
           new_centroids = Array.new(k) { [] }
 
           # Collect points for each cluster
-          vecs.each_with_index do |vec, idx|
+          normalized_vecs.each_with_index do |vec, idx|
             cluster_idx = cluster_assignments[idx]
             new_centroids[cluster_idx] << vec if cluster_idx >= 0
           end
@@ -797,12 +799,13 @@ module Geminize
           # Calculate new centroids (average of points in each cluster)
           new_centroids.each_with_index do |cluster_points, idx|
             if cluster_points.empty?
-              # If a cluster is empty, reinitialize with a random point
-              random_idx = (0...vecs.length).to_a.sample
-              centroids[idx] = vecs[random_idx].dup
+              # If a cluster is empty, reinitialize with a point farthest from other centroids
+              farthest_idx = find_farthest_point(normalized_vecs, centroids, cluster_assignments)
+              centroids[idx] = normalized_vecs[farthest_idx].dup
             else
-              # Otherwise take the average
-              centroids[idx] = VectorUtils.average_vectors(cluster_points)
+              # Otherwise take the average and normalize
+              avg = VectorUtils.average_vectors(cluster_points)
+              centroids[idx] = VectorUtils.normalize(avg)
             end
           end
 
@@ -962,6 +965,99 @@ module Geminize
       # Parse usage information from the response
       def parse_usage
         @usage = @data["usageMetadata"] if @data["usageMetadata"]
+      end
+
+      # Initialize centroids using k-means++ algorithm
+      # @param vectors [Array<Array<Float>>] Input vectors
+      # @param k [Integer] Number of clusters
+      # @param metric [Symbol] Distance metric to use
+      # @return [Array<Array<Float>>] Initial centroids
+      def kmeans_plus_plus_init(vectors, k, metric)
+        # Choose first centroid randomly
+        centroids = [vectors[rand(vectors.length)].dup]
+
+        # Choose remaining centroids
+        (k - 1).times do
+          # Calculate distances from each point to nearest centroid
+          distances = vectors.map do |vec|
+            # Find distance to closest centroid
+            best_distance = -Float::INFINITY
+
+            centroids.each do |centroid|
+              similarity = case metric
+              when :cosine
+                VectorUtils.cosine_similarity(vec, centroid)
+              when :euclidean
+                1.0 / (1.0 + VectorUtils.euclidean_distance(vec, centroid))
+              end
+
+              best_distance = [best_distance, similarity].max
+            end
+
+            # Convert similarity to distance (lower is better for selection)
+            1.0 - best_distance
+          end
+
+          # Calculate selection probabilities (higher distance = higher probability)
+          sum_distances = distances.sum
+
+          # Guard against division by zero
+          if sum_distances.zero?
+            # If all points are identical to centroids, choose randomly
+            next_idx = rand(vectors.length)
+          else
+            # Choose next centroid with probability proportional to squared distance
+            probabilities = distances.map { |d| (d / sum_distances) ** 2 }
+            cumulative_prob = 0.0
+            threshold = rand()
+            next_idx = 0
+
+            probabilities.each_with_index do |prob, idx|
+              cumulative_prob += prob
+              if cumulative_prob >= threshold
+                next_idx = idx
+                break
+              end
+            end
+          end
+
+          centroids << vectors[next_idx].dup
+        end
+
+        centroids
+      end
+
+      # Find the point farthest from existing centroids
+      # @param vectors [Array<Array<Float>>] Input vectors
+      # @param centroids [Array<Array<Float>>] Current centroids
+      # @param assignments [Array<Integer>] Current cluster assignments
+      # @return [Integer] Index of the farthest point
+      def find_farthest_point(vectors, centroids, assignments)
+        max_distance = -Float::INFINITY
+        farthest_idx = 0
+
+        vectors.each_with_index do |vec, idx|
+          # Skip points already assigned as centroids
+          next if centroids.any? { |c| c == vec }
+
+          # Find minimum similarity to any centroid
+          min_similarity = Float::INFINITY
+
+          centroids.each do |centroid|
+            similarity = VectorUtils.cosine_similarity(vec, centroid)
+            min_similarity = [min_similarity, similarity].min
+          end
+
+          # Convert to distance
+          distance = 1.0 - min_similarity
+
+          if distance > max_distance
+            max_distance = distance
+            farthest_idx = idx
+          end
+        end
+
+        farthest_idx
       end
     end
   end
