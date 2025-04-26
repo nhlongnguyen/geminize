@@ -16,7 +16,7 @@ RSpec.describe Geminize::Embeddings do
         to_hash: {
           model: model,
           content: {parts: [{text: sample_text}]},
-          taskType: "RETRIEVAL_DOCUMENT"
+          taskType: Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT
         }
       )
     end
@@ -56,8 +56,8 @@ RSpec.describe Geminize::Embeddings do
         batch?: true,
         to_hash: {
           requests: [
-            {model: model, content: {parts: [{text: "Text 1"}]}, taskType: "RETRIEVAL_DOCUMENT"},
-            {model: model, content: {parts: [{text: "Text 2"}]}, taskType: "RETRIEVAL_DOCUMENT"}
+            {model: model, content: {parts: [{text: "Text 1"}]}, taskType: Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT},
+            {model: model, content: {parts: [{text: "Text 2"}]}, taskType: Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT}
           ]
         }
       )
@@ -79,8 +79,8 @@ RSpec.describe Geminize::Embeddings do
         batch?: true,
         to_hash: {
           requests: [
-            {model: text_embedding_model, content: {parts: [{text: "Text 1"}]}, taskType: "RETRIEVAL_DOCUMENT"},
-            {model: text_embedding_model, content: {parts: [{text: "Text 2"}]}, taskType: "RETRIEVAL_DOCUMENT"}
+            {model: text_embedding_model, content: {parts: [{text: "Text 1"}]}, taskType: Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT},
+            {model: text_embedding_model, content: {parts: [{text: "Text 2"}]}, taskType: Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT}
           ]
         }
       )
@@ -143,7 +143,7 @@ RSpec.describe Geminize::Embeddings do
         expect(endpoint).to eq("models/#{model}:embedContent")
         expect(payload[:model]).to eq(model)
         expect(payload[:content][:parts].first[:text]).to eq(sample_text)
-        expect(payload[:taskType]).to eq("RETRIEVAL_DOCUMENT")
+        expect(payload[:taskType]).to eq(Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT)
         sample_response_data
       end
 
@@ -165,7 +165,7 @@ RSpec.describe Geminize::Embeddings do
         payload[:requests].each_with_index do |req, i|
           expect(req[:model]).to eq("models/#{model}")
           expect(req[:content][:parts].first[:text]).to eq(batch_texts[i])
-          expect(req[:taskType]).to eq("RETRIEVAL_DOCUMENT")
+          expect(req[:taskType]).to eq(Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT)
         end
 
         batch_response_data

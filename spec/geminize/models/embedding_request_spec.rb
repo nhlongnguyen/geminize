@@ -11,7 +11,7 @@ RSpec.describe Geminize::Models::EmbeddingRequest do
       expect(request.model_name).to eq(model_name)
       expect(request.text).to eq(text)
       expect(request.title).to be_nil
-      expect(request.task_type).to eq("RETRIEVAL_DOCUMENT")
+      expect(request.task_type).to eq(Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT)
     end
 
     it "accepts a title" do
@@ -21,9 +21,9 @@ RSpec.describe Geminize::Models::EmbeddingRequest do
     end
 
     it "accepts a task type" do
-      request = described_class.new(text, model_name, task_type: "SEMANTIC_SIMILARITY")
+      request = described_class.new(text, model_name, task_type: Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY)
 
-      expect(request.task_type).to eq("SEMANTIC_SIMILARITY")
+      expect(request.task_type).to eq(Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY)
     end
 
     it "raises an error for invalid task types" do
@@ -77,7 +77,7 @@ RSpec.describe Geminize::Models::EmbeddingRequest do
       hash[:requests].each_with_index do |req, i|
         expect(req[:model]).to eq("models/#{model_name}")
         expect(req[:content][:parts]).to eq([{text: texts[i]}])
-        expect(req[:taskType]).to eq("RETRIEVAL_DOCUMENT")
+        expect(req[:taskType]).to eq(Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT)
       end
     end
 
@@ -90,24 +90,24 @@ RSpec.describe Geminize::Models::EmbeddingRequest do
 
     it "includes task type in both single and batch requests" do
       # Single request
-      request = described_class.new(text, model_name, task_type: "SEMANTIC_SIMILARITY")
+      request = described_class.new(text, model_name, task_type: Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY)
       hash = request.to_hash
-      expect(hash[:taskType]).to eq("SEMANTIC_SIMILARITY")
+      expect(hash[:taskType]).to eq(Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY)
 
       # Batch request
       texts = ["First text", "Second text"]
-      batch_request = described_class.new(texts, model_name, task_type: "SEMANTIC_SIMILARITY")
+      batch_request = described_class.new(texts, model_name, task_type: Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY)
       batch_hash = batch_request.to_hash
 
       batch_hash[:requests].each do |req|
-        expect(req[:taskType]).to eq("SEMANTIC_SIMILARITY")
+        expect(req[:taskType]).to eq(Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY)
       end
     end
   end
 
   describe "#single_request_hash" do
     it "creates a properly formatted single request hash" do
-      request = described_class.new(text, model_name, task_type: "CLUSTERING")
+      request = described_class.new(text, model_name, task_type: Geminize::Models::EmbeddingRequest::CLUSTERING)
       hash = request.single_request_hash("Test text")
 
       expect(hash).to eq({
@@ -115,7 +115,7 @@ RSpec.describe Geminize::Models::EmbeddingRequest do
         content: {
           parts: [{text: "Test text"}]
         },
-        taskType: "CLUSTERING"
+        taskType: Geminize::Models::EmbeddingRequest::CLUSTERING
       })
     end
 

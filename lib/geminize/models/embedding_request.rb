@@ -7,12 +7,20 @@ module Geminize
       attr_reader :text, :model_name, :task_type, :dimensions, :title
 
       # Supported task types for embeddings
+      # Task type constants
+      RETRIEVAL_QUERY = "RETRIEVAL_QUERY"
+      RETRIEVAL_DOCUMENT = "RETRIEVAL_DOCUMENT"
+      SEMANTIC_SIMILARITY = "SEMANTIC_SIMILARITY"
+      CLASSIFICATION = "CLASSIFICATION"
+      CLUSTERING = "CLUSTERING"
+
+      # Supported task types for embeddings
       TASK_TYPES = [
-        "RETRIEVAL_QUERY",    # For embedding queries for retrieval
-        "RETRIEVAL_DOCUMENT", # For embedding documents for retrieval
-        "SEMANTIC_SIMILARITY", # For embeddings that will be compared for similarity
-        "CLASSIFICATION",     # For embeddings that will be used for classification
-        "CLUSTERING"          # For embeddings that will be clustered
+        RETRIEVAL_QUERY,    # For embedding queries for retrieval
+        RETRIEVAL_DOCUMENT, # For embedding documents for retrieval
+        SEMANTIC_SIMILARITY, # For embeddings that will be compared for similarity
+        CLASSIFICATION,     # For embeddings that will be used for classification
+        CLUSTERING          # For embeddings that will be clustered
       ].freeze
 
       # Initialize a new embedding request
@@ -34,7 +42,7 @@ module Geminize
           @model_name = model_name
         end
 
-        @task_type = options[:task_type] || "RETRIEVAL_DOCUMENT"
+        @task_type = options[:task_type] || RETRIEVAL_DOCUMENT
         @dimensions = options[:dimensions]
         @title = options[:title]
 

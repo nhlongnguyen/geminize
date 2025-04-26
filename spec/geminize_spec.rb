@@ -440,7 +440,7 @@ RSpec.describe Geminize do
     end
 
     it "successfully generates embeddings with task_type parameter", vcr: {cassette_name: "generate_embedding_with_task_type"} do
-      params = {task_type: "SEMANTIC_SIMILARITY"}
+      params = {task_type: Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY}
 
       response = Geminize.generate_embedding(text, model_name, params)
 
@@ -497,7 +497,7 @@ RSpec.describe Geminize do
     end
 
     it "correctly handles SEMANTIC_SIMILARITY task type", vcr: {cassette_name: "generate_embedding_with_task_type_semantic_similarity"} do
-      response = Geminize.generate_embedding(text, model_name, task_type: "SEMANTIC_SIMILARITY")
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY)
 
       expect(response).to be_a(Geminize::Models::EmbeddingResponse)
       expect(response.embeddings).to be_an(Array)
@@ -505,7 +505,7 @@ RSpec.describe Geminize do
     end
 
     it "correctly handles CLASSIFICATION task type", vcr: {cassette_name: "generate_embedding_with_task_type_classification"} do
-      response = Geminize.generate_embedding(text, model_name, task_type: "CLASSIFICATION")
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::CLASSIFICATION)
 
       expect(response).to be_a(Geminize::Models::EmbeddingResponse)
       expect(response.embeddings).to be_an(Array)
@@ -513,7 +513,7 @@ RSpec.describe Geminize do
     end
 
     it "correctly handles CLUSTERING task type", vcr: {cassette_name: "generate_embedding_with_task_type_clustering"} do
-      response = Geminize.generate_embedding(text, model_name, task_type: "CLUSTERING")
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::CLUSTERING)
 
       expect(response).to be_a(Geminize::Models::EmbeddingResponse)
       expect(response.embeddings).to be_an(Array)
@@ -521,7 +521,7 @@ RSpec.describe Geminize do
     end
 
     it "correctly handles RETRIEVAL_DOCUMENT task type", vcr: {cassette_name: "generate_embedding_with_task_type_retrieval_document"} do
-      response = Geminize.generate_embedding(text, model_name, task_type: "RETRIEVAL_DOCUMENT")
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT)
 
       expect(response).to be_a(Geminize::Models::EmbeddingResponse)
       expect(response.embeddings).to be_an(Array)

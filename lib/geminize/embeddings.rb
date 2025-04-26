@@ -56,7 +56,7 @@ module Geminize
       embedding_request = Models::EmbeddingRequest.new(
         model_name: model,
         text: text,
-        task_type: params[:task_type] || "RETRIEVAL_DOCUMENT",
+        task_type: params[:task_type] || Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT,
         params: params
       )
 
@@ -77,7 +77,7 @@ module Geminize
         request = Models::EmbeddingRequest.new(
           model_name: model_name,
           text: batch,
-          task_type: params[:task_type] || "RETRIEVAL_DOCUMENT",
+          task_type: params[:task_type] || Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT,
           params: params
         )
         responses << generate(request)
