@@ -190,7 +190,7 @@ module Geminize
     # @raise [Geminize::GeminizeError] If the request fails
     def generate_stream(content_request, stream_mode = :incremental, &block)
       model_name = content_request.model_name
-      endpoint = RequestBuilder.build_text_generation_endpoint(model_name)
+      endpoint = RequestBuilder.build_streaming_endpoint(model_name)
       payload = RequestBuilder.build_text_generation_request(content_request)
 
       # For incremental mode, we'll accumulate the response

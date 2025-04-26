@@ -71,24 +71,27 @@ module Geminize
         @finish_reason = nil
         @usage_metrics = nil
 
-        candidates = @raw_chunk["candidates"]
-        if candidates && !candidates.empty?
-          # Extract finish reason if available (last chunk)
-          if candidates.first["finishReason"]
-            @finish_reason = candidates.first["finishReason"]
+        # First check if the response has the expected fields
+        if @raw_chunk.is_a?(Hash)
+          candidates = @raw_chunk["candidates"]
+          if candidates && !candidates.empty?
+            # Extract finish reason if available (last chunk)
+            if candidates.first["finishReason"]
+              @finish_reason = candidates.first["finishReason"]
+            end
+
+            # Extract text content if available
+            content = candidates.first["content"]
+            if content && content["parts"] && !content["parts"].empty?
+              parts_text = content["parts"].map { |part| part["text"] }.compact
+              @text = parts_text.join(" ") unless parts_text.empty?
+            end
           end
 
-          # Extract text content if available
-          content = candidates.first["content"]
-          if content && content["parts"] && !content["parts"].empty?
-            parts_text = content["parts"].map { |part| part["text"] }.compact
-            @text = parts_text.join(" ") unless parts_text.empty?
+          # Extract usage metrics if available
+          if @raw_chunk["usageMetadata"]
+            @usage_metrics = @raw_chunk["usageMetadata"]
           end
-        end
-
-        # Extract usage metrics if available
-        if @raw_chunk["usageMetadata"]
-          @usage_metrics = @raw_chunk["usageMetadata"]
         end
       end
     end

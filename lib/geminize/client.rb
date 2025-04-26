@@ -87,8 +87,8 @@ module Geminize
       @streaming_in_progress = true
       @cancel_streaming = false
 
-      # Ensure we have stream=true parameter for the API
-      params = params.merge(stream: true)
+      # Ensure we have alt=sse parameter for the API to get server-sent events
+      params = params.merge(alt: "sse")
 
       # Create a separate connection for streaming
       streaming_connection = build_streaming_connection
@@ -257,18 +257,12 @@ module Geminize
         conn.options.timeout = (@options[:streaming_timeout] || @config.streaming_timeout || 300)
         conn.options.open_timeout = (@options[:open_timeout] || @config.open_timeout)
 
-        # Configure streaming-specific options
-        conn.options.on_data_timeout = (@options[:on_data_timeout] || 60) # Timeout between data chunks
-
         # Disable response parsing middleware for raw streaming
         conn.adapter :net_http do |http|
           # Configure Net::HTTP for streaming
           http.read_timeout = (@options[:streaming_timeout] || @config.streaming_timeout || 300)
           http.keep_alive_timeout = 60
           http.max_retries = 0 # Disable retries for streaming connections
-
-          # Enable persistent connections
-          http.start unless http.started?
         end
 
         # Error handling for streaming connections

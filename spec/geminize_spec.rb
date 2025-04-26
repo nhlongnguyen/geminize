@@ -232,4 +232,178 @@ RSpec.describe Geminize do
       expect(response.text).not_to be_empty
     end
   end
+
+  describe ".generate_text_stream", :vcr do
+    let(:prompt) { "Tell me a story about a dragon" }
+    let(:model_name) { "gemini-2.0-flash" }
+
+    before do
+      # Configure with real API key from env
+      Geminize.configure do |config|
+        config.api_key = ENV["GEMINI_API_KEY"]
+        config.default_model = model_name
+      end
+    end
+
+    after do
+      Geminize.reset_configuration!
+    end
+
+    it "requires a block to be given" do
+      expect {
+        Geminize.generate_text_stream(prompt)
+      }.to raise_error(ArgumentError, "A block is required for streaming")
+    end
+
+    it "properly streams text with default options", vcr: {cassette_name: "generate_text_stream_default"} do
+      chunks_received = 0
+      accumulated_text = ""
+
+      Geminize.generate_text_stream(prompt) do |chunk|
+        chunks_received += 1
+
+        # Only append to accumulated_text if it's not the final chunk with metrics
+        unless chunk.is_a?(Hash) && chunk[:usage]
+          accumulated_text += chunk
+        end
+      end
+
+      # Verify we received multiple chunks
+      expect(chunks_received).to be > 1
+
+      # Verify we received substantial content
+      expect(accumulated_text).not_to be_empty
+      expect(accumulated_text.length).to be > 50
+    end
+
+    it "properly streams text with delta mode", vcr: {cassette_name: "generate_text_stream_delta"} do
+      chunks_received = 0
+      accumulated_text = ""
+
+      Geminize.generate_text_stream(prompt, nil, stream_mode: :delta) do |chunk|
+        chunks_received += 1
+
+        # Only append to accumulated_text if it's not the final chunk with metrics
+        unless chunk.is_a?(Hash) && chunk[:usage]
+          accumulated_text += chunk
+        end
+      end
+
+      # Verify we received multiple chunks
+      expect(chunks_received).to be > 1
+
+      # Verify we received substantial content
+      expect(accumulated_text).not_to be_empty
+      expect(accumulated_text.length).to be > 50
+    end
+
+    it "properly streams text with raw mode", vcr: {cassette_name: "generate_text_stream_raw"} do
+      chunks_received = 0
+
+      Geminize.generate_text_stream(prompt, nil, stream_mode: :raw) do |chunk|
+        chunks_received += 1
+
+        # Verify each chunk is a hash with the expected structure
+        expect(chunk).to be_a(Hash)
+        expect(chunk["candidates"]).to be_an(Array)
+      end
+
+      # Verify we received multiple chunks
+      expect(chunks_received).to be > 1
+    end
+
+    it "properly streams text with a specific model", vcr: {cassette_name: "generate_text_stream_specific_model"} do
+      custom_model = "gemini-1.5-pro"
+      chunks_received = 0
+      accumulated_text = ""
+
+      Geminize.generate_text_stream(prompt, custom_model) do |chunk|
+        chunks_received += 1
+
+        # Only append to accumulated_text if it's not the final chunk with metrics
+        unless chunk.is_a?(Hash) && chunk[:usage]
+          accumulated_text += chunk
+        end
+      end
+
+      # Verify we received multiple chunks
+      expect(chunks_received).to be > 1
+
+      # Verify we received substantial content
+      expect(accumulated_text).not_to be_empty
+      expect(accumulated_text.length).to be > 50
+    end
+
+    it "properly streams text with generation parameters", vcr: {cassette_name: "generate_text_stream_parameters"} do
+      params = {temperature: 0.8, max_tokens: 100}
+      chunks_received = 0
+      accumulated_text = ""
+
+      Geminize.generate_text_stream(prompt, nil, params) do |chunk|
+        chunks_received += 1
+
+        # Only append to accumulated_text if it's not the final chunk with metrics
+        unless chunk.is_a?(Hash) && chunk[:usage]
+          accumulated_text += chunk
+        end
+      end
+
+      # Verify we received multiple chunks
+      expect(chunks_received).to be > 1
+
+      # Verify we received substantial content
+      expect(accumulated_text).not_to be_empty
+      expect(accumulated_text.length).to be > 50
+    end
+
+    it "properly streams text with client options", vcr: {cassette_name: "generate_text_stream_client_options"} do
+      client_options = {timeout: 30}
+      chunks_received = 0
+      accumulated_text = ""
+
+      Geminize.generate_text_stream(prompt, nil, client_options: client_options) do |chunk|
+        chunks_received += 1
+
+        # Only append to accumulated_text if it's not the final chunk with metrics
+        unless chunk.is_a?(Hash) && chunk[:usage]
+          accumulated_text += chunk
+        end
+      end
+
+      # Verify we received multiple chunks
+      expect(chunks_received).to be > 1
+
+      # Verify we received substantial content
+      expect(accumulated_text).not_to be_empty
+      expect(accumulated_text.length).to be > 50
+    end
+
+    it "supports cancellation during streaming" do
+      chunks_received = 0
+
+      generator = instance_double(Geminize::TextGeneration)
+      allow(Geminize::TextGeneration).to receive(:new).and_return(generator)
+      allow(generator).to receive(:generate_text_stream) do |&block|
+        # Simulate the first chunk
+        block.call("Once upon a time")
+      end
+      allow(generator).to receive(:cancel_streaming).and_return(true)
+
+      # Set up to call cancel_streaming after receiving the first chunk
+      Geminize.generate_text_stream(prompt) do |_|
+        chunks_received += 1
+        Geminize.cancel_streaming if chunks_received >= 1
+      end
+
+      # Should have received one chunk
+      expect(chunks_received).to eq(1)
+    end
+
+    it "wraps non-GeminizeError exceptions in a GeminizeError", vcr: {cassette_name: "generate_text_stream_error"} do
+      # We'll use a malformed model name to provoke an error
+      expect {
+        Geminize.generate_text_stream(prompt, "invalid-model") { |_| }
+      }.to raise_error(Geminize::GeminizeError)
+    end
+  end
 end

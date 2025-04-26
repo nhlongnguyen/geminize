@@ -1,0 +1,184 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=<GEMINI_API_KEY>
+    body:
+      encoding: UTF-8
+      string: '{"model":"gemini-2.0-flash","contents":[{"parts":[{"text":"Tell me
+        a story about a dragon"}]}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.0
+      Accept:
+      - text/event-stream
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - text/event-stream
+      Content-Disposition:
+      - attachment
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Transfer-Encoding:
+      - chunked
+      Date:
+      - Sat, 26 Apr 2025 09:31:05 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=271
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+    body:
+      encoding: UTF-8
+      string: "data: {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \"The\"}],\"role\":
+        \"model\"}}],\"usageMetadata\": {\"promptTokenCount\": 7,\"totalTokenCount\":
+        7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\":
+        \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\": [{\"content\": {\"parts\":
+        [{\"text\": \" wind howled a mournful dirge through the jagged peaks of the
+        Obsidian Mountains, a soundtrack\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" to the lonely existence
+        of Ignis. He wasn't just any dragon;\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" Ignis was the last
+        of his kind. His scales, once a vibrant, shimmering ruby, were now dulled
+        with age and etched with the scars of battles\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" fought and lost.
+        His roar, once a tremor in the earth, was now a raspy echo in the vast canyons.\\n\\nHe
+        remembered the days when dragons\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" ruled the skies,
+        when their fiery breath warmed the frozen peaks and their hoards glittered
+        like captured stars. But humanity, with their cunning and their contraptions,
+        had dwindled their numbers, hunting them for glory, for magic, and for the\"}],\"role\":
+        \"model\"}}],\"usageMetadata\": {\"promptTokenCount\": 7,\"totalTokenCount\":
+        7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\":
+        \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\": [{\"content\": {\"parts\":
+        [{\"text\": \" sheer thrill of the kill.\\n\\nNow, Ignis lived a solitary
+        life, guarding the last remnants of his hoard in a hidden cave deep within
+        the Obsidian Mountains. It wasn't the gold and jewels that he cherished, but
+        the relics of\"}],\"role\": \"model\"}}],\"usageMetadata\": {\"promptTokenCount\":
+        7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\":
+        7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\":
+        [{\"content\": {\"parts\": [{\"text\": \" his ancestors: a chipped obsidian
+        scale from his mother, a feather from his father's wing, a tarnished silver
+        pendant that told the story of the dragon kings.\\n\\nOne day, the mournful
+        wind brought a new sound, a fragile melody unlike any Ignis had heard before.
+        Curiosity, a rare and flickering\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" ember in his ancient
+        heart, stirred. He followed the sound, his heavy body shaking the very mountain
+        as he moved.\\n\\nHe found her in a small clearing, nestled amongst the ashen
+        rocks. A girl, no older than ten, with hair the color of spun moonlight and
+        eyes like the summer sky. She sat\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" cross-legged, playing
+        a simple tune on a wooden flute.\\n\\nIgnis froze. Fear warred with curiosity.
+        Humans were his enemy, the cause of his solitude, the murderers of his family.
+        He could incinerate her with a single breath, ending the threat before it
+        began.\\n\\nBut the melody was so pure\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \", so filled with
+        a longing that resonated deep within his ancient soul. He remained hidden,
+        observing her.\\n\\nAfter a while, the girl stopped playing. She looked around,
+        her eyes filled with a sadness that mirrored his own. \\\"Hello?\\\" she called
+        out, her voice barely a whisper. \\\"Is anyone there?\\\"\\n\\n\"}],\"role\":
+        \"model\"}}],\"usageMetadata\": {\"promptTokenCount\": 7,\"totalTokenCount\":
+        7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\":
+        \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\": [{\"content\": {\"parts\":
+        [{\"text\": \"Ignis, against his better judgement, stepped into the clearing.
+        The girl gasped, her flute clattering to the ground. She stared up at him,
+        her face a mixture of terror and wonder.\\n\\n\\\"A...a dragon,\\\" she stammered.\\n\\nIgnis
+        expected her to run, to scream, to throw\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" stones. But she
+        didn't. Instead, she slowly rose to her feet, her gaze unwavering.\\n\\n\\\"You're
+        beautiful,\\\" she said, her voice trembling slightly.\\n\\nIgnis rumbled,
+        a sound that was almost a purr. He hadn't heard words of kindness in centuries.\\n\\nThe\"}],\"role\":
+        \"model\"}}],\"usageMetadata\": {\"promptTokenCount\": 7,\"totalTokenCount\":
+        7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\":
+        \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\": [{\"content\": {\"parts\":
+        [{\"text\": \" girl, whose name was Elara, as Ignis later learned, began to
+        visit him regularly. She would bring him small gifts: wild berries, polished
+        stones, and always, her flute. She played for him, filling the desolate mountain
+        with her music. She told him stories of her village, of the stars,\"}],\"role\":
+        \"model\"}}],\"usageMetadata\": {\"promptTokenCount\": 7,\"totalTokenCount\":
+        7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\":
+        \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\": [{\"content\": {\"parts\":
+        [{\"text\": \" of the dreams she held for a world filled with peace.\\n\\nIgnis,
+        in turn, shared his stories, not with words, but with the glimmer in his eye,
+        the rumble in his chest. He showed her his hoard, not boasting of its value,
+        but revealing the history hidden within its treasures.\\n\\nOver\"}],\"role\":
+        \"model\"}}],\"usageMetadata\": {\"promptTokenCount\": 7,\"totalTokenCount\":
+        7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\":
+        \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\": [{\"content\": {\"parts\":
+        [{\"text\": \" time, a fragile bond formed between the last dragon and the
+        lonely girl. Ignis learned to trust her, to see in her the innocence that
+        humanity had long forgotten. Elara learned that not all dragons were monsters,
+        that beneath the scales and the fire lay a heart capable of profound sadness
+        and enduring love.\\n\\nOne day, El\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \"ara didn't come.
+        Ignis waited, his heart pounding with a fear he hadn't felt in ages. When
+        days turned into weeks, he knew something was wrong.\\n\\nDriven by a desperate
+        need to protect her, Ignis left his hidden cave and descended from the mountains,
+        a fearsome sight in the\"}],\"role\": \"model\"}}],\"usageMetadata\": {\"promptTokenCount\":
+        7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\":
+        7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\":
+        [{\"content\": {\"parts\": [{\"text\": \" eyes of the villagers. He found
+        Elara sick, ravaged by a fever that threatened to consume her.\\n\\nHe knew
+        what he had to do. Remembering the ancient lore, he gathered the rarest herbs,
+        ones that grew only in the highest reaches of the Obsidian Mountains. He breathed
+        his ancient fire upon them, infusing them with his\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" own life force.
+        He brought the potion to Elara, and with trembling claws, he helped her drink.\\n\\nThe
+        fever broke. Elara recovered. The villagers, witnessing Ignis's act of selfless
+        compassion, finally understood that not all dragons were to be feared.\\n\\nIgnis
+        returned to his mountain, his heart lighter\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" than it had been
+        in centuries. He was still the last dragon, but he was no longer alone. He
+        had found a friend, a protector, a reason to hope. And perhaps, just perhaps,
+        the world was ready to see dragons in a new light, not as monsters to be hunted,
+        but as magnificent creatures deserving of respect\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" and love. The wind
+        still howled through the Obsidian Mountains, but now, it carried a different
+        song, a song of hope, of friendship, and of the enduring power of love in
+        the face of fear.\\n\"}],\"role\": \"model\"},\"finishReason\": \"STOP\"}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"candidatesTokenCount\": 1087,\"totalTokenCount\":
+        1094,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 7}],\"candidatesTokensDetails\":
+        [{\"modality\": \"TEXT\",\"tokenCount\": 1087}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\n"
+  recorded_at: Sat, 26 Apr 2025 09:31:11 GMT
+recorded_with: VCR 6.3.1

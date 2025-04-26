@@ -1,0 +1,188 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=<GEMINI_API_KEY>
+    body:
+      encoding: UTF-8
+      string: '{"model":"gemini-2.0-flash","contents":[{"parts":[{"text":"Tell me
+        a story about a dragon"}]}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.0
+      Accept:
+      - text/event-stream
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - text/event-stream
+      Content-Disposition:
+      - attachment
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Transfer-Encoding:
+      - chunked
+      Date:
+      - Sat, 26 Apr 2025 09:31:36 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=377
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+    body:
+      encoding: UTF-8
+      string: "data: {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \"The\"}],\"role\":
+        \"model\"}}],\"usageMetadata\": {\"promptTokenCount\": 7,\"totalTokenCount\":
+        7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\":
+        \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\": [{\"content\": {\"parts\":
+        [{\"text\": \" wind howled\"}],\"role\": \"model\"}}],\"usageMetadata\": {\"promptTokenCount\":
+        7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\":
+        7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\":
+        [{\"content\": {\"parts\": [{\"text\": \" a mournful song through the jagged
+        peaks of Mount Cinderheart, a song El\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \"ara knew well. It
+        was the dragon's lament, a constant, low\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" thrum that vibrated
+        in her bones. Elara was a mountain weaver, her life woven into the fabric
+        of the land, and the dragon, Ignis, was\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" as much a part
+        of it as the granite and the snow.\\n\\nIgnis was not like the dragons of
+        legend. He didn't hoard gold, terror\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \"ize villages, or
+        breathe fire indiscriminately. He was a guardian, a protector of the mountain,
+        and a keeper of the ancient, volcanic heart that throbbed beneath its surface.
+        But lately, he was weakening. The lament was louder\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \", more frequent,
+        and the mountain itself seemed to mirror his decline.\\n\\nElara had seen
+        it firsthand. The once vibrant wildflowers were withering, the glacial streams
+        were drying up, and the air hung heavy with a sense of impending doom\"}],\"role\":
+        \"model\"}}],\"usageMetadata\": {\"promptTokenCount\": 7,\"totalTokenCount\":
+        7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\":
+        \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\": [{\"content\": {\"parts\":
+        [{\"text\": \". She knew Ignis was suffering, and she couldn't stand by and
+        watch.\\n\\nIgnoring the warnings of the elders who feared the dragon, Elara
+        began her journey up Mount Cinderheart. She carried only a small pack containing
+        dried herbs, a waterskin, and a length of spun mountain goat wool,\"}],\"role\":
+        \"model\"}}],\"usageMetadata\": {\"promptTokenCount\": 7,\"totalTokenCount\":
+        7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\":
+        \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\": [{\"content\": {\"parts\":
+        [{\"text\": \" imbued with the essence of the mountain itself.\\n\\nThe climb
+        was treacherous. Loose scree gave way beneath her feet, and the biting wind
+        threatened to tear her from the cliff face. But Elara pressed on, her determination
+        fueled by a deep connection to the land and its ancient guardian.\\n\\nFinally,
+        she reached the dragon's\"}],\"role\": \"model\"}}],\"usageMetadata\": {\"promptTokenCount\":
+        7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\":
+        7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\":
+        [{\"content\": {\"parts\": [{\"text\": \" lair, a vast cavern at the mountain's
+        peak. Ignis lay curled in the center, his scales dull and cracked, his breath
+        shallow and labored. The heat radiating from him was weak, a flickering ember
+        compared to the roaring inferno it once was.\\n\\nFear gnawed at her, but
+        Elara pushed\"}],\"role\": \"model\"}}],\"usageMetadata\": {\"promptTokenCount\":
+        7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\":
+        7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\":
+        [{\"content\": {\"parts\": [{\"text\": \" it aside. She approached him cautiously,
+        offering her respect. \\\"Ignis,\\\" she called out, her voice clear despite
+        the trembling in her hands. \\\"I have come to help.\\\"\\n\\nIgnis opened
+        one golden eye, the light within dimmed and weary. A plume of smoke, thin
+        and weak, escaped his nostrils. \\\"\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \"Leave, little weaver,\\\"
+        he rasped, his voice like the grinding of stones. \\\"I am failing. There
+        is nothing you can do.\\\"\\n\\n\\\"But there is!\\\" Elara insisted. She
+        unwound the mountain goat wool and began to weave it around Ignis's scales,
+        focusing her energy, her will, her\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" love for the mountain
+        into each strand. She hummed a song, an ancient melody passed down through
+        generations of mountain weavers, a song that spoke of resilience, of healing,
+        of the enduring power of the earth.\\n\\nAs she wove, she noticed the cracks
+        in his scales were not just physical. They were radiating\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" a cold, insidious
+        energy, a parasitic force draining him of his vitality. She realized that
+        Ignis wasn't just weakening from old age; he was being poisoned.\\n\\nFor
+        days, Elara stayed with Ignis, weaving, singing, and tending to his wounds.
+        She brewed him teas from the herbs she carried, teas\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" that tasted of
+        mountain moss and sun-baked stone. She spoke to him of the mountain, of the
+        vibrant life it still held, reminding him of what he was protecting.\\n\\nSlowly,
+        gradually, the poison began to recede. Ignis's scales regained their luster,
+        his breath grew stronger, and the\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" heat radiating
+        from him intensified. He began to respond to her, sharing stories of the mountain's
+        past, of the ancient battles he had fought, of the generations of weavers
+        who had honored him.\\n\\nFinally, the day came when Ignis rose to his feet,
+        his full height dwarfing Elara. He unf\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \"urled his wings,
+        and a torrent of fire erupted from his throat, cleansing the air and filling
+        the cavern with warmth.\\n\\n\\\"You have saved me, little weaver,\\\" he
+        said, his voice resonating with power once more. \\\"But the poison remains.
+        It originates from the deep caverns below, where a corrupted\"}],\"role\":
+        \"model\"}}],\"usageMetadata\": {\"promptTokenCount\": 7,\"totalTokenCount\":
+        7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\":
+        \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\": [{\"content\": {\"parts\":
+        [{\"text\": \" spring festers.\\\"\\n\\nTogether, Elara and Ignis descended
+        into the heart of Mount Cinderheart. They faced dangers that would have broken
+        lesser beings, but Elara's knowledge of the mountain and Ignis's immense power
+        proved to be an unstoppable combination. They found the corrupted spring,
+        a pool of black, viscous\"}],\"role\": \"model\"}}],\"usageMetadata\": {\"promptTokenCount\":
+        7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\":
+        7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\":
+        [{\"content\": {\"parts\": [{\"text\": \" liquid radiating a palpable malice.\\n\\nElara
+        used her weaving skills to create a dam, diverting the spring's flow. Ignis
+        unleashed a torrent of cleansing fire, purifying the water and banishing the
+        darkness. As the spring returned to its natural state, the mountain trembled
+        with relief, and the flowers on its slopes burst into vibrant\"}],\"role\":
+        \"model\"}}],\"usageMetadata\": {\"promptTokenCount\": 7,\"totalTokenCount\":
+        7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\":
+        \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\": [{\"content\": {\"parts\":
+        [{\"text\": \" bloom.\\n\\nIgnis was healed, and Mount Cinderheart thrived
+        once more. Elara, no longer just a mountain weaver, but a champion of her
+        land, returned to her village, her heart filled with gratitude and respect
+        for the magnificent dragon who guarded their home. The wind still howled through
+        the peaks,\"}],\"role\": \"model\"}}],\"usageMetadata\": {\"promptTokenCount\":
+        7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\":
+        7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\":
+        [{\"content\": {\"parts\": [{\"text\": \" but now it carried a new song, a
+        song of hope, of healing, and of the enduring bond between a dragon and the
+        weaver who dared to care.\\n\"}],\"role\": \"model\"},\"finishReason\": \"STOP\"}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"candidatesTokenCount\": 1075,\"totalTokenCount\":
+        1082,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 7}],\"candidatesTokensDetails\":
+        [{\"modality\": \"TEXT\",\"tokenCount\": 1075}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\n"
+  recorded_at: Sat, 26 Apr 2025 09:31:42 GMT
+recorded_with: VCR 6.3.1
