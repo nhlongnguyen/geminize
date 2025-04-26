@@ -133,3 +133,63 @@ begin
 rescue => e
   puts "Error: #{e.message}"
 end
+
+puts "\n============================================================"
+puts "Example 6: Using different task types for specific use cases"
+puts "============================================================"
+
+begin
+  # Sample texts for different use cases
+  question = "What is the capital of France?"
+  code_query = "how to sort an array in javascript"
+  document = "Paris is the capital and most populous city of France, with an estimated population of 2,175,601 residents."
+  fact = "The Earth revolves around the Sun."
+
+  puts "Demonstrating different task types for embeddings:"
+
+  # Question answering
+  qa_response = Geminize.generate_embedding(
+    question,
+    nil, # Use default model
+    task_type: Geminize::Models::EmbeddingRequest::QUESTION_ANSWERING
+  )
+  puts "\n1. QUESTION_ANSWERING task type:"
+  puts "   Text: \"#{question}\""
+  puts "   First 5 values: #{qa_response.embedding.take(5).inspect}"
+
+  # Code retrieval
+  code_response = Geminize.generate_embedding(
+    code_query,
+    nil, # Use default model
+    task_type: Geminize::Models::EmbeddingRequest::CODE_RETRIEVAL_QUERY
+  )
+  puts "\n2. CODE_RETRIEVAL_QUERY task type:"
+  puts "   Text: \"#{code_query}\""
+  puts "   First 5 values: #{code_response.embedding.take(5).inspect}"
+
+  # Document retrieval
+  document_response = Geminize.generate_embedding(
+    document,
+    nil, # Use default model
+    task_type: Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT,
+    title: "Paris Facts" # Titles can be used with RETRIEVAL_DOCUMENT
+  )
+  puts "\n3. RETRIEVAL_DOCUMENT task type with title:"
+  puts "   Title: \"Paris Facts\""
+  puts "   First 5 values: #{document_response.embedding.take(5).inspect}"
+
+  # Fact verification
+  fact_response = Geminize.generate_embedding(
+    fact,
+    nil, # Use default model
+    task_type: Geminize::Models::EmbeddingRequest::FACT_VERIFICATION
+  )
+  puts "\n4. FACT_VERIFICATION task type:"
+  puts "   Text: \"#{fact}\""
+  puts "   First 5 values: #{fact_response.embedding.take(5).inspect}"
+
+  puts "\nNote: Different task types optimize the embeddings for different use cases."
+  puts "Choose the appropriate task type based on your application needs."
+rescue => e
+  puts "Error: #{e.message}"
+end

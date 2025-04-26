@@ -212,7 +212,26 @@ vector1 = embeddings.values[0].value
 vector2 = embeddings.values[1].value
 similarity = Geminize.cosine_similarity(vector1, vector2)
 puts "Similarity: #{similarity}"
+
+# Specify a task type for optimized embeddings
+question_embedding = Geminize.generate_embedding(
+  "How do I install Ruby gems?",
+  task_type: Geminize::Models::EmbeddingRequest::QUESTION_ANSWERING
+)
+
+# Available task types:
+# - RETRIEVAL_QUERY: For embedding queries in a search/retrieval system
+# - RETRIEVAL_DOCUMENT: For embedding documents in a search corpus
+# - SEMANTIC_SIMILARITY: For comparing text similarity
+# - CLASSIFICATION: For text classification tasks
+# - CLUSTERING: For clustering text data
+# - QUESTION_ANSWERING: For question answering systems
+# - FACT_VERIFICATION: For fact checking applications
+# - CODE_RETRIEVAL_QUERY: For code search applications
+# - TASK_TYPE_UNSPECIFIED: Default unspecified type
 ```
+
+See the `examples/embeddings.rb` file for more comprehensive examples of working with embeddings.
 
 ## Streaming Responses
 

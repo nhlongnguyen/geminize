@@ -6,21 +6,28 @@ module Geminize
     class EmbeddingRequest
       attr_reader :text, :model_name, :task_type, :dimensions, :title
 
-      # Supported task types for embeddings
       # Task type constants
+      TASK_TYPE_UNSPECIFIED = "TASK_TYPE_UNSPECIFIED"
       RETRIEVAL_QUERY = "RETRIEVAL_QUERY"
       RETRIEVAL_DOCUMENT = "RETRIEVAL_DOCUMENT"
       SEMANTIC_SIMILARITY = "SEMANTIC_SIMILARITY"
       CLASSIFICATION = "CLASSIFICATION"
       CLUSTERING = "CLUSTERING"
+      QUESTION_ANSWERING = "QUESTION_ANSWERING"
+      FACT_VERIFICATION = "FACT_VERIFICATION"
+      CODE_RETRIEVAL_QUERY = "CODE_RETRIEVAL_QUERY"
 
       # Supported task types for embeddings
       TASK_TYPES = [
-        RETRIEVAL_QUERY,    # For embedding queries for retrieval
-        RETRIEVAL_DOCUMENT, # For embedding documents for retrieval
-        SEMANTIC_SIMILARITY, # For embeddings that will be compared for similarity
-        CLASSIFICATION,     # For embeddings that will be used for classification
-        CLUSTERING          # For embeddings that will be clustered
+        TASK_TYPE_UNSPECIFIED, # Default unspecified type
+        RETRIEVAL_QUERY,       # For embedding queries for retrieval
+        RETRIEVAL_DOCUMENT,    # For embedding documents for retrieval
+        SEMANTIC_SIMILARITY,   # For embeddings that will be compared for similarity
+        CLASSIFICATION,        # For embeddings that will be used for classification
+        CLUSTERING,            # For embeddings that will be clustered
+        QUESTION_ANSWERING,    # For embeddings used in question answering
+        FACT_VERIFICATION,     # For embeddings used in fact verification
+        CODE_RETRIEVAL_QUERY   # For embeddings used in code retrieval
       ].freeze
 
       # Initialize a new embedding request

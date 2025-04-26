@@ -528,6 +528,38 @@ RSpec.describe Geminize do
       expect(response.embeddings).not_to be_empty
     end
 
+    it "correctly handles QUESTION_ANSWERING task type", vcr: {cassette_name: "generate_embedding_with_task_type_question_answering"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::QUESTION_ANSWERING)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "correctly handles FACT_VERIFICATION task type", vcr: {cassette_name: "generate_embedding_with_task_type_fact_verification"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::FACT_VERIFICATION)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "correctly handles CODE_RETRIEVAL_QUERY task type", vcr: {cassette_name: "generate_embedding_with_task_type_code_retrieval_query"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::CODE_RETRIEVAL_QUERY)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "correctly handles TASK_TYPE_UNSPECIFIED task type", vcr: {cassette_name: "generate_embedding_with_task_type_unspecified"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::TASK_TYPE_UNSPECIFIED)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
     it "properly handles rate limit errors with retries" do
       mock_embeddings = instance_double(Geminize::Embeddings)
       mock_response = instance_double(Geminize::Models::EmbeddingResponse)
