@@ -6,8 +6,8 @@ require "tempfile"
 
 RSpec.describe Geminize::Models::ContentRequest do
   let(:prompt) { "Tell me a story about a dragon" }
-  let(:model_name) { "gemini-1.5-pro-latest" }
-  let(:default_model) { "gemini-1.5-pro-latest" }
+  let(:model_name) { "gemini-2.0-flash" }
+  let(:default_model) { "gemini-2.0-flash" }
   let(:valid_mime_type) { "image/jpeg" }
   let(:valid_image_data) { "\xFF\xD8\xFF\xE0" + ("X" * 100) } # Mock JPEG header + content
 

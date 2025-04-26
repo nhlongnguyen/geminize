@@ -14,8 +14,8 @@ Geminize.configure do |config|
   # The API version to use (default: v1beta)
   # config.api_version = "v1beta"
 
-  # The default model to use (default: gemini-1.5-pro-latest)
-  # config.default_model = "gemini-1.5-pro-latest"
+  # The default model to use (default: gemini-2.0-flash)
+  # config.default_model = "gemini-2.0-flash"
 
   # The base URL for the Gemini API (default: https://generativelanguage.googleapis.com)
   # config.api_base_url = "https://generativelanguage.googleapis.com"

@@ -60,7 +60,7 @@ Geminize.configure do |config|
 
   # Optional - shown with defaults
   config.api_version = "v1beta"
-  config.default_model = "gemini-1.5-pro-latest"
+  config.default_model = "gemini-2.0-flash"
   config.timeout = 30
   config.open_timeout = 10
   config.log_requests = false
@@ -69,14 +69,14 @@ end
 
 ### Available Configuration Options
 
-| Option          | Required | Default                   | Description                                         |
-| --------------- | -------- | ------------------------- | --------------------------------------------------- |
-| `api_key`       | Yes      | `ENV["GEMINI_API_KEY"]`   | Your Google Gemini API key                          |
-| `api_version`   | No       | `"v1beta"`                | API version to use                                  |
-| `default_model` | No       | `"gemini-1.5-pro-latest"` | Default model to use when not specified in requests |
-| `timeout`       | No       | `30`                      | Request timeout in seconds                          |
-| `open_timeout`  | No       | `10`                      | Connection open timeout in seconds                  |
-| `log_requests`  | No       | `false`                   | Whether to log API requests (useful for debugging)  |
+| Option          | Required | Default                 | Description                                         |
+| --------------- | -------- | ----------------------- | --------------------------------------------------- |
+| `api_key`       | Yes      | `ENV["GEMINI_API_KEY"]` | Your Google Gemini API key                          |
+| `api_version`   | No       | `"v1beta"`              | API version to use                                  |
+| `default_model` | No       | `"gemini-2.0-flash"`    | Default model to use when not specified in requests |
+| `timeout`       | No       | `30`                    | Request timeout in seconds                          |
+| `open_timeout`  | No       | `10`                    | Connection open timeout in seconds                  |
+| `log_requests`  | No       | `false`                 | Whether to log API requests (useful for debugging)  |
 
 ### Validating Configuration
 
@@ -110,7 +110,7 @@ response = Geminize.generate_text("Tell me a joke about Ruby programming")
 puts response.text
 
 # Use a specific model
-response = Geminize.generate_text("Explain quantum computing", "gemini-1.5-flash-latest")
+response = Geminize.generate_text("Explain quantum computing", "gemini-2.0-flash")
 puts response.text
 ```
 
@@ -150,7 +150,7 @@ Alternatively, you can use the more flexible ContentRequest API:
 # Create a content request
 request = Geminize::Models::ContentRequest.new(
   "Tell me about these images:",
-  "gemini-1.5-pro-latest"
+  "gemini-2.0-flash"
 )
 
 # Add images using different methods
