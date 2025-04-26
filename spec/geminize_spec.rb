@@ -103,7 +103,7 @@ RSpec.describe Geminize do
     before do
       # Configure with real API key from env
       Geminize.configure do |config|
-        config.api_key = ENV["GEMINI_API_KEY"]
+        config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key"
         config.default_model = model_name
       end
     end
@@ -200,7 +200,7 @@ RSpec.describe Geminize do
     before do
       # Configure with API key
       Geminize.configure do |config|
-        config.api_key = ENV["GEMINI_API_KEY"]
+        config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key"
         config.default_model = model_name
       end
 
@@ -247,7 +247,7 @@ RSpec.describe Geminize do
     before do
       # Configure with real API key from env
       Geminize.configure do |config|
-        config.api_key = ENV["GEMINI_API_KEY"]
+        config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key"
         config.default_model = model_name
       end
     end
@@ -421,7 +421,7 @@ RSpec.describe Geminize do
     before do
       # Configure with real API key from env
       Geminize.configure do |config|
-        config.api_key = ENV["GEMINI_API_KEY"]
+        config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key"
         config.default_embedding_model = model_name
       end
     end
