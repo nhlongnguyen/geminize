@@ -47,6 +47,7 @@ RSpec.describe Geminize::Models::EmbeddingRequest do
       hash = request.to_hash
 
       expect(hash).to eq({
+        model: model_name,
         content: {
           parts: [
             {text: text}
@@ -60,19 +61,69 @@ RSpec.describe Geminize::Models::EmbeddingRequest do
       request = described_class.new(text, model_name, title: "Sample Title")
       hash = request.to_hash
 
+      expect(hash[:model]).to eq(model_name)
       expect(hash[:content][:parts].first).to include(text: text)
       expect(hash[:content][:title]).to eq("Sample Title")
     end
 
-    it "formats a multiple text request properly" do
+    it "formats multiple text requests with 'requests' array" do
       texts = ["First text", "Second text", "Third text"]
       request = described_class.new(texts, model_name)
       hash = request.to_hash
 
-      expect(hash[:content][:parts].size).to eq(3)
-      expect(hash[:content][:parts][0]).to eq({text: texts[0]})
-      expect(hash[:content][:parts][1]).to eq({text: texts[1]})
-      expect(hash[:content][:parts][2]).to eq({text: texts[2]})
+      expect(hash[:requests]).to be_an(Array)
+      expect(hash[:requests].size).to eq(3)
+
+      hash[:requests].each_with_index do |req, i|
+        expect(req[:model]).to eq("models/#{model_name}")
+        expect(req[:content][:parts]).to eq([{text: texts[i]}])
+        expect(req[:taskType]).to eq("RETRIEVAL_DOCUMENT")
+      end
+    end
+
+    it "includes dimensions in the request when specified" do
+      request = described_class.new(text, model_name, dimensions: 768)
+      hash = request.to_hash
+
+      expect(hash[:dimensions]).to eq(768)
+    end
+
+    it "includes task type in both single and batch requests" do
+      # Single request
+      request = described_class.new(text, model_name, task_type: "SEMANTIC_SIMILARITY")
+      hash = request.to_hash
+      expect(hash[:taskType]).to eq("SEMANTIC_SIMILARITY")
+
+      # Batch request
+      texts = ["First text", "Second text"]
+      batch_request = described_class.new(texts, model_name, task_type: "SEMANTIC_SIMILARITY")
+      batch_hash = batch_request.to_hash
+
+      batch_hash[:requests].each do |req|
+        expect(req[:taskType]).to eq("SEMANTIC_SIMILARITY")
+      end
+    end
+  end
+
+  describe "#single_request_hash" do
+    it "creates a properly formatted single request hash" do
+      request = described_class.new(text, model_name, task_type: "CLUSTERING")
+      hash = request.single_request_hash("Test text")
+
+      expect(hash).to eq({
+        model: model_name,
+        content: {
+          parts: [{text: "Test text"}]
+        },
+        taskType: "CLUSTERING"
+      })
+    end
+
+    it "includes title when specified" do
+      request = described_class.new(text, model_name, title: "My Title")
+      hash = request.single_request_hash("Test text")
+
+      expect(hash[:content][:title]).to eq("My Title")
     end
   end
 

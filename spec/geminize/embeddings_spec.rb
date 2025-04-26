@@ -12,7 +12,12 @@ RSpec.describe Geminize::Embeddings do
       instance_double(
         "Geminize::Models::EmbeddingRequest",
         model_name: model,
-        to_hash: {content: {parts: [{text: sample_text}]}}
+        batch?: false,
+        to_hash: {
+          model: model,
+          content: {parts: [{text: sample_text}]},
+          taskType: "RETRIEVAL_DOCUMENT"
+        }
       )
     end
 
@@ -42,6 +47,64 @@ RSpec.describe Geminize::Embeddings do
       expect(result).to be_a(Geminize::Models::EmbeddingResponse)
       expect(result.embeddings.length).to eq(1)
       expect(result.embedding).to eq([0.1, 0.2, 0.3, 0.4, 0.5])
+    end
+
+    it "uses the batch endpoint for batch requests" do
+      batch_request = instance_double(
+        "Geminize::Models::EmbeddingRequest",
+        model_name: model,
+        batch?: true,
+        to_hash: {
+          requests: [
+            {model: model, content: {parts: [{text: "Text 1"}]}, taskType: "RETRIEVAL_DOCUMENT"},
+            {model: model, content: {parts: [{text: "Text 2"}]}, taskType: "RETRIEVAL_DOCUMENT"}
+          ]
+        }
+      )
+
+      expect(client).to receive(:post).with(
+        "models/#{model}:batchEmbedContents",
+        batch_request.to_hash
+      ).and_return(response_data)
+
+      result = embeddings.generate(batch_request)
+      expect(result).to be_a(Geminize::Models::EmbeddingResponse)
+    end
+
+    it "uses the special format for text-embedding models in batch requests" do
+      text_embedding_model = "text-embedding-004"
+      text_embedding_batch_request = instance_double(
+        "Geminize::Models::EmbeddingRequest",
+        model_name: text_embedding_model,
+        batch?: true,
+        to_hash: {
+          requests: [
+            {model: text_embedding_model, content: {parts: [{text: "Text 1"}]}, taskType: "RETRIEVAL_DOCUMENT"},
+            {model: text_embedding_model, content: {parts: [{text: "Text 2"}]}, taskType: "RETRIEVAL_DOCUMENT"}
+          ]
+        }
+      )
+
+      expect(client).to receive(:post).with(
+        "#{text_embedding_model}:batchEmbedContents",
+        text_embedding_batch_request.to_hash
+      ).and_return(response_data)
+
+      result = embeddings.generate(text_embedding_batch_request)
+      expect(result).to be_a(Geminize::Models::EmbeddingResponse)
+    end
+
+    it "handles models with full path" do
+      full_model_name = "models/#{model}"
+      allow(embedding_request).to receive(:model_name).and_return(full_model_name)
+
+      expect(client).to receive(:post).with(
+        "models/#{model}:embedContent", # Should strip the "models/" prefix
+        embedding_request.to_hash
+      ).and_return(response_data)
+
+      result = embeddings.generate(embedding_request)
+      expect(result).to be_a(Geminize::Models::EmbeddingResponse)
     end
   end
 
@@ -75,7 +138,14 @@ RSpec.describe Geminize::Embeddings do
     end
 
     it "processes a single text input" do
-      expect(client).to receive(:post).and_return(sample_response_data)
+      # Verify the request format
+      expect(client).to receive(:post) do |endpoint, payload|
+        expect(endpoint).to eq("models/#{model}:embedContent")
+        expect(payload[:model]).to eq(model)
+        expect(payload[:content][:parts].first[:text]).to eq(sample_text)
+        expect(payload[:taskType]).to eq("RETRIEVAL_DOCUMENT")
+        sample_response_data
+      end
 
       result = embeddings.generate_embedding(sample_text, model)
 
@@ -84,8 +154,22 @@ RSpec.describe Geminize::Embeddings do
       expect(result.embedding).to eq([0.1, 0.2, 0.3, 0.4, 0.5])
     end
 
-    it "processes multiple texts efficiently" do
-      expect(client).to receive(:post).and_return(batch_response_data)
+    it "processes multiple texts with batch format" do
+      # Verify the batch request format
+      expect(client).to receive(:post) do |endpoint, payload|
+        expect(endpoint).to eq("models/#{model}:batchEmbedContents")
+        expect(payload[:requests]).to be_an(Array)
+        expect(payload[:requests].length).to eq(3)
+
+        # Check each request in the batch
+        payload[:requests].each_with_index do |req, i|
+          expect(req[:model]).to eq("models/#{model}")
+          expect(req[:content][:parts].first[:text]).to eq(batch_texts[i])
+          expect(req[:taskType]).to eq("RETRIEVAL_DOCUMENT")
+        end
+
+        batch_response_data
+      end
 
       result = embeddings.generate_embedding(batch_texts, model)
 
@@ -107,6 +191,33 @@ RSpec.describe Geminize::Embeddings do
       expect(result).to be_a(Geminize::Models::EmbeddingResponse)
       # In a real test, we'd verify that batch_process_embeddings was called
       # with the right parameters, but that's not possible with the current setup
+    end
+  end
+
+  describe "#batch_process_embeddings" do
+    let(:batch_response) do
+      instance_double(
+        "Geminize::Models::EmbeddingResponse",
+        raw_response: {
+          "embeddings" => [{"values" => [0.1, 0.2, 0.3]}],
+          "usageMetadata" => {"promptTokenCount" => 5, "totalTokenCount" => 5}
+        },
+        usage: {"promptTokenCount" => 5, "totalTokenCount" => 5},
+        prompt_tokens: 5,
+        total_tokens: 5
+      )
+    end
+
+    it "splits large batches and processes them" do
+      # Mock the generate method to return our batch_response
+      expect(embeddings).to receive(:generate).exactly(2).times.and_return(batch_response)
+
+      # Call with 5 texts and batch size of 3
+      texts = ["Text 1", "Text 2", "Text 3", "Text 4", "Text 5"]
+      result = embeddings.send(:batch_process_embeddings, texts, model, {}, 3)
+
+      # We expect combine_responses to be called with an array of our responses
+      expect(result).to be_a(Geminize::Models::EmbeddingResponse)
     end
   end
 

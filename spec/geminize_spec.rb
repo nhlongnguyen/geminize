@@ -406,4 +406,180 @@ RSpec.describe Geminize do
       }.to raise_error(Geminize::GeminizeError)
     end
   end
+
+  describe ".generate_embedding", :vcr do
+    let(:text) { "What is the meaning of life?" }
+    let(:model_name) { "gemini-embedding-exp-03-07" }
+
+    before do
+      # Configure with real API key from env
+      Geminize.configure do |config|
+        config.api_key = ENV["GEMINI_API_KEY"]
+        config.default_embedding_model = model_name
+      end
+    end
+
+    after do
+      Geminize.reset_configuration!
+    end
+
+    it "successfully generates embeddings with default model", vcr: {cassette_name: "generate_embedding_default_model"} do
+      response = Geminize.generate_embedding(text)
+      # Test that we get a valid response object with embeddings
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "successfully generates embeddings with specified model", vcr: {cassette_name: "generate_embedding_specified_model"} do
+      response = Geminize.generate_embedding(text, model_name)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "successfully generates embeddings with task_type parameter", vcr: {cassette_name: "generate_embedding_with_task_type"} do
+      params = {task_type: "SEMANTIC_SIMILARITY"}
+
+      response = Geminize.generate_embedding(text, model_name, params)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "successfully generates embeddings for multiple texts", vcr: {cassette_name: "generate_embedding_multiple_texts"} do
+      texts = ["What is the meaning of life?", "How does gravity work?", "What makes the sky blue?"]
+
+      response = Geminize.generate_embedding(texts, model_name)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings.length).to eq(texts.length)
+    end
+
+    it "successfully handles batching for large arrays of texts", vcr: {cassette_name: "generate_embedding_batching"} do
+      # Create an array of 5 texts (small enough for testing but forces batching with batch_size=2)
+      texts = Array.new(5) { |i| "This is test text #{i}" }
+
+      response = Geminize.generate_embedding(texts, model_name, batch_size: 2)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings.length).to eq(texts.length)
+    end
+
+    it "successfully generates embeddings without retries", vcr: {cassette_name: "generate_embedding_without_retries"} do
+      response = Geminize.generate_embedding(text, nil, with_retries: false)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "successfully generates embeddings with custom retry parameters", vcr: {cassette_name: "generate_embedding_custom_retries"} do
+      response = Geminize.generate_embedding(text, nil, max_retries: 5, retry_delay: 2.0)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "successfully generates embeddings with client options", vcr: {cassette_name: "generate_embedding_client_options"} do
+      client_options = {timeout: 30}
+
+      response = Geminize.generate_embedding(text, nil, client_options: client_options)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "correctly handles SEMANTIC_SIMILARITY task type", vcr: {cassette_name: "generate_embedding_with_task_type_semantic_similarity"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: "SEMANTIC_SIMILARITY")
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "correctly handles CLASSIFICATION task type", vcr: {cassette_name: "generate_embedding_with_task_type_classification"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: "CLASSIFICATION")
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "correctly handles CLUSTERING task type", vcr: {cassette_name: "generate_embedding_with_task_type_clustering"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: "CLUSTERING")
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "correctly handles RETRIEVAL_DOCUMENT task type", vcr: {cassette_name: "generate_embedding_with_task_type_retrieval_document"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: "RETRIEVAL_DOCUMENT")
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "properly handles rate limit errors with retries" do
+      mock_embeddings = instance_double(Geminize::Embeddings)
+      mock_response = instance_double(Geminize::Models::EmbeddingResponse)
+      mock_embeddings_data = [0.1, 0.2, 0.3, 0.4, 0.5]
+
+      # Set up to throw rate limit error on first call, then succeed
+      call_count = 0
+      allow(Geminize::Embeddings).to receive(:new).and_return(mock_embeddings)
+      allow(mock_embeddings).to receive(:generate_embedding) do
+        call_count += 1
+        if call_count == 1
+          raise Geminize::RateLimitError, "Rate limit exceeded"
+        else
+          mock_response
+        end
+      end
+
+      # Mock the response for successful call
+      allow(mock_response).to receive(:embeddings).and_return(mock_embeddings_data)
+      allow(mock_response).to receive(:is_a?).with(Geminize::Models::EmbeddingResponse).and_return(true)
+
+      # Reduce sleep time for faster test
+      allow_any_instance_of(Object).to receive(:sleep)
+
+      # Call with retry parameters
+      response = Geminize.generate_embedding(text, model_name, max_retries: 3, retry_delay: 0.1)
+
+      # Verify we got the response after retry
+      expect(response).to be(mock_response)
+      expect(call_count).to eq(2)
+    end
+
+    it "raises error after max retries exceeded" do
+      mock_embeddings = instance_double(Geminize::Embeddings)
+
+      # Set up to always throw rate limit error
+      allow(Geminize::Embeddings).to receive(:new).and_return(mock_embeddings)
+      allow(mock_embeddings).to receive(:generate_embedding).and_raise(Geminize::RateLimitError, "Rate limit exceeded")
+
+      # Reduce sleep time for faster test
+      allow_any_instance_of(Object).to receive(:sleep)
+
+      # Call with retry parameters - should fail after max retries
+      expect {
+        Geminize.generate_embedding(text, model_name, max_retries: 2, retry_delay: 0.1)
+      }.to raise_error(Geminize::RateLimitError, "Rate limit exceeded")
+    end
+
+    it "wraps other exceptions in GeminizeError", vcr: {cassette_name: "generate_embedding_invalid_model"} do
+      expect {
+        Geminize.generate_embedding(text, "invalid-model-name")
+      }.to raise_error(Geminize::GeminizeError)
+    end
+  end
 end
