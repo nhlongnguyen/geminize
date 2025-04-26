@@ -621,4 +621,94 @@ RSpec.describe Geminize do
       }.to raise_error(Geminize::GeminizeError)
     end
   end
+
+  describe ".chat", :vcr do
+    let(:message) { "Hello, how are you today?" }
+    let(:model_name) { "gemini-2.0-flash" }
+
+    before do
+      # Configure with real API key from env
+      Geminize.configure do |config|
+        config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key"
+        config.default_model = model_name
+      end
+    end
+
+    after do
+      Geminize.reset_configuration!
+    end
+
+    it "creates a new chat and sends a message with default model", vcr: {cassette_name: "chat_new_default_model", record: :once} do
+      result = Geminize.chat(message)
+
+      # Verify result structure
+      expect(result).to be_a(Hash)
+      expect(result[:response]).to be_a(Geminize::Models::ChatResponse)
+      expect(result[:chat]).to be_a(Geminize::Chat)
+
+      # Verify response content
+      expect(result[:response].text).to be_a(String)
+      expect(result[:response].text).not_to be_empty
+
+      # Verify chat state
+      expect(result[:chat].conversation.messages.length).to be >= 2 # At least user message and model response
+    end
+
+    it "sends a message with an existing chat", vcr: {cassette_name: "chat_existing_chat", record: :once} do
+      # First create a chat
+      chat = Geminize.create_chat("Test Conversation")
+
+      # Send first message to establish context
+      first_result = Geminize.chat("My name is Ruby", chat)
+
+      # Send second message using the same chat
+      second_result = Geminize.chat("What's my name?", first_result[:chat])
+
+      # Verify the second response
+      expect(second_result[:response].text).to include("Ruby")
+
+      # Verify it's the same chat instance
+      expect(second_result[:chat]).to be(first_result[:chat])
+
+      # Verify chat history contains all messages
+      expect(second_result[:chat].conversation.messages.length).to be >= 4 # At least 2 user messages and 2 model responses
+    end
+
+    it "sends a message with specified model", vcr: {cassette_name: "chat_specified_model", record: :once} do
+      specified_model = "gemini-2.0-flash" # Using same model as default but explicitly specified
+
+      result = Geminize.chat(message, nil, specified_model)
+
+      # Verify result structure and content
+      expect(result[:response]).to be_a(Geminize::Models::ChatResponse)
+      expect(result[:response].text).to be_a(String)
+      expect(result[:response].text).not_to be_empty
+
+      # We can't directly test the model name here since Chat doesn't expose it
+      # Instead, verify that we get a valid response when using the specified model
+      expect(result[:chat]).to be_a(Geminize::Chat)
+    end
+
+    it "sends a message with generation parameters", vcr: {cassette_name: "chat_with_parameters", record: :once} do
+      params = {temperature: 0.3, max_tokens: 100}
+
+      result = Geminize.chat(message, nil, nil, params)
+
+      # Verify result structure and content
+      expect(result[:response]).to be_a(Geminize::Models::ChatResponse)
+      expect(result[:response].text).to be_a(String)
+      expect(result[:response].text).not_to be_empty
+    end
+
+    it "sends a message with client options", vcr: {cassette_name: "chat_client_options", record: :once} do
+      client_options = {timeout: 30}
+
+      result = Geminize.chat(message, nil, nil, client_options: client_options)
+
+      # Verify result structure and content
+      expect(result[:response]).to be_a(Geminize::Models::ChatResponse)
+      expect(result[:response].text).to be_a(String)
+      expect(result[:response].text).not_to be_empty
+    end
+  end
 end
