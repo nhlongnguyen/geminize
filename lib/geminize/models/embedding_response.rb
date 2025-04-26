@@ -1007,9 +1007,9 @@ module Geminize
             next_idx = rand(vectors.length)
           else
             # Choose next centroid with probability proportional to squared distance
-            probabilities = distances.map { |d| (d / sum_distances) ** 2 }
+            probabilities = distances.map { |d| (d / sum_distances)**2 }
             cumulative_prob = 0.0
-            threshold = rand()
+            threshold = rand
             next_idx = 0
 
             probabilities.each_with_index do |prob, idx|
