@@ -8,7 +8,7 @@ Geminize.configure do |config|
   config.api_key = ENV["GEMINI_API_KEY"] || "your-api-key-here"
 
   # Specify the model to use (optional)
-  config.default_model = "gemini-1.5-pro-latest" # This model supports multimodal inputs
+  config.default_model = "gemini-2.0-flash" # This model supports multimodal inputs
 end
 
 puts "============================================================"

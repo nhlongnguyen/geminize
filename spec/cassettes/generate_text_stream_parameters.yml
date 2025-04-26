@@ -1,0 +1,81 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=<GEMINI_API_KEY>
+    body:
+      encoding: UTF-8
+      string: '{"model":"gemini-2.0-flash","contents":[{"parts":[{"text":"Tell me
+        a story about a dragon"}]}],"generationConfig":{"temperature":0.8,"maxOutputTokens":100}}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.0
+      Accept:
+      - text/event-stream
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - text/event-stream
+      Content-Disposition:
+      - attachment
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Transfer-Encoding:
+      - chunked
+      Date:
+      - Sat, 26 Apr 2025 09:31:35 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=346
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+    body:
+      encoding: UTF-8
+      string: "data: {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \"The\"}],\"role\":
+        \"model\"}}],\"usageMetadata\": {\"promptTokenCount\": 7,\"totalTokenCount\":
+        7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\":
+        \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\": [{\"content\": {\"parts\":
+        [{\"text\": \" scales\"}],\"role\": \"model\"}}],\"usageMetadata\": {\"promptTokenCount\":
+        7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\": \"TEXT\",\"tokenCount\":
+        7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata: {\"candidates\":
+        [{\"content\": {\"parts\": [{\"text\": \" on Ignis shimmered like a thousand
+        sunsets caught in amber. He was a\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" dragon of the Ember
+        Peak, his heart forged in the mountain's fiery core\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \", his breath capable
+        of melting granite. But Ignis was different. He wasn't interested in hoarding
+        gold or terrorizing villages. He yearned for stories\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \".\\n\\nHe'd often
+        perch on the highest peak, overlooking the valley below. He'd watch the humans,
+        small and scurrying like ants, but\"}],\"role\": \"model\"}}],\"usageMetadata\":
+        {\"promptTokenCount\": 7,\"totalTokenCount\": 7,\"promptTokensDetails\": [{\"modality\":
+        \"TEXT\",\"tokenCount\": 7}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\ndata:
+        {\"candidates\": [{\"content\": {\"parts\": [{\"text\": \" their lives\"}],\"role\":
+        \"model\"},\"finishReason\": \"MAX_TOKENS\"}],\"usageMetadata\": {\"promptTokenCount\":
+        7,\"candidatesTokenCount\": 100,\"totalTokenCount\": 107,\"promptTokensDetails\":
+        [{\"modality\": \"TEXT\",\"tokenCount\": 7}],\"candidatesTokensDetails\":
+        [{\"modality\": \"TEXT\",\"tokenCount\": 100}]},\"modelVersion\": \"gemini-2.0-flash\"}\r\n\r\n"
+  recorded_at: Sat, 26 Apr 2025 09:31:36 GMT
+recorded_with: VCR 6.3.1

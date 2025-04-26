@@ -11,7 +11,7 @@ RSpec.describe Geminize::Models::EmbeddingRequest do
       expect(request.model_name).to eq(model_name)
       expect(request.text).to eq(text)
       expect(request.title).to be_nil
-      expect(request.task_type).to eq("RETRIEVAL_DOCUMENT")
+      expect(request.task_type).to eq(Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT)
     end
 
     it "accepts a title" do
@@ -21,9 +21,31 @@ RSpec.describe Geminize::Models::EmbeddingRequest do
     end
 
     it "accepts a task type" do
-      request = described_class.new(text, model_name, task_type: "SEMANTIC_SIMILARITY")
+      request = described_class.new(text, model_name, task_type: Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY)
 
-      expect(request.task_type).to eq("SEMANTIC_SIMILARITY")
+      expect(request.task_type).to eq(Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY)
+    end
+
+    it "supports all task types from the Google AI documentation" do
+      # Test the new task types
+      request1 = described_class.new(text, model_name, task_type: Geminize::Models::EmbeddingRequest::TASK_TYPE_UNSPECIFIED)
+      expect(request1.task_type).to eq(Geminize::Models::EmbeddingRequest::TASK_TYPE_UNSPECIFIED)
+
+      request2 = described_class.new(text, model_name, task_type: Geminize::Models::EmbeddingRequest::QUESTION_ANSWERING)
+      expect(request2.task_type).to eq(Geminize::Models::EmbeddingRequest::QUESTION_ANSWERING)
+
+      request3 = described_class.new(text, model_name, task_type: Geminize::Models::EmbeddingRequest::FACT_VERIFICATION)
+      expect(request3.task_type).to eq(Geminize::Models::EmbeddingRequest::FACT_VERIFICATION)
+
+      request4 = described_class.new(text, model_name, task_type: Geminize::Models::EmbeddingRequest::CODE_RETRIEVAL_QUERY)
+      expect(request4.task_type).to eq(Geminize::Models::EmbeddingRequest::CODE_RETRIEVAL_QUERY)
+
+      # Also check that existing task types still work
+      request5 = described_class.new(text, model_name, task_type: Geminize::Models::EmbeddingRequest::RETRIEVAL_QUERY)
+      expect(request5.task_type).to eq(Geminize::Models::EmbeddingRequest::RETRIEVAL_QUERY)
+
+      request6 = described_class.new(text, model_name, task_type: Geminize::Models::EmbeddingRequest::CLUSTERING)
+      expect(request6.task_type).to eq(Geminize::Models::EmbeddingRequest::CLUSTERING)
     end
 
     it "raises an error for invalid task types" do
@@ -47,6 +69,7 @@ RSpec.describe Geminize::Models::EmbeddingRequest do
       hash = request.to_hash
 
       expect(hash).to eq({
+        model: model_name,
         content: {
           parts: [
             {text: text}
@@ -60,19 +83,84 @@ RSpec.describe Geminize::Models::EmbeddingRequest do
       request = described_class.new(text, model_name, title: "Sample Title")
       hash = request.to_hash
 
+      expect(hash[:model]).to eq(model_name)
       expect(hash[:content][:parts].first).to include(text: text)
       expect(hash[:content][:title]).to eq("Sample Title")
     end
 
-    it "formats a multiple text request properly" do
+    it "formats multiple text requests with 'requests' array" do
       texts = ["First text", "Second text", "Third text"]
       request = described_class.new(texts, model_name)
       hash = request.to_hash
 
-      expect(hash[:content][:parts].size).to eq(3)
-      expect(hash[:content][:parts][0]).to eq({text: texts[0]})
-      expect(hash[:content][:parts][1]).to eq({text: texts[1]})
-      expect(hash[:content][:parts][2]).to eq({text: texts[2]})
+      expect(hash[:requests]).to be_an(Array)
+      expect(hash[:requests].size).to eq(3)
+
+      hash[:requests].each_with_index do |req, i|
+        expect(req[:model]).to eq("models/#{model_name}")
+        expect(req[:content][:parts]).to eq([{text: texts[i]}])
+        expect(req[:taskType]).to eq(Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT)
+      end
+    end
+
+    it "includes dimensions in the request when specified" do
+      request = described_class.new(text, model_name, dimensions: 768)
+      hash = request.to_hash
+
+      expect(hash[:dimensions]).to eq(768)
+    end
+
+    it "includes task type in both single and batch requests" do
+      # Single request
+      request = described_class.new(text, model_name, task_type: Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY)
+      hash = request.to_hash
+      expect(hash[:taskType]).to eq(Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY)
+
+      # Batch request
+      texts = ["First text", "Second text"]
+      batch_request = described_class.new(texts, model_name, task_type: Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY)
+      batch_hash = batch_request.to_hash
+
+      batch_hash[:requests].each do |req|
+        expect(req[:taskType]).to eq(Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY)
+      end
+    end
+  end
+
+  describe "#single_request_hash" do
+    it "creates a properly formatted single request hash" do
+      request = described_class.new(text, model_name, task_type: Geminize::Models::EmbeddingRequest::CLUSTERING)
+      hash = request.single_request_hash("Test text")
+
+      expect(hash).to eq({
+        model: model_name,
+        content: {
+          parts: [{text: "Test text"}]
+        },
+        taskType: Geminize::Models::EmbeddingRequest::CLUSTERING
+      })
+    end
+
+    it "includes title when specified" do
+      request = described_class.new(text, model_name, title: "My Title")
+      hash = request.single_request_hash("Test text")
+
+      expect(hash[:content][:title]).to eq("My Title")
+    end
+
+    it "includes the new task types in the request" do
+      new_task_types = [
+        Geminize::Models::EmbeddingRequest::TASK_TYPE_UNSPECIFIED,
+        Geminize::Models::EmbeddingRequest::QUESTION_ANSWERING,
+        Geminize::Models::EmbeddingRequest::FACT_VERIFICATION,
+        Geminize::Models::EmbeddingRequest::CODE_RETRIEVAL_QUERY
+      ]
+
+      new_task_types.each do |task_type|
+        request = described_class.new(text, model_name, task_type: task_type)
+        hash = request.single_request_hash("Test text")
+        expect(hash[:taskType]).to eq(task_type)
+      end
     end
   end
 

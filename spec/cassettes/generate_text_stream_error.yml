@@ -1,0 +1,57 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/invalid-model:streamGenerateContent?alt=sse&key=<GEMINI_API_KEY>
+    body:
+      encoding: UTF-8
+      string: '{"model":"invalid-model","contents":[{"parts":[{"text":"Tell me a story
+        about a dragon"}]}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.0
+      Accept:
+      - text/event-stream
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Content-Type:
+      - text/event-stream
+      Date:
+      - Sat, 26 Apr 2025 09:31:48 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      Content-Length:
+      - '262'
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=50
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+    body:
+      encoding: UTF-8
+      string: |
+        {
+          "error": {
+            "code": 404,
+            "message": "models/invalid-model is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.",
+            "status": "NOT_FOUND"
+          }
+        }
+  recorded_at: Sat, 26 Apr 2025 09:31:48 GMT
+recorded_with: VCR 6.3.1

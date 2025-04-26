@@ -1,5 +1,13 @@
 # frozen_string_literal: true
 
+# Conditionally load dotenv if it's available
+begin
+  require "dotenv"
+  Dotenv.load
+rescue LoadError
+  # Dotenv is not available, skip loading
+end
+
 require_relative "geminize/version"
 require_relative "geminize/errors"
 require_relative "geminize/configuration"

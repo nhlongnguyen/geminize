@@ -45,6 +45,13 @@ module Geminize
       def build_text_generation_endpoint(model_name)
         build_model_endpoint(model_name, "generateContent")
       end
+
+      # Build the streaming text generation endpoint for a specific model
+      # @param model_name [String] The name of the model
+      # @return [String] The complete API endpoint path for streaming text generation
+      def build_streaming_endpoint(model_name)
+        build_model_endpoint(model_name, "streamGenerateContent")
+      end
     end
   end
 end

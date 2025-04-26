@@ -4,54 +4,96 @@ module Geminize
   module Models
     # Represents a request for embedding generation from the Gemini API
     class EmbeddingRequest
-      # @return [String, Array<String>] The input text(s) to embed
-      attr_reader :text
+      attr_reader :text, :model_name, :task_type, :dimensions, :title
 
-      # @return [String] The model name to use
-      attr_reader :model_name
-
-      # @return [String, nil] Optional title for the request
-      attr_reader :title
-
-      # @return [Integer, nil] The desired dimensionality of the embeddings
-      attr_accessor :dimensions
-
-      # @return [String] The embedding task type (default: 'RETRIEVAL_DOCUMENT')
-      attr_accessor :task_type
+      # Task type constants
+      TASK_TYPE_UNSPECIFIED = "TASK_TYPE_UNSPECIFIED"
+      RETRIEVAL_QUERY = "RETRIEVAL_QUERY"
+      RETRIEVAL_DOCUMENT = "RETRIEVAL_DOCUMENT"
+      SEMANTIC_SIMILARITY = "SEMANTIC_SIMILARITY"
+      CLASSIFICATION = "CLASSIFICATION"
+      CLUSTERING = "CLUSTERING"
+      QUESTION_ANSWERING = "QUESTION_ANSWERING"
+      FACT_VERIFICATION = "FACT_VERIFICATION"
+      CODE_RETRIEVAL_QUERY = "CODE_RETRIEVAL_QUERY"
 
       # Supported task types for embeddings
       TASK_TYPES = [
-        "RETRIEVAL_QUERY",    # For embedding queries for retrieval
-        "RETRIEVAL_DOCUMENT", # For embedding documents for retrieval
-        "SEMANTIC_SIMILARITY", # For embeddings that will be compared for similarity
-        "CLASSIFICATION",     # For embeddings that will be used for classification
-        "CLUSTERING"          # For embeddings that will be clustered
+        TASK_TYPE_UNSPECIFIED, # Default unspecified type
+        RETRIEVAL_QUERY,       # For embedding queries for retrieval
+        RETRIEVAL_DOCUMENT,    # For embedding documents for retrieval
+        SEMANTIC_SIMILARITY,   # For embeddings that will be compared for similarity
+        CLASSIFICATION,        # For embeddings that will be used for classification
+        CLUSTERING,            # For embeddings that will be clustered
+        QUESTION_ANSWERING,    # For embeddings used in question answering
+        FACT_VERIFICATION,     # For embeddings used in fact verification
+        CODE_RETRIEVAL_QUERY   # For embeddings used in code retrieval
       ].freeze
 
       # Initialize a new embedding request
-      # @param text [String, Array<String>] The input text(s) to embed
       # @param model_name [String] The model name to use
+      # @param text [String, Array<String>] The input text(s) to embed
+      # @param task_type [String] The embedding task type
       # @param params [Hash] Additional parameters
       # @option params [Integer] :dimensions Desired dimensionality of the embeddings
-      # @option params [String] :task_type The embedding task type
       # @option params [String] :title Optional title for the request
-      def initialize(text, model_name = nil, params = {})
-        @text = text
-        @model_name = model_name || Geminize.configuration.default_embedding_model
-        @dimensions = params[:dimensions]
-        @task_type = params[:task_type] || "RETRIEVAL_DOCUMENT"
-        @title = params[:title]
+      def initialize(text = nil, model_name = nil, **options)
+        # Support both old positional params and new named params
+        if text.nil? && model_name.nil?
+          # New named parameters style
+          @model_name = options.delete(:model_name)
+          @text = options.delete(:text)
+        else
+          # Old positional parameters style
+          @text = text
+          @model_name = model_name
+        end
+
+        @task_type = options[:task_type] || RETRIEVAL_DOCUMENT
+        @dimensions = options[:dimensions]
+        @title = options[:title]
 
         validate!
       end
 
-      # Convert the request to a hash for the API
+      # Get the request as a hash
       # @return [Hash] The request hash
       def to_hash
+        if batch?
+          build_batch_request
+        else
+          build_single_request
+        end
+      end
+
+      # Alias for to_hash
+      def to_h
+        to_hash
+      end
+
+      # Check if this request contains multiple texts
+      # @return [Boolean] True if the request contains multiple texts
+      def batch?
+        @text.is_a?(Array)
+      end
+
+      # Alias for batch?
+      alias_method :multiple?, :batch?
+
+      # Create a single request hash for the given text
+      # @param text_input [String] The text to create a request for
+      # @return [Hash] The request hash for a single text
+      def single_request_hash(text_input)
         request = {
+          model: @model_name,
           content: {
-            parts: texts_to_parts
-          }
+            parts: [
+              {
+                text: text_input.to_s
+              }
+            ]
+          },
+          taskType: @task_type
         }
 
         # Add title if provided
@@ -59,40 +101,11 @@ module Geminize
 
         # Add optional parameters if they exist
         request[:dimensions] = @dimensions if @dimensions
-        request[:taskType] = @task_type if @task_type
 
         request
       end
 
-      # Alias for to_hash
-      # @return [Hash] The request hash
-      def to_h
-        to_hash
-      end
-
-      # Check if this request contains multiple texts
-      # @return [Boolean] True if the request contains multiple texts
-      def multiple?
-        @text.is_a?(Array)
-      end
-
-      # Check if this request is for a batch of texts
-      # @return [Boolean] True if multiple texts
-      def batch?
-        multiple?
-      end
-
       private
-
-      # Convert texts to API-compatible parts format
-      # @return [Array<Hash>] Array of text parts
-      def texts_to_parts
-        if @text.is_a?(Array)
-          @text.map { |t| {text: t.to_s} }
-        else
-          [{text: @text.to_s}]
-        end
-      end
 
       # Validate the request parameters
       # @raise [Geminize::ValidationError] If any parameter is invalid
@@ -159,6 +172,50 @@ module Geminize
             "INVALID_ARGUMENT"
           )
         end
+      end
+
+      # Create a single request hash
+      # @return [Hash] The request hash for a single text
+      def build_single_request
+        request = {
+          model: @model_name,
+          content: {
+            parts: [
+              {
+                text: @text.to_s
+              }
+            ]
+          },
+          taskType: @task_type
+        }
+
+        # Add title if provided
+        request[:content][:title] = @title if @title
+
+        # Add optional parameters if they exist
+        request[:dimensions] = @dimensions if @dimensions
+
+        request
+      end
+
+      # Create a batch request hash
+      # @return [Hash] The request hash for a batch of texts
+      def build_batch_request
+        {
+          requests: @text.map do |text_item|
+            {
+              model: "models/#{@model_name}",
+              content: {
+                parts: [
+                  {
+                    text: text_item
+                  }
+                ]
+              },
+              taskType: @task_type
+            }
+          end
+        }
       end
     end
   end

@@ -14,7 +14,7 @@ module Geminize
     DEFAULT_API_VERSION = "v1beta"
 
     # Default model
-    DEFAULT_MODEL = "gemini-1.5-pro-latest"
+    DEFAULT_MODEL = "gemini-2.0-flash"
 
     # Default embedding model
     DEFAULT_EMBEDDING_MODEL = "embedding-001"

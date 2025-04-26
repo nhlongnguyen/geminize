@@ -6,7 +6,7 @@ require "webmock/rspec"
 RSpec.describe Geminize::Client do
   let(:api_key) { "test-api-key" }
   let(:api_version) { "v1beta" }
-  let(:default_model) { "gemini-1.5-pro-latest" }
+  let(:default_model) { "gemini-2.0-flash" }
   let(:client) { described_class.new }
 
   before do

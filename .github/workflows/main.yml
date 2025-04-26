@@ -15,7 +15,8 @@ jobs:
       matrix:
         ruby:
           - "3.3.4"
-
+    env:
+      GEMINIZE_API_KEY: dummy-key
     steps:
       - uses: actions/checkout@v4
       - name: Set up Ruby

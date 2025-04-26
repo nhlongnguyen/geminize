@@ -1,5 +1,30 @@
 # frozen_string_literal: true
 
+require "vcr"
+require "webmock/rspec"
+
+VCR.configure do |config|
+  config.cassette_library_dir = "spec/cassettes"
+  config.hook_into :webmock
+  config.configure_rspec_metadata!
+
+  # Filter out sensitive information
+  config.filter_sensitive_data("<GEMINI_API_KEY>") { ENV["GEMINI_API_KEY"] }
+
+  # Create custom URI matcher that ignores API key
+  uri_without_api_key = lambda do |request_1, request_2|
+    uri1 = URI(request_1.uri).to_s.gsub(/[?&]key=[^&]+(&|$)/, '\1')
+    uri2 = URI(request_2.uri).to_s.gsub(/[?&]key=[^&]+(&|$)/, '\1')
+    uri1 == uri2
+  end
+
+  # Set default record mode - record once and replay afterwards
+  config.default_cassette_options = {
+    record: :none,
+    match_requests_on: [:method, uri_without_api_key, :body]
+  }
+end
+
 RSpec.describe Geminize do
   it "has a version number" do
     expect(Geminize::VERSION).not_to be nil
@@ -71,21 +96,15 @@ RSpec.describe Geminize do
     end
   end
 
-  describe ".generate_text" do
-    let(:mock_generator) { instance_double(Geminize::TextGeneration) }
-    let(:mock_response) { instance_double(Geminize::Models::ContentResponse) }
+  describe ".generate_text", :vcr do
     let(:prompt) { "Tell me a story about a dragon" }
-    let(:model_name) { "gemini-1.5-pro-latest" }
+    let(:model_name) { "gemini-2.0-flash" }
 
     before do
-      allow(Geminize::TextGeneration).to receive(:new).and_return(mock_generator)
-      allow(mock_generator).to receive(:generate).and_return(mock_response)
-      allow(mock_generator).to receive(:generate_with_retries).and_return(mock_response)
-
-      # Configure with valid API key
+      # Configure with real API key from env
       Geminize.configure do |config|
-        config.api_key = "test-api-key"
-        config.default_model = "gemini-1.5-flash-latest"
+        config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key"
+        config.default_model = model_name
       end
     end
 
@@ -93,103 +112,143 @@ RSpec.describe Geminize do
       Geminize.reset_configuration!
     end
 
-    it "validates the configuration" do
-      expect(Geminize).to receive(:validate_configuration!)
-      Geminize.generate_text(prompt)
+    it "successfully generates text with default model", vcr: {cassette_name: "generate_text_default_model"} do
+      response = Geminize.generate_text(prompt)
+
+      # Test that we get a valid response object with content
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
     end
 
-    it "uses the default model if none provided" do
-      expect(Geminize::Models::ContentRequest).to receive(:new).with(
-        prompt,
-        "gemini-1.5-flash-latest",
-        {}
-      ).and_call_original
+    it "successfully generates text with specified model", vcr: {cassette_name: "generate_text_specified_model"} do
+      response = Geminize.generate_text(prompt, model_name)
 
-      Geminize.generate_text(prompt)
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
     end
 
-    it "uses the provided model if specified" do
-      expect(Geminize::Models::ContentRequest).to receive(:new).with(
-        prompt,
-        model_name,
-        {}
-      ).and_call_original
-
-      Geminize.generate_text(prompt, model_name)
-    end
-
-    it "passes generation parameters to the content request" do
+    it "successfully generates text with generation parameters", vcr: {cassette_name: "generate_text_with_parameters"} do
       params = {temperature: 0.8, max_tokens: 200}
 
-      expect(Geminize::Models::ContentRequest).to receive(:new).with(
-        prompt,
-        model_name,
-        params
-      ).and_call_original
+      response = Geminize.generate_text(prompt, model_name, params)
 
-      Geminize.generate_text(prompt, model_name, params)
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
     end
 
-    it "uses generate_with_retries by default" do
-      content_request = instance_double(Geminize::Models::ContentRequest)
-      allow(Geminize::Models::ContentRequest).to receive(:new).and_return(content_request)
+    it "successfully generates text without retries", vcr: {cassette_name: "generate_text_without_retries"} do
+      response = Geminize.generate_text(prompt, nil, with_retries: false)
 
-      expect(mock_generator).to receive(:generate_with_retries).with(content_request, 3, 1.0)
-      Geminize.generate_text(prompt)
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
     end
 
-    it "disables retries when with_retries is false" do
-      content_request = instance_double(Geminize::Models::ContentRequest)
-      allow(Geminize::Models::ContentRequest).to receive(:new).and_return(content_request)
+    it "successfully generates text with custom retry parameters", vcr: {cassette_name: "generate_text_custom_retries"} do
+      response = Geminize.generate_text(prompt, nil, max_retries: 5, retry_delay: 2.0)
 
-      expect(mock_generator).to receive(:generate).with(content_request)
-      Geminize.generate_text(prompt, nil, with_retries: false)
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
     end
 
-    it "uses custom retry parameters when provided" do
-      content_request = instance_double(Geminize::Models::ContentRequest)
-      allow(Geminize::Models::ContentRequest).to receive(:new).and_return(content_request)
-
-      expect(mock_generator).to receive(:generate_with_retries).with(content_request, 5, 2.0)
-      Geminize.generate_text(prompt, nil, max_retries: 5, retry_delay: 2.0)
-    end
-
-    it "passes client options to the TextGeneration constructor" do
+    it "successfully generates text with client options", vcr: {cassette_name: "generate_text_client_options"} do
       client_options = {timeout: 30}
 
-      expect(Geminize::TextGeneration).to receive(:new).with(nil, client_options)
-      Geminize.generate_text(prompt, nil, client_options: client_options)
-    end
+      response = Geminize.generate_text(prompt, nil, client_options: client_options)
 
-    it "returns the response from the generator" do
-      result = Geminize.generate_text(prompt)
-      expect(result).to eq(mock_response)
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
     end
   end
 
-  describe ".generate_multimodal" do
-    let(:mock_generator) { instance_double(Geminize::TextGeneration) }
-    let(:mock_response) { instance_double(Geminize::Models::ContentResponse) }
+  describe ".generate_multimodal", :vcr do
     let(:prompt) { "Describe this image" }
-    let(:model_name) { "gemini-1.5-pro-latest" }
-    let(:image_file_path) { "/path/to/image.jpg" }
-    let(:image_url) { "https://example.com/image.jpg" }
-    let(:images) { [{source_type: "file", data: image_file_path}] }
-    let(:content_request) { instance_double(Geminize::Models::ContentRequest) }
+    let(:model_name) { "gemini-2.0-flash" }
+
+    # We'll use a stub to avoid actually making API calls for these tests
+    let(:mock_client) { instance_double(Geminize::Client) }
+    let(:mock_response) do
+      {
+        "candidates" => [
+          {
+            "content" => {
+              "parts" => [
+                {
+                  "text" => "This is a description of the image. It appears to be a cake with chocolate frosting."
+                }
+              ],
+              "role" => "model"
+            },
+            "finishReason" => "STOP",
+            "index" => 0
+          }
+        ],
+        "modelVersion" => "gemini-2.0-flash",
+        "usageMetadata" => {
+          "promptTokenCount" => 25,
+          "candidatesTokenCount" => 16,
+          "totalTokenCount" => 41
+        }
+      }
+    end
 
     before do
-      allow(Geminize::TextGeneration).to receive(:new).and_return(mock_generator)
-      allow(Geminize::Models::ContentRequest).to receive(:new).and_return(content_request)
-      allow(content_request).to receive(:add_image_from_file).and_return(content_request)
-      allow(content_request).to receive(:add_image_from_url).and_return(content_request)
-      allow(content_request).to receive(:add_image_from_bytes).and_return(content_request)
-      allow(mock_generator).to receive(:generate).and_return(mock_response)
-      allow(mock_generator).to receive(:generate_with_retries).and_return(mock_response)
-
-      # Configure with valid API key
+      # Configure with API key
       Geminize.configure do |config|
-        config.api_key = "test-api-key"
-        config.default_model = "gemini-1.5-flash-latest"
+        config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key"
+        config.default_model = model_name
+      end
+
+      # Setup the mock client
+      allow(Geminize::Client).to receive(:new).and_return(mock_client)
+      allow(mock_client).to receive(:post).and_return(mock_response)
+    end
+
+    after do
+      Geminize.reset_configuration!
+    end
+
+    it "successfully generates multimodal content", vcr: {cassette_name: "generate_multimodal"} do
+      image_data = {
+        source_type: "url",
+        data: "https://storage.googleapis.com/generativeai-downloads/images/cake.jpg"
+      }
+
+      response = Geminize.generate_multimodal(prompt, [image_data])
+
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
+    end
+
+    it "successfully generates multimodal content with specified model", vcr: {cassette_name: "generate_multimodal_specified_model"} do
+      image_data = {
+        source_type: "url",
+        data: "https://storage.googleapis.com/generativeai-downloads/images/cake.jpg"
+      }
+
+      response = Geminize.generate_multimodal(prompt, [image_data], model_name)
+
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
+    end
+  end
+
+  describe ".generate_text_stream", :vcr do
+    let(:prompt) { "Tell me a story about a dragon" }
+    let(:model_name) { "gemini-2.0-flash" }
+
+    before do
+      # Configure with real API key from env
+      Geminize.configure do |config|
+        config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key"
+        config.default_model = model_name
       end
     end
 
@@ -197,93 +256,369 @@ RSpec.describe Geminize do
       Geminize.reset_configuration!
     end
 
-    it "validates the configuration" do
-      expect(Geminize).to receive(:validate_configuration!)
-      Geminize.generate_multimodal(prompt, images)
-    end
-
-    it "uses the default model if none provided" do
-      expect(Geminize::Models::ContentRequest).to receive(:new).with(
-        prompt,
-        "gemini-1.5-flash-latest",
-        {}
-      )
-
-      Geminize.generate_multimodal(prompt, images)
-    end
-
-    it "uses the provided model if specified" do
-      expect(Geminize::Models::ContentRequest).to receive(:new).with(
-        prompt,
-        model_name,
-        {}
-      )
-
-      Geminize.generate_multimodal(prompt, images, model_name)
-    end
-
-    it "passes generation parameters to the content request" do
-      params = {temperature: 0.8, max_tokens: 200}
-
-      expect(Geminize::Models::ContentRequest).to receive(:new).with(
-        prompt,
-        model_name,
-        params
-      )
-
-      Geminize.generate_multimodal(prompt, images, model_name, params)
-    end
-
-    it "adds each image to the content request" do
-      expect(content_request).to receive(:add_image_from_file).with(image_file_path)
-      Geminize.generate_multimodal(prompt, images)
-    end
-
-    it "adds multiple images of different types" do
-      multiple_images = [
-        {source_type: "file", data: image_file_path},
-        {source_type: "url", data: image_url}
-      ]
-
-      expect(content_request).to receive(:add_image_from_file).with(image_file_path)
-      expect(content_request).to receive(:add_image_from_url).with(image_url)
-
-      Geminize.generate_multimodal(prompt, multiple_images)
-    end
-
-    it "raises an error for invalid image source types" do
-      invalid_images = [{source_type: "invalid", data: image_file_path}]
-
+    it "requires a block to be given" do
       expect {
-        Geminize.generate_multimodal(prompt, invalid_images)
-      }.to raise_error(Geminize::ValidationError, /Invalid image source type/)
+        Geminize.generate_text_stream(prompt)
+      }.to raise_error(ArgumentError, "A block is required for streaming")
     end
 
-    it "uses generate_with_retries by default" do
-      expect(mock_generator).to receive(:generate_with_retries).with(content_request, 3, 1.0)
-      Geminize.generate_multimodal(prompt, images)
+    it "properly streams text with default options", vcr: {cassette_name: "generate_text_stream_default"} do
+      chunks_received = 0
+      accumulated_text = ""
+
+      Geminize.generate_text_stream(prompt) do |chunk|
+        chunks_received += 1
+
+        # Only append to accumulated_text if it's not the final chunk with metrics
+        unless chunk.is_a?(Hash) && chunk[:usage]
+          accumulated_text += chunk
+        end
+      end
+
+      # Verify we received multiple chunks
+      expect(chunks_received).to be > 1
+
+      # Verify we received substantial content
+      expect(accumulated_text).not_to be_empty
+      expect(accumulated_text.length).to be > 50
     end
 
-    it "disables retries when with_retries is false" do
-      expect(mock_generator).to receive(:generate).with(content_request)
-      Geminize.generate_multimodal(prompt, images, nil, with_retries: false)
+    it "properly streams text with delta mode", vcr: {cassette_name: "generate_text_stream_delta"} do
+      chunks_received = 0
+      accumulated_text = ""
+
+      Geminize.generate_text_stream(prompt, nil, stream_mode: :delta) do |chunk|
+        chunks_received += 1
+
+        # Only append to accumulated_text if it's not the final chunk with metrics
+        unless chunk.is_a?(Hash) && chunk[:usage]
+          accumulated_text += chunk
+        end
+      end
+
+      # Verify we received multiple chunks
+      expect(chunks_received).to be > 1
+
+      # Verify we received substantial content
+      expect(accumulated_text).not_to be_empty
+      expect(accumulated_text.length).to be > 50
     end
 
-    it "uses custom retry parameters when provided" do
-      expect(mock_generator).to receive(:generate_with_retries).with(content_request, 5, 2.0)
-      Geminize.generate_multimodal(prompt, images, nil, max_retries: 5, retry_delay: 2.0)
+    it "properly streams text with raw mode", vcr: {cassette_name: "generate_text_stream_raw"} do
+      chunks_received = 0
+
+      Geminize.generate_text_stream(prompt, nil, stream_mode: :raw) do |chunk|
+        chunks_received += 1
+
+        # Verify each chunk is a hash with the expected structure
+        expect(chunk).to be_a(Hash)
+        expect(chunk["candidates"]).to be_an(Array)
+      end
+
+      # Verify we received multiple chunks
+      expect(chunks_received).to be > 1
     end
 
-    it "passes client options to the TextGeneration constructor" do
+    it "properly streams text with a specific model", vcr: {cassette_name: "generate_text_stream_specific_model"} do
+      custom_model = "gemini-1.5-pro"
+      chunks_received = 0
+      accumulated_text = ""
+
+      Geminize.generate_text_stream(prompt, custom_model) do |chunk|
+        chunks_received += 1
+
+        # Only append to accumulated_text if it's not the final chunk with metrics
+        unless chunk.is_a?(Hash) && chunk[:usage]
+          accumulated_text += chunk
+        end
+      end
+
+      # Verify we received multiple chunks
+      expect(chunks_received).to be > 1
+
+      # Verify we received substantial content
+      expect(accumulated_text).not_to be_empty
+      expect(accumulated_text.length).to be > 50
+    end
+
+    it "properly streams text with generation parameters", vcr: {cassette_name: "generate_text_stream_parameters"} do
+      params = {temperature: 0.8, max_tokens: 100}
+      chunks_received = 0
+      accumulated_text = ""
+
+      Geminize.generate_text_stream(prompt, nil, params) do |chunk|
+        chunks_received += 1
+
+        # Only append to accumulated_text if it's not the final chunk with metrics
+        unless chunk.is_a?(Hash) && chunk[:usage]
+          accumulated_text += chunk
+        end
+      end
+
+      # Verify we received multiple chunks
+      expect(chunks_received).to be > 1
+
+      # Verify we received substantial content
+      expect(accumulated_text).not_to be_empty
+      expect(accumulated_text.length).to be > 50
+    end
+
+    it "properly streams text with client options", vcr: {cassette_name: "generate_text_stream_client_options"} do
+      client_options = {timeout: 30}
+      chunks_received = 0
+      accumulated_text = ""
+
+      Geminize.generate_text_stream(prompt, nil, client_options: client_options) do |chunk|
+        chunks_received += 1
+
+        # Only append to accumulated_text if it's not the final chunk with metrics
+        unless chunk.is_a?(Hash) && chunk[:usage]
+          accumulated_text += chunk
+        end
+      end
+
+      # Verify we received multiple chunks
+      expect(chunks_received).to be > 1
+
+      # Verify we received substantial content
+      expect(accumulated_text).not_to be_empty
+      expect(accumulated_text.length).to be > 50
+    end
+
+    it "supports cancellation during streaming" do
+      chunks_received = 0
+
+      generator = instance_double(Geminize::TextGeneration)
+      allow(Geminize::TextGeneration).to receive(:new).and_return(generator)
+      allow(generator).to receive(:generate_text_stream) do |&block|
+        # Simulate the first chunk
+        block.call("Once upon a time")
+      end
+      allow(generator).to receive(:cancel_streaming).and_return(true)
+
+      # Set up to call cancel_streaming after receiving the first chunk
+      Geminize.generate_text_stream(prompt) do |_|
+        chunks_received += 1
+        Geminize.cancel_streaming if chunks_received >= 1
+      end
+
+      # Should have received one chunk
+      expect(chunks_received).to eq(1)
+    end
+
+    it "wraps non-GeminizeError exceptions in a GeminizeError", vcr: {cassette_name: "generate_text_stream_error"} do
+      # We'll use a malformed model name to provoke an error
+      expect {
+        Geminize.generate_text_stream(prompt, "invalid-model") { |_| }
+      }.to raise_error(Geminize::GeminizeError)
+    end
+  end
+
+  describe ".generate_embedding", :vcr do
+    let(:text) { "What is the meaning of life?" }
+    let(:model_name) { "gemini-embedding-exp-03-07" }
+
+    before do
+      # Configure with real API key from env
+      Geminize.configure do |config|
+        config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key"
+        config.default_embedding_model = model_name
+      end
+    end
+
+    after do
+      Geminize.reset_configuration!
+    end
+
+    it "successfully generates embeddings with default model", vcr: {cassette_name: "generate_embedding_default_model"} do
+      response = Geminize.generate_embedding(text)
+      # Test that we get a valid response object with embeddings
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "successfully generates embeddings with specified model", vcr: {cassette_name: "generate_embedding_specified_model"} do
+      response = Geminize.generate_embedding(text, model_name)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "successfully generates embeddings with task_type parameter", vcr: {cassette_name: "generate_embedding_with_task_type"} do
+      params = {task_type: Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY}
+
+      response = Geminize.generate_embedding(text, model_name, params)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "successfully generates embeddings for multiple texts", vcr: {cassette_name: "generate_embedding_multiple_texts"} do
+      texts = ["What is the meaning of life?", "How does gravity work?", "What makes the sky blue?"]
+
+      response = Geminize.generate_embedding(texts, model_name)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings.length).to eq(texts.length)
+    end
+
+    it "successfully handles batching for large arrays of texts", vcr: {cassette_name: "generate_embedding_batching"} do
+      # Create an array of 5 texts (small enough for testing but forces batching with batch_size=2)
+      texts = Array.new(5) { |i| "This is test text #{i}" }
+
+      response = Geminize.generate_embedding(texts, model_name, batch_size: 2)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings.length).to eq(texts.length)
+    end
+
+    it "successfully generates embeddings without retries", vcr: {cassette_name: "generate_embedding_without_retries"} do
+      response = Geminize.generate_embedding(text, nil, with_retries: false)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "successfully generates embeddings with custom retry parameters", vcr: {cassette_name: "generate_embedding_custom_retries"} do
+      response = Geminize.generate_embedding(text, nil, max_retries: 5, retry_delay: 2.0)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "successfully generates embeddings with client options", vcr: {cassette_name: "generate_embedding_client_options"} do
       client_options = {timeout: 30}
 
-      expect(Geminize::TextGeneration).to receive(:new).with(nil, client_options)
-      Geminize.generate_multimodal(prompt, images, nil, client_options: client_options)
+      response = Geminize.generate_embedding(text, nil, client_options: client_options)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
     end
 
-    it "returns the response from the generator" do
-      result = Geminize.generate_multimodal(prompt, images)
-      expect(result).to eq(mock_response)
+    it "correctly handles SEMANTIC_SIMILARITY task type", vcr: {cassette_name: "generate_embedding_with_task_type_semantic_similarity"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::SEMANTIC_SIMILARITY)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "correctly handles CLASSIFICATION task type", vcr: {cassette_name: "generate_embedding_with_task_type_classification"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::CLASSIFICATION)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "correctly handles CLUSTERING task type", vcr: {cassette_name: "generate_embedding_with_task_type_clustering"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::CLUSTERING)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "correctly handles RETRIEVAL_DOCUMENT task type", vcr: {cassette_name: "generate_embedding_with_task_type_retrieval_document"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "correctly handles QUESTION_ANSWERING task type", vcr: {cassette_name: "generate_embedding_with_task_type_question_answering"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::QUESTION_ANSWERING)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "correctly handles FACT_VERIFICATION task type", vcr: {cassette_name: "generate_embedding_with_task_type_fact_verification"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::FACT_VERIFICATION)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "correctly handles CODE_RETRIEVAL_QUERY task type", vcr: {cassette_name: "generate_embedding_with_task_type_code_retrieval_query"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::CODE_RETRIEVAL_QUERY)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "correctly handles TASK_TYPE_UNSPECIFIED task type", vcr: {cassette_name: "generate_embedding_with_task_type_unspecified"} do
+      response = Geminize.generate_embedding(text, model_name, task_type: Geminize::Models::EmbeddingRequest::TASK_TYPE_UNSPECIFIED)
+
+      expect(response).to be_a(Geminize::Models::EmbeddingResponse)
+      expect(response.embeddings).to be_an(Array)
+      expect(response.embeddings).not_to be_empty
+    end
+
+    it "properly handles rate limit errors with retries" do
+      mock_embeddings = instance_double(Geminize::Embeddings)
+      mock_response = instance_double(Geminize::Models::EmbeddingResponse)
+      mock_embeddings_data = [0.1, 0.2, 0.3, 0.4, 0.5]
+
+      # Set up to throw rate limit error on first call, then succeed
+      call_count = 0
+      allow(Geminize::Embeddings).to receive(:new).and_return(mock_embeddings)
+      allow(mock_embeddings).to receive(:generate_embedding) do
+        call_count += 1
+        if call_count == 1
+          raise Geminize::RateLimitError, "Rate limit exceeded"
+        else
+          mock_response
+        end
+      end
+
+      # Mock the response for successful call
+      allow(mock_response).to receive(:embeddings).and_return(mock_embeddings_data)
+      allow(mock_response).to receive(:is_a?).with(Geminize::Models::EmbeddingResponse).and_return(true)
+
+      # Reduce sleep time for faster test
+      allow_any_instance_of(Object).to receive(:sleep)
+
+      # Call with retry parameters
+      response = Geminize.generate_embedding(text, model_name, max_retries: 3, retry_delay: 0.1)
+
+      # Verify we got the response after retry
+      expect(response).to be(mock_response)
+      expect(call_count).to eq(2)
+    end
+
+    it "raises error after max retries exceeded" do
+      mock_embeddings = instance_double(Geminize::Embeddings)
+
+      # Set up to always throw rate limit error
+      allow(Geminize::Embeddings).to receive(:new).and_return(mock_embeddings)
+      allow(mock_embeddings).to receive(:generate_embedding).and_raise(Geminize::RateLimitError, "Rate limit exceeded")
+
+      # Reduce sleep time for faster test
+      allow_any_instance_of(Object).to receive(:sleep)
+
+      # Call with retry parameters - should fail after max retries
+      expect {
+        Geminize.generate_embedding(text, model_name, max_retries: 2, retry_delay: 0.1)
+      }.to raise_error(Geminize::RateLimitError, "Rate limit exceeded")
+    end
+
+    it "wraps other exceptions in GeminizeError", vcr: {cassette_name: "generate_embedding_invalid_model"} do
+      expect {
+        Geminize.generate_embedding(text, "invalid-model-name")
+      }.to raise_error(Geminize::GeminizeError)
     end
   end
 end

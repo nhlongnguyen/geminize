@@ -5,8 +5,8 @@ require "spec_helper"
 RSpec.describe Geminize::TextGeneration do
   let(:client) { instance_double(Geminize::Client) }
   let(:prompt) { "Tell me a story about a dragon" }
-  let(:model_name) { "gemini-1.5-pro-latest" }
-  let(:default_model) { "gemini-1.5-pro-latest" }
+  let(:model_name) { "gemini-2.0-flash" }
+  let(:default_model) { "gemini-2.0-flash" }
   let(:generation_endpoint) { "models/#{model_name}:generateContent" }
 
   let(:mock_response) do

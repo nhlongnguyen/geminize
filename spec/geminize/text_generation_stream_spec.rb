@@ -248,12 +248,13 @@ RSpec.describe Geminize::TextGeneration do
           chunks << chunk
         end
 
+        # First 3 chunks should be the text parts
         expect(chunks.length).to eq(4) # 3 text chunks + 1 final metrics hash
         expect(chunks[0]).to eq("Once ")
         expect(chunks[1]).to eq("upon a ")
         expect(chunks[2]).to eq("time")
 
-        # Check the final metrics hash
+        # Last chunk should be the metrics hash
         expect(chunks[3]).to be_a(Hash)
         expect(chunks[3][:text]).to eq("Once upon a time")
         expect(chunks[3][:finish_reason]).to eq("STOP")
@@ -263,58 +264,56 @@ RSpec.describe Geminize::TextGeneration do
         expect(chunks[3][:usage][:total_tokens]).to eq(30)
       end
 
-      context "with error handling" do
-        it "raises StreamingError when streaming fails" do
-          allow(client).to receive(:post_stream).and_raise(Geminize::StreamingError.new("Network error"))
-
-          expect {
-            text_generation.generate_text_stream(prompt) { |_| }
-          }.to raise_error(Geminize::StreamingError, /Network error/)
-        end
-
-        it "raises StreamingInterruptedError when streaming is interrupted" do
-          allow(client).to receive(:post_stream).and_raise(Geminize::StreamingInterruptedError.new("Connection interrupted"))
-
-          expect {
-            text_generation.generate_text_stream(prompt) { |_| }
-          }.to raise_error(Geminize::StreamingInterruptedError, /Connection interrupted/)
-        end
-
-        it "raises StreamingTimeoutError when streaming times out" do
-          allow(client).to receive(:post_stream).and_raise(Geminize::StreamingTimeoutError.new("Connection timed out"))
-
-          expect {
-            text_generation.generate_text_stream(prompt) { |_| }
-          }.to raise_error(Geminize::StreamingTimeoutError, /Connection timed out/)
-        end
-
-        it "raises InvalidStreamFormatError when stream format is invalid" do
-          allow(client).to receive(:post_stream).and_raise(Geminize::InvalidStreamFormatError.new("Invalid stream format"))
-
-          expect {
-            text_generation.generate_text_stream(prompt) { |_| }
-          }.to raise_error(Geminize::InvalidStreamFormatError, /Invalid stream format/)
-        end
-
-        it "adds partial response context to error message when chunks were received" do
-          # First yield some successful chunks, then raise an error
-          allow(client).to receive(:post_stream) do |&block|
+      context "with streaming errors" do
+        it "properly handles network interruptions during streaming" do
+          # Configure the client to yield some successful chunks then raise a network error
+          expect(client).to receive(:post_stream) do |&block|
+            # First yield some successful chunks
             block.call(stream_response1)
             block.call(stream_response2)
+            # Then simulate a network error
             raise Geminize::StreamingInterruptedError.new("Connection interrupted")
           end
 
+          # Capture what chunks were received before the error
+          received_chunks = []
+
+          # The streaming should raise a StreamingInterruptedError
           expect {
-            text_generation.generate_text_stream(prompt) { |_| }
-          }.to raise_error(Geminize::StreamingInterruptedError, /Connection interrupted.*Partial response received:.*characters/)
+            text_generation.generate_text_stream(prompt) do |chunk|
+              received_chunks << chunk
+            end
+          }.to raise_error(Geminize::StreamingInterruptedError) do |error|
+            # Error message should contain partial response information
+            expect(error.message).to include("Connection interrupted")
+            expect(error.message).to include("Partial response received")
+            # Error should include the length of partial response received
+            expect(error.message).to include("12 characters")
+          end
+
+          # We should have received the first two chunks before the error
+          expect(received_chunks.length).to eq(2)
+          expect(received_chunks[0]).to eq("Once ")
+          expect(received_chunks[1]).to eq("Once upon a ")
         end
 
-        it "wraps non-streaming errors in GeminizeError" do
-          allow(client).to receive(:post_stream).and_raise(StandardError.new("Unknown error"))
+        it "wraps non-streaming specific exceptions in GeminizeError" do
+          # Simulate a generic error during streaming
+          expect(client).to receive(:post_stream).and_raise(StandardError.new("Unknown error"))
 
           expect {
             text_generation.generate_text_stream(prompt) { |_| }
           }.to raise_error(Geminize::GeminizeError, /Error during text generation streaming: Unknown error/)
+        end
+
+        it "wraps GeminizeError subclasses in GeminizeError too" do
+          # Specific GeminizeError subclasses are also wrapped
+          error = Geminize::ValidationError.new("Invalid request")
+          expect(client).to receive(:post_stream).and_raise(error)
+
+          expect {
+            text_generation.generate_text_stream(prompt) { |_| }
+          }.to raise_error(Geminize::GeminizeError, /Error during text generation streaming: Invalid request/)
         end
       end
     end

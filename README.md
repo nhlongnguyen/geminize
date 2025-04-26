@@ -45,11 +45,35 @@ Set the `GEMINI_API_KEY` environment variable:
 export GEMINI_API_KEY=your-api-key-here
 ```
 
-In Rails, you can use the dotenv gem and add it to your `.env` file:
+#### Using dotenv
+
+Geminize has built-in support for the [dotenv](https://github.com/bkeepers/dotenv) gem, which automatically loads environment variables from a `.env` file in your project's root directory.
+
+1. Create a `.env` file in your project root (copy from `.env.example`):
 
 ```
-GEMINI_API_KEY=your-api-key-here
+# Gemini API Key
+GOOGLE_AI_API_KEY=your_api_key_here
+
+# API Configuration
+GOOGLE_AI_API_VERSION=v1beta
+GEMINI_DEFAULT_MODEL=gemini-1.5-pro-latest
+
+# Generation Parameters
+GEMINI_TEMPERATURE=0.7
+GEMINI_MAX_TOKENS=8192
 ```
+
+2. Add `.env` to your `.gitignore` file to keep your API keys secure:
+
+```
+# Add to .gitignore
+.env
+```
+
+3. For test environments, create a `.env.test` file with test-specific configuration.
+
+The gem will automatically load these environment variables when it initializes.
 
 ### Method 2: Configuration Block
 
@@ -60,7 +84,7 @@ Geminize.configure do |config|
 
   # Optional - shown with defaults
   config.api_version = "v1beta"
-  config.default_model = "gemini-1.5-pro-latest"
+  config.default_model = "gemini-2.0-flash"
   config.timeout = 30
   config.open_timeout = 10
   config.log_requests = false
@@ -69,14 +93,14 @@ end
 
 ### Available Configuration Options
 
-| Option          | Required | Default                   | Description                                         |
-| --------------- | -------- | ------------------------- | --------------------------------------------------- |
-| `api_key`       | Yes      | `ENV["GEMINI_API_KEY"]`   | Your Google Gemini API key                          |
-| `api_version`   | No       | `"v1beta"`                | API version to use                                  |
-| `default_model` | No       | `"gemini-1.5-pro-latest"` | Default model to use when not specified in requests |
-| `timeout`       | No       | `30`                      | Request timeout in seconds                          |
-| `open_timeout`  | No       | `10`                      | Connection open timeout in seconds                  |
-| `log_requests`  | No       | `false`                   | Whether to log API requests (useful for debugging)  |
+| Option          | Required | Default                 | Description                                         |
+| --------------- | -------- | ----------------------- | --------------------------------------------------- |
+| `api_key`       | Yes      | `ENV["GEMINI_API_KEY"]` | Your Google Gemini API key                          |
+| `api_version`   | No       | `"v1beta"`              | API version to use                                  |
+| `default_model` | No       | `"gemini-2.0-flash"`    | Default model to use when not specified in requests |
+| `timeout`       | No       | `30`                    | Request timeout in seconds                          |
+| `open_timeout`  | No       | `10`                    | Connection open timeout in seconds                  |
+| `log_requests`  | No       | `false`                 | Whether to log API requests (useful for debugging)  |
 
 ### Validating Configuration
 
@@ -110,7 +134,7 @@ response = Geminize.generate_text("Tell me a joke about Ruby programming")
 puts response.text
 
 # Use a specific model
-response = Geminize.generate_text("Explain quantum computing", "gemini-1.5-flash-latest")
+response = Geminize.generate_text("Explain quantum computing", "gemini-2.0-flash")
 puts response.text
 ```
 
@@ -150,7 +174,7 @@ Alternatively, you can use the more flexible ContentRequest API:
 # Create a content request
 request = Geminize::Models::ContentRequest.new(
   "Tell me about these images:",
-  "gemini-1.5-pro-latest"
+  "gemini-2.0-flash"
 )
 
 # Add images using different methods
@@ -212,7 +236,26 @@ vector1 = embeddings.values[0].value
 vector2 = embeddings.values[1].value
 similarity = Geminize.cosine_similarity(vector1, vector2)
 puts "Similarity: #{similarity}"
+
+# Specify a task type for optimized embeddings
+question_embedding = Geminize.generate_embedding(
+  "How do I install Ruby gems?",
+  task_type: Geminize::Models::EmbeddingRequest::QUESTION_ANSWERING
+)
+
+# Available task types:
+# - RETRIEVAL_QUERY: For embedding queries in a search/retrieval system
+# - RETRIEVAL_DOCUMENT: For embedding documents in a search corpus
+# - SEMANTIC_SIMILARITY: For comparing text similarity
+# - CLASSIFICATION: For text classification tasks
+# - CLUSTERING: For clustering text data
+# - QUESTION_ANSWERING: For question answering systems
+# - FACT_VERIFICATION: For fact checking applications
+# - CODE_RETRIEVAL_QUERY: For code search applications
+# - TASK_TYPE_UNSPECIFIED: Default unspecified type
 ```
+
+See the `examples/embeddings.rb` file for more comprehensive examples of working with embeddings.
 
 ## Streaming Responses
 
