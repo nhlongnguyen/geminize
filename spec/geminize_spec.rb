@@ -11,10 +11,17 @@ VCR.configure do |config|
   # Filter out sensitive information
   config.filter_sensitive_data("<GEMINI_API_KEY>") { ENV["GEMINI_API_KEY"] }
 
+  # Create custom URI matcher that ignores API key
+  uri_without_api_key = lambda do |request_1, request_2|
+    uri1 = URI(request_1.uri).to_s.gsub(/key=[^&]+/, "key=DUMMY_KEY")
+    uri2 = URI(request_2.uri).to_s.gsub(/key=[^&]+/, "key=DUMMY_KEY")
+    uri1 == uri2
+  end
+
   # Set default record mode - record once and replay afterwards
   config.default_cassette_options = {
     record: :once,
-    match_requests_on: [:method, :uri, :body]
+    match_requests_on: [:method, uri_without_api_key, :body]
   }
 end
 
