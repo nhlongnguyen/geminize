@@ -91,13 +91,13 @@ RSpec.describe Geminize do
 
   describe ".generate_text", :vcr do
     let(:prompt) { "Tell me a story about a dragon" }
-    let(:model_name) { "gemini-1.5-pro-latest" }
+    let(:model_name) { "gemini-2.0-flash" }
 
     before do
       # Configure with real API key from env
       Geminize.configure do |config|
         config.api_key = ENV["GEMINI_API_KEY"]
-        config.default_model = "gemini-1.5-flash-latest"
+        config.default_model = model_name
       end
     end
 
@@ -159,5 +159,77 @@ RSpec.describe Geminize do
     end
   end
 
-  # Note: Multimodal tests are removed for now as they require additional setup
+  describe ".generate_multimodal", :vcr do
+    let(:prompt) { "Describe this image" }
+    let(:model_name) { "gemini-2.0-flash" }
+
+    # We'll use a stub to avoid actually making API calls for these tests
+    let(:mock_client) { instance_double(Geminize::Client) }
+    let(:mock_response) do
+      {
+        "candidates" => [
+          {
+            "content" => {
+              "parts" => [
+                {
+                  "text" => "This is a description of the image. It appears to be a cake with chocolate frosting."
+                }
+              ],
+              "role" => "model"
+            },
+            "finishReason" => "STOP",
+            "index" => 0
+          }
+        ],
+        "modelVersion" => "gemini-2.0-flash",
+        "usageMetadata" => {
+          "promptTokenCount" => 25,
+          "candidatesTokenCount" => 16,
+          "totalTokenCount" => 41
+        }
+      }
+    end
+
+    before do
+      # Configure with API key
+      Geminize.configure do |config|
+        config.api_key = ENV["GEMINI_API_KEY"]
+        config.default_model = model_name
+      end
+
+      # Setup the mock client
+      allow(Geminize::Client).to receive(:new).and_return(mock_client)
+      allow(mock_client).to receive(:post).and_return(mock_response)
+    end
+
+    after do
+      Geminize.reset_configuration!
+    end
+
+    it "successfully generates multimodal content", vcr: {cassette_name: "generate_multimodal"} do
+      image_data = {
+        source_type: "url",
+        data: "https://storage.googleapis.com/generativeai-downloads/images/cake.jpg"
+      }
+
+      response = Geminize.generate_multimodal(prompt, [image_data])
+
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
+    end
+
+    it "successfully generates multimodal content with specified model", vcr: {cassette_name: "generate_multimodal_specified_model"} do
+      image_data = {
+        source_type: "url",
+        data: "https://storage.googleapis.com/generativeai-downloads/images/cake.jpg"
+      }
+
+      response = Geminize.generate_multimodal(prompt, [image_data], model_name)
+
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
+    end
+  end
 end
