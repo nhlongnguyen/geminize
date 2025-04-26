@@ -166,7 +166,7 @@ RSpec.describe Geminize do
     end
   end
 
-  describe ".generate_multimodal", :vcr do
+  describe ".generate_text_multimodal", :vcr do
     let(:prompt) { "Describe this image" }
     let(:model_name) { "gemini-2.0-flash" }
 
@@ -213,26 +213,26 @@ RSpec.describe Geminize do
       Geminize.reset_configuration!
     end
 
-    it "successfully generates multimodal content", vcr: {cassette_name: "generate_multimodal"} do
+    it "successfully generates multimodal content", vcr: {cassette_name: "generate_text_multimodal"} do
       image_data = {
         source_type: "url",
         data: "https://storage.googleapis.com/generativeai-downloads/images/cake.jpg"
       }
 
-      response = Geminize.generate_multimodal(prompt, [image_data])
+      response = Geminize.generate_text_multimodal(prompt, [image_data])
 
       expect(response).to be_a(Geminize::Models::ContentResponse)
       expect(response.text).to be_a(String)
       expect(response.text).not_to be_empty
     end
 
-    it "successfully generates multimodal content with specified model", vcr: {cassette_name: "generate_multimodal_specified_model"} do
+    it "successfully generates multimodal content with specified model", vcr: {cassette_name: "generate_text_multimodal_specified_model"} do
       image_data = {
         source_type: "url",
         data: "https://storage.googleapis.com/generativeai-downloads/images/cake.jpg"
       }
 
-      response = Geminize.generate_multimodal(prompt, [image_data], model_name)
+      response = Geminize.generate_text_multimodal(prompt, [image_data], model_name)
 
       expect(response).to be_a(Geminize::Models::ContentResponse)
       expect(response.text).to be_a(String)

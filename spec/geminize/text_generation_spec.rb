@@ -116,7 +116,7 @@ RSpec.describe Geminize::TextGeneration do
     end
   end
 
-  describe "#generate_multimodal" do
+  describe "#generate_text_multimodal" do
     let(:text_generation) { described_class.new(client) }
     let(:prompt) { "Describe this image" }
     let(:image_file_path) { "/path/to/image.jpg" }
@@ -142,7 +142,7 @@ RSpec.describe Geminize::TextGeneration do
 
         expect(content_request).to receive(:add_image_from_file).with(image_file_path)
 
-        response = text_generation.generate_multimodal(prompt, images, model_name)
+        response = text_generation.generate_text_multimodal(prompt, images, model_name)
         expect(response).to be_a(Geminize::Models::ContentResponse)
       end
     end
@@ -153,7 +153,7 @@ RSpec.describe Geminize::TextGeneration do
 
         expect(content_request).to receive(:add_image_from_url).with(image_url)
 
-        response = text_generation.generate_multimodal(prompt, images, model_name)
+        response = text_generation.generate_text_multimodal(prompt, images, model_name)
         expect(response).to be_a(Geminize::Models::ContentResponse)
       end
     end
@@ -164,7 +164,7 @@ RSpec.describe Geminize::TextGeneration do
 
         expect(content_request).to receive(:add_image_from_bytes).with(image_bytes, mime_type)
 
-        response = text_generation.generate_multimodal(prompt, images, model_name)
+        response = text_generation.generate_text_multimodal(prompt, images, model_name)
         expect(response).to be_a(Geminize::Models::ContentResponse)
       end
     end
@@ -179,7 +179,7 @@ RSpec.describe Geminize::TextGeneration do
         expect(content_request).to receive(:add_image_from_file).with(image_file_path)
         expect(content_request).to receive(:add_image_from_url).with(image_url)
 
-        response = text_generation.generate_multimodal(prompt, images, model_name)
+        response = text_generation.generate_text_multimodal(prompt, images, model_name)
         expect(response).to be_a(Geminize::Models::ContentResponse)
       end
     end
@@ -189,7 +189,7 @@ RSpec.describe Geminize::TextGeneration do
         images = [{source_type: "invalid", data: image_file_path}]
 
         expect {
-          text_generation.generate_multimodal(prompt, images, model_name)
+          text_generation.generate_text_multimodal(prompt, images, model_name)
         }.to raise_error(Geminize::ValidationError, /Invalid image source type/)
       end
     end

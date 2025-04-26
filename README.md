@@ -144,21 +144,21 @@ Geminize allows you to send mixed content including text and images to the Gemin
 
 ```ruby
 # Generate content with an image from a file
-response = Geminize.generate_multimodal(
+response = Geminize.generate_text_multimodal(
   "Describe this image in detail:",
   [{ source_type: 'file', data: 'path/to/image.jpg' }]
 )
 puts response.text
 
 # Using an image URL
-response = Geminize.generate_multimodal(
+response = Geminize.generate_text_multimodal(
   "What's in this image?",
   [{ source_type: 'url', data: 'https://example.com/sample-image.jpg' }]
 )
 puts response.text
 
 # Using multiple images
-response = Geminize.generate_multimodal(
+response = Geminize.generate_text_multimodal(
   "Compare these two images:",
   [
     { source_type: 'file', data: 'path/to/image1.jpg' },

@@ -169,13 +169,13 @@ module Geminize
     # @return [Geminize::Models::ContentResponse] The generation response
     # @raise [Geminize::GeminizeError] If the request fails
     # @example Generate with an image file
-    #   Geminize.generate_multimodal("Describe this image", [{source_type: 'file', data: 'path/to/image.jpg'}])
+    #   Geminize.generate_text_multimodal("Describe this image", [{source_type: 'file', data: 'path/to/image.jpg'}])
     # @example Generate with multiple images
-    #   Geminize.generate_multimodal("Compare these images", [
+    #   Geminize.generate_text_multimodal("Compare these images", [
     #     {source_type: 'file', data: 'path/to/image1.jpg'},
     #     {source_type: 'url', data: 'https://example.com/image2.jpg'}
     #   ])
-    def generate_multimodal(prompt, images, model_name = nil, params = {})
+    def generate_text_multimodal(prompt, images, model_name = nil, params = {})
       validate_configuration!
 
       # Extract special options

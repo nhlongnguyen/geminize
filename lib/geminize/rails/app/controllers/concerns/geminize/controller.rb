@@ -60,7 +60,7 @@ module Geminize
     # @param params [Hash] Additional parameters for generation
     # @return [Geminize::Models::ContentResponse] The response
     def generate_gemini_multimodal(prompt, images, model_name = nil, params = {})
-      Geminize.generate_multimodal(prompt, images, model_name, params)
+      Geminize.generate_text_multimodal(prompt, images, model_name, params)
     end
 
     # Generate embeddings for text using Gemini

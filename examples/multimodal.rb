@@ -17,7 +17,7 @@ puts "============================================================"
 
 begin
   # Generate content with an image from a file
-  response = Geminize.generate_multimodal(
+  response = Geminize.generate_text_multimodal(
     "Describe this image in detail:",
     [{source_type: "file", data: "path/to/image.jpg"}]
   )
@@ -36,7 +36,7 @@ puts "============================================================"
 
 begin
   # Generate content with an image from a URL
-  response = Geminize.generate_multimodal(
+  response = Geminize.generate_text_multimodal(
     "What's in this image?",
     [{source_type: "url", data: "https://example.com/sample-image.jpg"}],
     nil, # Use default model
@@ -56,7 +56,7 @@ puts "============================================================"
 
 begin
   # Generate content comparing multiple images
-  response = Geminize.generate_multimodal(
+  response = Geminize.generate_text_multimodal(
     "Compare these two images and describe the differences:",
     [
       {source_type: "file", data: "path/to/image1.jpg"},
@@ -82,7 +82,7 @@ begin
   image_bytes = File.binread("path/to/image.jpg")
 
   # Generate content with raw image bytes
-  response = Geminize.generate_multimodal(
+  response = Geminize.generate_text_multimodal(
     "Analyze this image:",
     [{source_type: "bytes", data: image_bytes, mime_type: "image/jpeg"}]
   )
