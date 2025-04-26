@@ -13,8 +13,8 @@ VCR.configure do |config|
 
   # Create custom URI matcher that ignores API key
   uri_without_api_key = lambda do |request_1, request_2|
-    uri1 = URI(request_1.uri).to_s.gsub(/key=[^&]+/, "key=DUMMY_KEY")
-    uri2 = URI(request_2.uri).to_s.gsub(/key=[^&]+/, "key=DUMMY_KEY")
+    uri1 = URI(request_1.uri).to_s.gsub(/[?&]key=[^&]+(&|$)/, '\1')
+    uri2 = URI(request_2.uri).to_s.gsub(/[?&]key=[^&]+(&|$)/, '\1')
     uri1 == uri2
   end
 

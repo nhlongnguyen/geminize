@@ -19,4 +19,5 @@ end
 
 group :development, :test do
   gem "pry"
+  gem "dotenv"
 end

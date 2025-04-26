@@ -45,11 +45,35 @@ Set the `GEMINI_API_KEY` environment variable:
 export GEMINI_API_KEY=your-api-key-here
 ```
 
-In Rails, you can use the dotenv gem and add it to your `.env` file:
+#### Using dotenv
+
+Geminize has built-in support for the [dotenv](https://github.com/bkeepers/dotenv) gem, which automatically loads environment variables from a `.env` file in your project's root directory.
+
+1. Create a `.env` file in your project root (copy from `.env.example`):
 
 ```
-GEMINI_API_KEY=your-api-key-here
+# Gemini API Key
+GOOGLE_AI_API_KEY=your_api_key_here
+
+# API Configuration
+GOOGLE_AI_API_VERSION=v1beta
+GEMINI_DEFAULT_MODEL=gemini-1.5-pro-latest
+
+# Generation Parameters
+GEMINI_TEMPERATURE=0.7
+GEMINI_MAX_TOKENS=8192
 ```
+
+2. Add `.env` to your `.gitignore` file to keep your API keys secure:
+
+```
+# Add to .gitignore
+.env
+```
+
+3. For test environments, create a `.env.test` file with test-specific configuration.
+
+The gem will automatically load these environment variables when it initializes.
 
 ### Method 2: Configuration Block
 

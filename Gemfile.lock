@@ -20,6 +20,7 @@ GEM
       bigdecimal
       rexml
     diff-lcs (1.6.1)
+    dotenv (3.1.7)
     faraday (2.13.0)
       faraday-net_http (>= 2.0, < 3.5)
       json
@@ -115,6 +116,7 @@ PLATFORMS
 
 DEPENDENCIES
   climate_control (~> 1.2)
+  dotenv
   geminize!
   pry
   rake (~> 13.0)
