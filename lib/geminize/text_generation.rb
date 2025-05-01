@@ -36,12 +36,15 @@ module Geminize
     # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
     # @option params [Integer] :top_k Top-k value for sampling
     # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+    # @option params [String] :system_instruction System instruction to guide model behavior
     # @return [Geminize::Models::ContentResponse] The generation response
     # @raise [Geminize::GeminizeError] If the request fails
     def generate_text(prompt, model_name = nil, params = {})
+      model = model_name || Geminize.configuration.default_model
+
       content_request = Models::ContentRequest.new(
         prompt,
-        model_name || Geminize.configuration.default_model,
+        model,
         params
       )
 
@@ -58,6 +61,7 @@ module Geminize
     # @option params [Integer] :top_k Top-k value for sampling
     # @option params [Array<String>] :stop_sequences Stop sequences to end generation
     # @option params [Symbol] :stream_mode Mode for processing stream chunks (:raw, :incremental, or :delta)
+    # @option params [String] :system_instruction System instruction to guide model behavior
     # @yield [chunk] Yields each chunk of the streaming response
     # @yieldparam chunk [String, Hash, StreamResponse] A chunk of the response
     # @return [void]
@@ -113,13 +117,13 @@ module Geminize
     # @return [Geminize::Models::ContentResponse] The generation response
     # @raise [Geminize::GeminizeError] If the request fails
     # @example Generate with an image file
-    #   generate_multimodal("Describe this image", [{source_type: 'file', data: 'path/to/image.jpg'}])
+    #   generate_text_multimodal("Describe this image", [{source_type: 'file', data: 'path/to/image.jpg'}])
     # @example Generate with multiple images
-    #   generate_multimodal("Compare these images", [
+    #   generate_text_multimodal("Compare these images", [
     #     {source_type: 'file', data: 'path/to/image1.jpg'},
     #     {source_type: 'url', data: 'https://example.com/image2.jpg'}
     #   ])
-    def generate_multimodal(prompt, images, model_name = nil, params = {})
+    def generate_text_multimodal(prompt, images, model_name = nil, params = {})
       # Create a new content request with the prompt text
       content_request = Models::ContentRequest.new(
         prompt,

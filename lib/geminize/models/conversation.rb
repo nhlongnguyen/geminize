@@ -23,17 +23,22 @@ module Geminize
       # @return [Array<Message>] The messages in the conversation
       attr_reader :messages
 
+      # @return [String, nil] System instruction to guide model behavior
+      attr_accessor :system_instruction
+
       # Initialize a new conversation
       # @param id [String, nil] Unique identifier for the conversation
       # @param title [String, nil] Optional title for the conversation
       # @param messages [Array<Message>, nil] Initial messages
       # @param created_at [Time, nil] When the conversation was created
-      def initialize(id = nil, title = nil, messages = nil, created_at = nil)
+      # @param system_instruction [String, nil] System instruction to guide model behavior
+      def initialize(id = nil, title = nil, messages = nil, created_at = nil, system_instruction = nil)
         @id = id || SecureRandom.uuid
         @title = title
         @messages = messages || []
         @created_at = created_at || Time.now
         @updated_at = @created_at
+        @system_instruction = system_instruction
       end
 
       # Add a user message to the conversation
@@ -105,7 +110,8 @@ module Geminize
           title: @title,
           created_at: @created_at.iso8601,
           updated_at: @updated_at.iso8601,
-          messages: @messages.map(&:to_hash)
+          messages: @messages.map(&:to_hash),
+          system_instruction: @system_instruction
         }
       end
 
@@ -128,13 +134,14 @@ module Geminize
         id = hash["id"]
         title = hash["title"]
         created_at = hash["created_at"] ? Time.parse(hash["created_at"]) : Time.now
+        system_instruction = hash["system_instruction"]
 
         messages = []
         if hash["messages"]&.is_a?(Array)
           messages = hash["messages"].map { |msg_hash| Message.from_hash(msg_hash) }
         end
 
-        new(id, title, messages, created_at)
+        new(id, title, messages, created_at, system_instruction)
       end
 
       # Create a conversation from a JSON string

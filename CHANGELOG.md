@@ -9,7 +9,7 @@
   - View helpers for rendering conversations and chat interfaces
   - Comprehensive documentation and examples
 - Multimodal support for sending mixed content including text and images to the Gemini API
-- New `generate_multimodal` method at module level for simplified multimodal requests
+- New `generate_text_multimodal` method at module level for simplified multimodal requests
 - Methods for adding images to content requests from files, URLs, or raw bytes
 - Support for common image formats (JPEG, PNG, GIF, WEBP) with proper MIME type detection
 - Comprehensive validation for image formats, sizes, and content

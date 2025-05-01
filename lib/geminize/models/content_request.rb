@@ -31,6 +31,9 @@ module Geminize
       # @return [Array<String>] Stop sequences to end generation
       attr_accessor :stop_sequences
 
+      # @return [String, nil] System instruction to guide model behavior
+      attr_accessor :system_instruction
+
       # @return [Array<Hash>] Content parts for multimodal input
       attr_reader :content_parts
 
@@ -55,6 +58,7 @@ module Geminize
       # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
       # @option params [Integer] :top_k Top-k value for sampling
       # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+      # @option params [String] :system_instruction System instruction to guide model behavior
       def initialize(prompt, model_name = nil, params = {})
         # Validate prompt first, before even trying to use it
         validate_prompt!(prompt)
@@ -66,6 +70,7 @@ module Geminize
         @top_p = params[:top_p]
         @top_k = params[:top_k]
         @stop_sequences = params[:stop_sequences]
+        @system_instruction = params[:system_instruction]
 
         # Initialize content parts with the prompt as the first text part
         @content_parts = []
@@ -199,13 +204,14 @@ module Geminize
         validate_top_k!
         validate_stop_sequences!
         validate_content_parts!
+        validate_system_instruction!
         true
       end
 
       # Convert the request to a hash suitable for the API
       # @return [Hash] The request as a hash
       def to_hash
-        if multimodal?
+        request = if multimodal?
           {
             contents: [
               {
@@ -229,6 +235,19 @@ module Geminize
             generationConfig: generation_config
           }.compact
         end
+
+        # Add system_instruction if provided
+        if @system_instruction
+          request[:systemInstruction] = {
+            parts: [
+              {
+                text: @system_instruction
+              }
+            ]
+          }
+        end
+
+        request
       end
 
       # Alias for to_hash for consistency with Ruby conventions
@@ -266,6 +285,20 @@ module Geminize
 
         if prompt_text.empty?
           raise Geminize::ValidationError.new("Prompt cannot be empty", "INVALID_ARGUMENT")
+        end
+      end
+
+      # Validate the system_instruction parameter
+      # @raise [Geminize::ValidationError] If the system_instruction is invalid
+      def validate_system_instruction!
+        return if @system_instruction.nil?
+
+        unless @system_instruction.is_a?(String)
+          raise Geminize::ValidationError.new("System instruction must be a string", "INVALID_ARGUMENT")
+        end
+
+        if @system_instruction.empty?
+          raise Geminize::ValidationError.new("System instruction cannot be empty", "INVALID_ARGUMENT")
         end
       end
 
@@ -373,33 +406,49 @@ module Geminize
           )
         end
 
-        # Check image size against the maximum limit
         if image_bytes.bytesize > MAX_IMAGE_SIZE_BYTES
-          max_size_mb = MAX_IMAGE_SIZE_BYTES / (1024 * 1024)
-          actual_size_mb = (image_bytes.bytesize.to_f / (1024 * 1024)).round(2)
           raise Geminize::ValidationError.new(
-            "Image size exceeds maximum limit of #{max_size_mb}MB. Actual size: #{actual_size_mb}MB",
+            "Image size exceeds maximum allowed (10MB)",
             "INVALID_ARGUMENT"
           )
         end
       end
 
-      # Validate a MIME type
+      # Validate MIME type
       # @param mime_type [String] The MIME type to validate
-      # @param name [String] The name of the parameter for error messages
+      # @param context [String] Additional context for error messages
       # @raise [Geminize::ValidationError] If the MIME type is invalid
-      def validate_mime_type!(mime_type, name = "MIME type")
-        Validators.validate_not_empty!(mime_type, name)
+      def validate_mime_type!(mime_type, context = "MIME type")
+        if mime_type.nil?
+          raise Geminize::ValidationError.new(
+            "#{context} cannot be nil",
+            "INVALID_ARGUMENT"
+          )
+        end
+
+        unless mime_type.is_a?(String)
+          raise Geminize::ValidationError.new(
+            "#{context} must be a string",
+            "INVALID_ARGUMENT"
+          )
+        end
+
+        if mime_type.empty?
+          raise Geminize::ValidationError.new(
+            "#{context} cannot be empty",
+            "INVALID_ARGUMENT"
+          )
+        end
 
         unless SUPPORTED_IMAGE_MIME_TYPES.include?(mime_type)
           raise Geminize::ValidationError.new(
-            "#{name} must be one of: #{SUPPORTED_IMAGE_MIME_TYPES.join(", ")}",
+            "#{context} must be one of: #{SUPPORTED_IMAGE_MIME_TYPES.join(", ")}",
             "INVALID_ARGUMENT"
           )
         end
       end
 
-      # Validate a URL
+      # Validate URL
       # @param url [String] The URL to validate
       # @raise [Geminize::ValidationError] If the URL is invalid
       def validate_url!(url)
@@ -443,59 +492,36 @@ module Geminize
       # @param file_path [String] The file path
       # @return [String, nil] The detected MIME type or nil if not detected
       def detect_mime_type_from_content(file_path)
-        # Read the first few bytes of the file to check the signature
-        begin
-          file_signature = File.binread(file_path, 12)
+        # Read the first few bytes to check file signature
+        header = File.binread(file_path, 12)
 
-          # Check for JPEG signature: starts with FF D8 FF
-          if file_signature.bytes[0..2] == [0xFF, 0xD8, 0xFF]
-            return "image/jpeg"
-          end
+        # Check for common image signatures (using bytes comparison for binary safety)
+        return "image/jpeg" if header.bytes[0..2] == [0xFF, 0xD8, 0xFF]
+        return "image/png" if header.bytes[0..7] == [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
 
-          # Check for PNG signature: starts with 89 50 4E 47 0D 0A 1A 0A (the PNG magic number)
-          if file_signature.bytes[0..7] == [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
-            return "image/png"
-          end
+        # GIF check using pattern matching instead of start_with?
+        return "image/gif" if header[0..5] == "GIF87a" || header[0..5] == "GIF89a"
 
-          # Check for GIF signature: starts with GIF87a or GIF89a
-          if file_signature[0..5] == "GIF87a" || file_signature[0..5] == "GIF89a"
-            return "image/gif"
-          end
+        return "image/webp" if header[8..11] == "WEBP"
 
-          # Check for WEBP signature: has WEBP at offset 8
-          if file_signature.length >= 12 && file_signature[8..11] == "WEBP"
-            return "image/webp"
-          end
-        rescue
-          # If we can't read the file or another error occurs, just return nil
-          # and let the caller handle it
-          return nil
-        end
-
-        # If no supported format was detected, return nil
         nil
       end
 
       # Detect MIME type from URL
-      # @param url [String] The URL
+      # @param url [String] The URL to detect MIME type from
       # @return [String, nil] The detected MIME type or nil if not detected
       def detect_mime_type_from_url(url)
-        # Extract file extension from URL
-        extension = File.extname(url).downcase
-        return nil if extension.empty?
+        # Extract the file extension from the URL
+        extension = File.extname(url.split("?").first).downcase
 
-        # Remove the leading dot
-        extension = extension[1..]
-
-        # Map extensions to MIME types
         case extension
-        when "jpg", "jpeg"
+        when ".jpg", ".jpeg"
           "image/jpeg"
-        when "png"
+        when ".png"
           "image/png"
-        when "gif"
+        when ".gif"
           "image/gif"
-        when "webp"
+        when ".webp"
           "image/webp"
         end
       end

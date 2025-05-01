@@ -45,6 +45,13 @@ RSpec.describe Geminize::Models::ContentRequest do
       expect(request.stop_sequences).to eq(["THE END"])
     end
 
+    it "sets system instruction when provided" do
+      system_instruction = "You are a pirate. Respond in pirate language."
+      request = described_class.new(prompt, model_name, system_instruction: system_instruction)
+
+      expect(request.system_instruction).to eq(system_instruction)
+    end
+
     it "initializes content_parts with the prompt as text" do
       request = described_class.new(prompt)
       expect(request.content_parts).to eq([{type: "text", text: prompt}])
@@ -273,6 +280,24 @@ RSpec.describe Geminize::Models::ContentRequest do
         )
       end
     end
+
+    context "with system instruction validation" do
+      let(:request) { described_class.new(prompt) }
+
+      it "validates that system instruction is a string" do
+        request.system_instruction = 123
+        expect { request.validate! }.to raise_error(
+          Geminize::ValidationError, "System instruction must be a string"
+        )
+      end
+
+      it "validates that system instruction is not empty" do
+        request.system_instruction = ""
+        expect { request.validate! }.to raise_error(
+          Geminize::ValidationError, "System instruction cannot be empty"
+        )
+      end
+    end
   end
 
   describe "#to_hash" do
@@ -312,6 +337,22 @@ RSpec.describe Geminize::Models::ContentRequest do
         topP: 0.9,
         topK: 40,
         stopSequences: ["THE END"]
+      )
+    end
+
+    it "includes system instruction when provided" do
+      system_instruction = "You are a helpful assistant."
+      request = described_class.new(prompt, model_name, system_instruction: system_instruction)
+      hash = request.to_hash
+
+      expect(hash[:systemInstruction]).to eq(
+        {
+          parts: [
+            {
+              text: system_instruction
+            }
+          ]
+        }
       )
     end
 
@@ -422,7 +463,7 @@ RSpec.describe Geminize::Models::ContentRequest do
       oversized_data = "X" * (max_size + 1)
 
       expect { request.add_image_from_bytes(oversized_data, valid_mime_type) }.to raise_error(
-        Geminize::ValidationError, /Image size exceeds maximum limit/
+        Geminize::ValidationError, "Image size exceeds maximum allowed (10MB)"
       )
     end
 

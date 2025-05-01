@@ -34,6 +34,7 @@ RSpec.describe Geminize::Chat do
       allow(chat).to receive(:generate_response).and_return(chat_response)
       allow(conversation).to receive(:add_user_message).and_return(nil)
       allow(conversation).to receive(:add_model_message).and_return(nil)
+      allow(conversation).to receive(:system_instruction).and_return(nil)
     end
 
     it "adds the user message to the conversation" do
@@ -44,6 +45,32 @@ RSpec.describe Geminize::Chat do
     it "creates a chat request with the message" do
       expect(Geminize::Models::ChatRequest).to receive(:new).with(message, model_name, nil, {})
       chat.send_message(message, model_name)
+    end
+
+    context "when system instruction is provided" do
+      let(:system_instruction) { "You are a helpful assistant" }
+
+      it "creates a chat request with system instruction" do
+        expect(Geminize::Models::ChatRequest).to receive(:new).with(
+          message, model_name, nil, {system_instruction: system_instruction}
+        )
+        chat.send_message(message, model_name, system_instruction: system_instruction)
+      end
+    end
+
+    context "when system instruction is set in conversation" do
+      let(:system_instruction) { "You are a helpful assistant" }
+
+      before do
+        allow(conversation).to receive(:system_instruction).and_return(system_instruction)
+      end
+
+      it "creates a chat request with the conversation's system instruction" do
+        expect(Geminize::Models::ChatRequest).to receive(:new).with(
+          message, model_name, nil, {system_instruction: system_instruction}
+        )
+        chat.send_message(message, model_name)
+      end
     end
 
     it "generates a response using the chat request" do
@@ -98,6 +125,7 @@ RSpec.describe Geminize::Chat do
 
   describe ".new_conversation" do
     let(:title) { "Test Conversation" }
+    let(:system_instruction) { "You are a helpful assistant" }
 
     before do
       allow(Geminize::Models::Conversation).to receive(:new).and_return(conversation)
@@ -105,13 +133,32 @@ RSpec.describe Geminize::Chat do
     end
 
     it "creates a new conversation with the given title" do
-      expect(Geminize::Models::Conversation).to receive(:new).with(nil, title)
+      expect(Geminize::Models::Conversation).to receive(:new).with(nil, title, nil, nil, nil)
       described_class.new_conversation(title)
+    end
+
+    it "creates a new conversation with system instruction when provided" do
+      expect(Geminize::Models::Conversation).to receive(:new).with(nil, title, nil, nil, system_instruction)
+      described_class.new_conversation(title, system_instruction)
     end
 
     it "returns a new chat instance with the conversation" do
       expect(described_class).to receive(:new).with(conversation)
       expect(described_class.new_conversation(title)).to eq(chat)
+    end
+  end
+
+  describe "#set_system_instruction" do
+    let(:system_instruction) { "You are a helpful assistant" }
+
+    it "sets the system instruction on the conversation" do
+      expect(conversation).to receive(:system_instruction=).with(system_instruction)
+      chat.set_system_instruction(system_instruction)
+    end
+
+    it "returns self for method chaining" do
+      allow(conversation).to receive(:system_instruction=)
+      expect(chat.set_system_instruction(system_instruction)).to eq(chat)
     end
   end
 end

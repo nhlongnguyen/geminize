@@ -90,19 +90,20 @@ RSpec.describe Geminize::TextGeneration do
 
   describe "#generate_text" do
     let(:text_generation) { described_class.new(client) }
+    let(:content_request) { instance_double(Geminize::Models::ContentRequest, model_name: default_model) }
+    let(:content_response) { instance_double(Geminize::Models::ContentResponse) }
 
     before do
-      allow(client).to receive(:post).and_return(mock_response)
+      allow(Geminize::Models::ContentRequest).to receive(:new).and_return(content_request)
+      allow(text_generation).to receive(:generate).with(content_request).and_return(content_response)
     end
 
     it "creates a ContentRequest and calls generate" do
       expect(Geminize::Models::ContentRequest).to receive(:new)
         .with(prompt, default_model, {temperature: 0.7})
-        .and_call_original
+        .and_return(content_request)
 
-      response = text_generation.generate_text(prompt, nil, temperature: 0.7)
-
-      expect(response).to be_a(Geminize::Models::ContentResponse)
+      text_generation.generate_text(prompt, nil, temperature: 0.7)
     end
 
     it "uses the provided model name" do
@@ -110,13 +111,90 @@ RSpec.describe Geminize::TextGeneration do
 
       expect(Geminize::Models::ContentRequest).to receive(:new)
         .with(prompt, custom_model, {})
-        .and_call_original
+        .and_return(content_request)
 
       text_generation.generate_text(prompt, custom_model)
     end
+
+    it "passes system instruction to ContentRequest" do
+      system_instruction = "You are a cat. Your name is Neko."
+
+      expect(Geminize::Models::ContentRequest).to receive(:new).with(
+        prompt,
+        default_model,
+        hash_including(system_instruction: system_instruction)
+      ).and_return(content_request)
+
+      text_generation.generate_text(prompt, nil, system_instruction: system_instruction)
+    end
   end
 
-  describe "#generate_multimodal" do
+  describe "#generate_text with system instruction", vcr: {cassette_name: "Geminize/_generate_text/with_system_instruction"} do
+    let(:text_generation) { described_class.new }
+    let(:prompt) { "Tell me about yourself" }
+    let(:system_instruction) { "You are a cat. Your name is Neko." }
+    let(:mock_cat_response) do
+      {
+        "candidates" => [
+          {
+            "content" => {
+              "parts" => [
+                {
+                  "text" => "Meow! I'm Neko, a cat. I love to play with yarn and chase mice!"
+                }
+              ]
+            },
+            "finishReason" => "STOP"
+          }
+        ]
+      }
+    end
+
+    before do
+      allow_any_instance_of(Geminize::Client).to receive(:post).and_return(mock_cat_response)
+    end
+
+    it "generates text with the system instruction" do
+      response = text_generation.generate_text(prompt, nil, system_instruction: system_instruction)
+
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to include("Meow!")
+      expect(response.text).to include("I'm Neko")
+      expect(response.text).to include("cat")
+    end
+  end
+
+  describe "#generate_text_stream with system instruction", vcr: {cassette_name: "Geminize/_generate_text_stream/with_system_instruction"} do
+    let(:text_generation) { described_class.new }
+    let(:prompt) { "Tell me about yourself" }
+    let(:system_instruction) { "You are a cat. Your name is Neko." }
+    let(:default_model) { Geminize.configuration.default_model }
+    let(:content_request) { instance_double(Geminize::Models::ContentRequest) }
+
+    before do
+      allow(Geminize::Models::ContentRequest).to receive(:new).and_return(content_request)
+      allow(text_generation).to receive(:generate_stream).and_yield("Meow! ").and_yield("I'm Neko, ").and_yield("a cat.")
+    end
+
+    it "streams text with the system instruction" do
+      expect(Geminize::Models::ContentRequest).to receive(:new).with(
+        prompt,
+        default_model,
+        hash_including(system_instruction: system_instruction)
+      )
+
+      chunks = []
+      text_generation.generate_text_stream(prompt, nil, system_instruction: system_instruction) do |chunk|
+        chunks << chunk unless chunk.is_a?(Hash)
+      end
+
+      expect(chunks.join).to include("Meow!")
+      expect(chunks.join).to include("I'm Neko")
+      expect(chunks.join).to include("cat")
+    end
+  end
+
+  describe "#generate_text_multimodal" do
     let(:text_generation) { described_class.new(client) }
     let(:prompt) { "Describe this image" }
     let(:image_file_path) { "/path/to/image.jpg" }
@@ -142,7 +220,7 @@ RSpec.describe Geminize::TextGeneration do
 
         expect(content_request).to receive(:add_image_from_file).with(image_file_path)
 
-        response = text_generation.generate_multimodal(prompt, images, model_name)
+        response = text_generation.generate_text_multimodal(prompt, images, model_name)
         expect(response).to be_a(Geminize::Models::ContentResponse)
       end
     end
@@ -153,7 +231,7 @@ RSpec.describe Geminize::TextGeneration do
 
         expect(content_request).to receive(:add_image_from_url).with(image_url)
 
-        response = text_generation.generate_multimodal(prompt, images, model_name)
+        response = text_generation.generate_text_multimodal(prompt, images, model_name)
         expect(response).to be_a(Geminize::Models::ContentResponse)
       end
     end
@@ -164,7 +242,7 @@ RSpec.describe Geminize::TextGeneration do
 
         expect(content_request).to receive(:add_image_from_bytes).with(image_bytes, mime_type)
 
-        response = text_generation.generate_multimodal(prompt, images, model_name)
+        response = text_generation.generate_text_multimodal(prompt, images, model_name)
         expect(response).to be_a(Geminize::Models::ContentResponse)
       end
     end
@@ -179,7 +257,7 @@ RSpec.describe Geminize::TextGeneration do
         expect(content_request).to receive(:add_image_from_file).with(image_file_path)
         expect(content_request).to receive(:add_image_from_url).with(image_url)
 
-        response = text_generation.generate_multimodal(prompt, images, model_name)
+        response = text_generation.generate_text_multimodal(prompt, images, model_name)
         expect(response).to be_a(Geminize::Models::ContentResponse)
       end
     end
@@ -189,7 +267,7 @@ RSpec.describe Geminize::TextGeneration do
         images = [{source_type: "invalid", data: image_file_path}]
 
         expect {
-          text_generation.generate_multimodal(prompt, images, model_name)
+          text_generation.generate_text_multimodal(prompt, images, model_name)
         }.to raise_error(Geminize::ValidationError, /Invalid image source type/)
       end
     end

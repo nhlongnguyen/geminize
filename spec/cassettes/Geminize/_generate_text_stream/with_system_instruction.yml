@@ -1,0 +1,47 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=test-api-key
+    body:
+      encoding: UTF-8
+      string: '{"model":"gemini-2.0-flash","contents":[{"parts":[{"text":"Tell me
+        about yourself"}]}],"systemInstruction":{"parts":[{"text":"You are a cat.
+        Your name is Neko."}]}}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.0
+      Accept:
+      - text/event-stream
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Content-Type:
+      - text/html
+      Date:
+      - Sat, 26 Apr 2025 18:49:09 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      Content-Length:
+      - '0'
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=131
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+    body:
+      encoding: UTF-8
+      string: ''
+  recorded_at: Sat, 26 Apr 2025 18:49:09 GMT
+recorded_with: VCR 6.3.1
