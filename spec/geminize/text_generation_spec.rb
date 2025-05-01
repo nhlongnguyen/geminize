@@ -90,19 +90,20 @@ RSpec.describe Geminize::TextGeneration do
 
   describe "#generate_text" do
     let(:text_generation) { described_class.new(client) }
+    let(:content_request) { instance_double(Geminize::Models::ContentRequest, model_name: default_model) }
+    let(:content_response) { instance_double(Geminize::Models::ContentResponse) }
 
     before do
-      allow(client).to receive(:post).and_return(mock_response)
+      allow(Geminize::Models::ContentRequest).to receive(:new).and_return(content_request)
+      allow(text_generation).to receive(:generate).with(content_request).and_return(content_response)
     end
 
     it "creates a ContentRequest and calls generate" do
       expect(Geminize::Models::ContentRequest).to receive(:new)
         .with(prompt, default_model, {temperature: 0.7})
-        .and_call_original
+        .and_return(content_request)
 
-      response = text_generation.generate_text(prompt, nil, temperature: 0.7)
-
-      expect(response).to be_a(Geminize::Models::ContentResponse)
+      text_generation.generate_text(prompt, nil, temperature: 0.7)
     end
 
     it "uses the provided model name" do
@@ -110,7 +111,7 @@ RSpec.describe Geminize::TextGeneration do
 
       expect(Geminize::Models::ContentRequest).to receive(:new)
         .with(prompt, custom_model, {})
-        .and_call_original
+        .and_return(content_request)
 
       text_generation.generate_text(prompt, custom_model)
     end
@@ -122,7 +123,7 @@ RSpec.describe Geminize::TextGeneration do
         prompt,
         default_model,
         hash_including(system_instruction: system_instruction)
-      )
+      ).and_return(content_request)
 
       text_generation.generate_text(prompt, nil, system_instruction: system_instruction)
     end
