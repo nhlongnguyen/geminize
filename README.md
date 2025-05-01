@@ -392,11 +392,12 @@ Example view:
 
 Check out these example applications to see Geminize in action:
 
-- [Basic Chatbot](examples/chatbot.rb)
-- [Image Analysis](examples/image_analysis.rb)
-- [Semantic Search](examples/semantic_search.rb)
-- [System Instructions](examples/system_instructions.rb)
-- [Rails Chat Application](examples/rails_chat) (coming soon)
+- [Configuration Example](examples/configuration.rb)
+- [Embeddings Example](examples/embeddings.rb)
+- [Multimodal Example](examples/multimodal.rb)
+- [Rails Initializer Example](examples/rails_initializer.rb)
+- [System Instructions Example](examples/system_instructions.rb)
+- [Rails Chat Application](examples/rails_chat)
 
 ## Compatibility
 

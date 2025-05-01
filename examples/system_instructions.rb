@@ -50,15 +50,15 @@ puts "=============================================="
 conversation = Geminize.create_chat("Role-playing Chat")
 
 # The system instruction guides the entire conversation
-conversation.system_instruction = "You are a ship's computer named HAL on a spaceship. Respond in a calm, slightly robotic manner with space-related terminology."
+conversation.set_system_instruction("You are a ship's computer named HAL on a spaceship. Respond in a calm, slightly robotic manner with space-related terminology.")
 
 # First message
-response = Geminize.chat("Hello there, who are you?", conversation)
-puts "Response 1:\n#{response.text}\n"
+response_hash = Geminize.chat("Hello there, who are you?", conversation)
+puts "Response 1:\n#{response_hash[:response].text}\n"
 
 # Follow-up
-response = Geminize.chat("What can you help me with?", conversation)
-puts "Response 2:\n#{response.text}\n"
+response_hash = Geminize.chat("What can you help me with?", conversation)
+puts "Response 2:\n#{response_hash[:response].text}\n"
 
 puts "EXAMPLE 4: Streaming with system instructions"
 puts "==========================================="
