@@ -211,30 +211,31 @@ module Geminize
       # Convert the request to a hash suitable for the API
       # @return [Hash] The request as a hash
       def to_hash
-        request = if multimodal?
-          {
-            contents: [
-              {
-                parts: @content_parts
+        # Map content_parts to the structure the API expects
+        api_parts = @content_parts.map do |part|
+          if part[:type] == "text"
+            { text: part[:text] }
+          elsif part[:type] == "image"
+            {
+              inlineData: {
+                mimeType: part[:mime_type],
+                data: part[:data]
               }
-            ],
-            generationConfig: generation_config
-          }.compact
-        else
-          # Keep backward compatibility for text-only requests
-          {
-            contents: [
-              {
-                parts: [
-                  {
-                    text: @prompt
-                  }
-                ]
-              }
-            ],
-            generationConfig: generation_config
-          }.compact
-        end
+            }
+          else
+            # Handle potential future types or raise error
+            nil # Or raise an error for unknown part types
+          end
+        end.compact # Remove any nil parts from unknown types
+
+        request = {
+          contents: [
+            {
+              parts: api_parts # Use the correctly formatted parts
+            }
+          ],
+          generationConfig: generation_config
+        }.compact
 
         # Add system_instruction if provided
         if @system_instruction

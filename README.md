@@ -124,23 +124,24 @@ Geminize.reset_configuration!
 ```ruby
 require 'geminize'
 
-# Configure with API key if not set via environment variables
-Geminize.configure do |config|
-  config.api_key = "your-api-key-here"
-end
+# Assumes API key is set via environment variables (e.g., in .env)
+# Or configure manually:
+# Geminize.configure do |config|
+#   config.api_key = "your-api-key-here"
+# end
 
-# Generate text
+# Generate text (uses default model)
 response = Geminize.generate_text("Tell me a joke about Ruby programming")
 puts response.text
 
 # Use a specific model
-response = Geminize.generate_text("Explain quantum computing", "gemini-2.0-flash")
+response = Geminize.generate_text("Explain quantum computing", "gemini-1.5-flash-latest")
 puts response.text
 
 # Use system instructions to guide the model's behavior
 response = Geminize.generate_text(
   "Tell me about yourself",
-  "gemini-2.0-flash",
+  "gemini-1.5-flash-latest",
   system_instruction: "You are a pirate named Captain Codebeard. Always respond in pirate language."
 )
 puts response.text
@@ -148,58 +149,52 @@ puts response.text
 
 ## Multimodal Support
 
-Geminize allows you to send mixed content including text and images to the Gemini API:
+Geminize allows you to send mixed content including text and images to the Gemini API.
+
+Here is a working example using the `ContentRequest` API:
 
 ```ruby
-# Generate content with an image from a file
-response = Geminize.generate_text_multimodal(
-  "Describe this image in detail:",
-  [{ source_type: 'file', data: 'path/to/image.jpg' }]
-)
-puts response.text
+require 'geminize'
 
-# Using an image URL
-response = Geminize.generate_text_multimodal(
-  "What's in this image?",
-  [{ source_type: 'url', data: 'https://example.com/sample-image.jpg' }]
-)
-puts response.text
+# Assumes API key is set via environment variables (e.g., in .env)
+# Or configure manually:
+# Geminize.configure do |config|
+#   config.api_key = "your-api-key-here"
+# end
 
-# Using multiple images
-response = Geminize.generate_text_multimodal(
-  "Compare these two images:",
-  [
-    { source_type: 'file', data: 'path/to/image1.jpg' },
-    { source_type: 'file', data: 'path/to/image2.jpg' }
-  ]
-)
-puts response.text
-```
+begin
+  # 1. Create a ContentRequest object
+  #    Specify the prompt and a model that supports multimodal input
+  request = Geminize::Models::ContentRequest.new(
+    "Describe this image briefly:",
+    "gemini-1.5-flash-latest" # Ensure this model supports multimodal
+  )
 
-Alternatively, you can use the more flexible ContentRequest API:
+  # 2. Add the image from a file path
+  #    Make sure the path is correct relative to where you run the script
+  request.add_image_from_file("./examples/ruby.png")
 
-```ruby
-# Create a content request
-request = Geminize::Models::ContentRequest.new(
-  "Tell me about these images:",
-  "gemini-2.0-flash"
-)
+  # 3. Create a TextGeneration instance
+  generator = Geminize::TextGeneration.new
 
-# Add images using different methods
-request.add_image_from_file('path/to/image1.jpg')
-request.add_image_from_url('https://example.com/image2.jpg')
+  # 4. Generate the response
+  response = generator.generate(request)
 
-# Read image directly into bytes
-image_bytes = File.binread('path/to/image3.jpg')
-request.add_image_from_bytes(image_bytes, 'image/jpeg')
+  # 5. Print the response text
+  puts "Response:"
+  puts response.text
 
-# Set a system instruction to guide model behavior
-request.system_instruction = "You are a professional photography critic. Analyze the composition and technical aspects of these images."
+  # Optionally print usage data if available
+  if response.usage
+    puts "Tokens used: #{response.usage['totalTokenCount']}"
+  end
 
-# Generate the response
-generator = Geminize::TextGeneration.new
-response = generator.generate(request)
-puts response.text
+rescue Geminize::GeminizeError => e
+  puts "An API error occurred: #{e.message}"
+rescue => e
+  puts "An unexpected error occurred: #{e.message}"
+  puts e.backtrace.join("\n")
+end
 ```
 
 Supported image formats include JPEG, PNG, GIF, and WEBP. Maximum image size is 10MB.
@@ -235,26 +230,39 @@ Generate numerical vector representations for text:
 
 ```ruby
 # Generate an embedding for a single text
-embedding = Geminize.generate_embedding("Ruby is a dynamic, object-oriented programming language")
-vector = embedding.values.first.value
+embedding_response = Geminize.generate_embedding("Ruby is a dynamic, object-oriented programming language")
+vector = embedding_response.embedding # Access the vector
+puts "Generated embedding with #{embedding_response.embedding_size} dimensions."
 
-# Generate embeddings for multiple texts
+# Generate embeddings for multiple texts (by iterating)
 texts = ["Ruby", "Python", "JavaScript"]
-embeddings = Geminize.generate_embedding(texts)
+embeddings = texts.map do |text|
+  Geminize.generate_embedding(text).embedding
+end
+puts "Generated #{embeddings.size} embeddings individually."
 
 # Calculate similarity between vectors
-vector1 = embeddings.values[0].value
-vector2 = embeddings.values[1].value
+vector1 = embeddings[0]
+vector2 = embeddings[1]
 similarity = Geminize.cosine_similarity(vector1, vector2)
-puts "Similarity: #{similarity}"
+puts "Similarity between Ruby and Python: #{similarity.round(4)}"
 
-# Specify a task type for optimized embeddings
-question_embedding = Geminize.generate_embedding(
-  "How do I install Ruby gems?",
-  task_type: Geminize::Models::EmbeddingRequest::QUESTION_ANSWERING
-)
+# Specify a task type for optimized embeddings (requires compatible model)
+# Note: Task types are not supported by all models (e.g., text-embedding-004).
+# Ensure you are using a compatible model like text-embedding-005.
+begin
+  question_embedding_response = Geminize.generate_embedding(
+    "How do I install Ruby gems?",
+    nil, # Use default or specify compatible model like \'text-embedding-005\'
+    { task_type: Geminize::Models::EmbeddingRequest::QUESTION_ANSWERING }
+  )
+  puts "Generated embedding for QA task with #{question_embedding_response.embedding_size} dimensions."
+rescue Geminize::GeminizeError => e
+  puts "Could not generate embedding with task type: #{e.message}"
+  puts "(This might be due to using an incompatible model like the default text-embedding-004)"
+end
 
-# Available task types:
+# Available task types (check model compatibility):
 # - RETRIEVAL_QUERY: For embedding queries in a search/retrieval system
 # - RETRIEVAL_DOCUMENT: For embedding documents in a search corpus
 # - SEMANTIC_SIMILARITY: For comparing text similarity
@@ -273,24 +281,34 @@ See the `examples/embeddings.rb` file for more comprehensive examples of working
 Get real-time, token-by-token responses:
 
 ```ruby
+require 'geminize'
+# Assumes API key is configured via .env
+
 Geminize.generate_text_stream("Write a short poem about coding") do |chunk|
-  print chunk.text
+  # Check if the chunk has the text method before printing
+  print chunk.text if chunk.respond_to?(:text)
 end
+puts "\n" # Add a newline after streaming
 ```
 
 You can also use system instructions with streaming responses:
 
 ```ruby
+require 'geminize'
+# Assumes API key is configured via .env
+
 Geminize.generate_text_stream(
   "Tell me a story",
-  "gemini-2.0-flash",
+  "gemini-1.5-flash-latest",
   {
     stream_mode: :delta,
     system_instruction: "You are a medieval bard telling epic tales."
   }
 ) do |chunk|
-  print chunk
+  # The raw chunk might be different in delta mode, adjust handling as needed
+  print chunk.respond_to?(:text) ? chunk.text : chunk.to_s
 end
+puts "\n" # Add a newline after streaming
 ```
 
 ## Rails Integration

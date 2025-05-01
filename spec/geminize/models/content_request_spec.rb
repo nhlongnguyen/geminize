@@ -363,12 +363,13 @@ RSpec.describe Geminize::Models::ContentRequest do
 
       hash = request.to_hash
 
+      # Expect the new, correct structure for parts array
       expect(hash).to include(
         contents: [
           {
             parts: [
-              {type: "text", text: prompt},
-              {type: "text", text: "Additional text part"}
+              {text: prompt},               # No :type key
+              {text: "Additional text part"} # No :type key
             ]
           }
         ]
@@ -379,21 +380,27 @@ RSpec.describe Geminize::Models::ContentRequest do
       request = described_class.new(prompt)
       allow(request).to receive(:add_image_from_bytes).and_call_original
 
-      # Add an image part
+      # Manually set internal state for this test to avoid relying on add_image_from_bytes logic
       base64_data = Base64.strict_encode64(valid_image_data)
       request.instance_variable_set(:@content_parts, [
-        {type: "text", text: prompt},
-        {type: "image", mime_type: valid_mime_type, data: base64_data}
+        {type: "text", text: prompt}, # Internal state still uses type
+        {type: "image", mime_type: valid_mime_type, data: base64_data} # Internal state still uses type
       ])
 
       hash = request.to_hash
 
+      # Expect the new, correct structure for parts array with inlineData
       expect(hash).to include(
         contents: [
           {
             parts: [
-              {type: "text", text: prompt},
-              {type: "image", mime_type: valid_mime_type, data: base64_data}
+              {text: prompt}, # Text part is correct
+              {
+                inlineData: { # Image part is nested under inlineData
+                  mimeType: valid_mime_type,
+                  data: base64_data
+                }
+              }
             ]
           }
         ]

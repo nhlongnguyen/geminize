@@ -8,7 +8,8 @@ Geminize.configure do |config|
   config.api_key = ENV["GEMINI_API_KEY"] || "your-api-key-here"
 
   # Specify the model to use (optional)
-  config.default_model = "gemini-2.0-flash" # This model supports multimodal inputs
+  # Use a model that supports multimodal input, like gemini-1.5-flash-latest
+  config.default_model = "gemini-1.5-flash-latest"
 end
 
 puts "============================================================"
@@ -19,7 +20,7 @@ begin
   # Generate content with an image from a file
   response = Geminize.generate_text_multimodal(
     "Describe this image in detail:",
-    [{source_type: "file", data: "path/to/image.jpg"}]
+    [{source_type: "file", data: "./examples/ruby.png"}] # Updated path
   )
 
   puts "Response:"
@@ -27,7 +28,7 @@ begin
   puts "\nFinish reason: #{response.finish_reason}"
 rescue => e
   puts "Error: #{e.message}"
-  puts "Make sure to update the image path to a real image on your system."
+  puts "Make sure the path './examples/ruby.png' is correct relative to the project root."
 end
 
 puts "\n============================================================"
@@ -38,7 +39,7 @@ begin
   # Generate content with an image from a URL
   response = Geminize.generate_text_multimodal(
     "What's in this image?",
-    [{source_type: "url", data: "https://example.com/sample-image.jpg"}],
+    [{source_type: "url", data: "https://miro.medium.com/v2/resize:fit:720/format:webp/1*zkA1cWgJDlMUxI5TRcIHdQ.jpeg"}], # Updated URL
     nil, # Use default model
     temperature: 0.7
   )
@@ -47,7 +48,7 @@ begin
   puts response.text
 rescue => e
   puts "Error: #{e.message}"
-  puts "Make sure to use a valid image URL."
+  puts "Make sure the URL is valid and accessible."
 end
 
 puts "\n============================================================"
@@ -55,12 +56,12 @@ puts "Example 3: Multiple images comparison"
 puts "============================================================"
 
 begin
-  # Generate content comparing multiple images
+  # Generate content comparing multiple images (using the same image twice here for simplicity)
   response = Geminize.generate_text_multimodal(
-    "Compare these two images and describe the differences:",
+    "Compare these two images and describe the differences (they might be the same):",
     [
-      {source_type: "file", data: "path/to/image1.jpg"},
-      {source_type: "file", data: "path/to/image2.jpg"}
+      {source_type: "file", data: "./examples/ruby.png"}, # Updated path
+      {source_type: "file", data: "./examples/ruby.png"}  # Updated path
     ],
     "gemini-1.5-pro-latest", # Explicitly specify model
     max_tokens: 500
@@ -70,7 +71,7 @@ begin
   puts response.text
 rescue => e
   puts "Error: #{e.message}"
-  puts "Make sure to update the image paths to real images on your system."
+  puts "Make sure the path './examples/ruby.png' is correct."
 end
 
 puts "\n============================================================"
@@ -79,19 +80,19 @@ puts "============================================================"
 
 begin
   # Read image directly into bytes
-  image_bytes = File.binread("path/to/image.jpg")
+  image_bytes = File.binread("./examples/ruby.png") # Updated path
 
   # Generate content with raw image bytes
   response = Geminize.generate_text_multimodal(
     "Analyze this image:",
-    [{source_type: "bytes", data: image_bytes, mime_type: "image/jpeg"}]
+    [{source_type: "bytes", data: image_bytes, mime_type: "image/png"}] # Updated MIME type
   )
 
   puts "Response for raw bytes input:"
   puts response.text
 rescue => e
   puts "Error: #{e.message}"
-  puts "Make sure to update the image path to a real image on your system."
+  puts "Make sure the path './examples/ruby.png' is correct."
 end
 
 puts "\n============================================================"
@@ -111,16 +112,22 @@ begin
   )
 
   # Add multiple images using different methods
-  request.add_image_from_file("path/to/image1.jpg")
-  request.add_image_from_url("https://example.com/image2.jpg")
+  request.add_image_from_file("./examples/ruby.png") # Updated path
+  request.add_image_from_url("https://miro.medium.com/v2/resize:fit:720/format:webp/1*zkA1cWgJDlMUxI5TRcIHdQ.jpeg") # Updated URL
 
   # Generate the response
   response = generator.generate(request)
 
   puts "Response using ContentRequest directly:"
   puts response.text
-  puts "\nUsed #{response.usage.total_tokens} tokens total"
+
+  # Check if usage data is available before accessing it
+  if response.usage && response.usage.total_tokens
+    puts "\nUsed #{response.usage.total_tokens} tokens total"
+  else
+    puts "\nUsage data not available in the response."
+  end
 rescue => e
   puts "Error: #{e.message}"
-  puts "Make sure to update the paths to real images."
+  puts "Make sure paths and URLs are valid."
 end
