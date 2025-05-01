@@ -13,11 +13,8 @@ gem "standard", "~> 1.3"
 
 group :test do
   gem "climate_control", "~> 1.2"
-  gem "vcr"
-  gem "webmock"
 end
 
 group :development, :test do
   gem "pry"
-  gem "dotenv"
 end
