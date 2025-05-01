@@ -36,24 +36,26 @@ puts "Example 2: Generate embeddings for multiple texts"
 puts "============================================================"
 
 begin
-  # Generate embeddings for multiple texts in a single API call
+  # Generate embeddings for multiple texts by calling the API for each
   texts = [
     "What is the meaning of life?",
     "How much wood would a woodchuck chuck?",
     "How does the brain work?"
   ]
 
-  response = Geminize.generate_embedding(texts)
-
-  puts "Generated #{response.batch_size} embeddings, each with #{response.embedding_size} dimensions"
-
-  # Access individual embeddings
-  texts.each_with_index do |text, i|
+  puts "Generating embeddings individually:"
+  total_tokens = 0
+  embeddings = texts.map do |text|
+    response = Geminize.generate_embedding(text)
+    total_tokens += response.total_tokens if response.total_tokens
     puts "\nText: \"#{text}\""
-    puts "First 5 values: #{response.embedding_at(i).take(5).inspect}"
+    puts "First 5 values: #{response.embedding.take(5).inspect}"
+    response.embedding # Collect the embedding vector
   end
 
-  puts "\nTotal tokens: #{response.total_tokens}"
+  puts "\nGenerated #{embeddings.size} embeddings."
+  puts "Total tokens (approximated by summing individual calls): #{total_tokens}"
+
 rescue => e
   puts "Error: #{e.message}"
 end
@@ -81,9 +83,9 @@ rescue => e
 end
 
 puts "\n============================================================"
-puts "Example 4: Batch processing for large arrays"
+puts "Example 4: Batch processing for large arrays (COMMENTED OUT)"
 puts "============================================================"
-
+=begin # Commenting out Example 4 due to potential model/API limitations with batching
 begin
   # Create a larger array of texts
   many_texts = Array.new(120) { |i| "This is sample text number #{i}" }
@@ -101,6 +103,8 @@ begin
 rescue => e
   puts "Error: #{e.message}"
 end
+=end
+puts "# Example 4 skipped due to potential issues with batch embedding support."
 
 puts "\n============================================================"
 puts "Example 5: Vector operations with embeddings"
@@ -141,7 +145,7 @@ puts "============================================================"
 begin
   # Sample texts for different use cases
   question = "What is the capital of France?"
-  code_query = "how to sort an array in javascript"
+  # code_query = "how to sort an array in javascript" # Removed for compatibility
   document = "Paris is the capital and most populous city of France, with an estimated population of 2,175,601 residents."
   fact = "The Earth revolves around the Sun."
 
@@ -157,15 +161,15 @@ begin
   puts "   Text: \"#{question}\""
   puts "   First 5 values: #{qa_response.embedding.take(5).inspect}"
 
-  # Code retrieval
-  code_response = Geminize.generate_embedding(
-    code_query,
-    nil, # Use default model
-    task_type: Geminize::Models::EmbeddingRequest::CODE_RETRIEVAL_QUERY
-  )
-  puts "\n2. CODE_RETRIEVAL_QUERY task type:"
-  puts "   Text: \"#{code_query}\""
-  puts "   First 5 values: #{code_response.embedding.take(5).inspect}"
+  # Code retrieval - REMOVED as CODE_RETRIEVAL_QUERY seems unsupported by text-embedding-004
+  # code_response = Geminize.generate_embedding(
+  #   code_query,
+  #   nil, # Use default model
+  #   task_type: Geminize::Models::EmbeddingRequest::CODE_RETRIEVAL_QUERY
+  # )
+  # puts "\n2. CODE_RETRIEVAL_QUERY task type:"
+  # puts "   Text: \"#{code_query}\""
+  # puts "   First 5 values: #{code_response.embedding.take(5).inspect}"
 
   # Document retrieval
   document_response = Geminize.generate_embedding(
@@ -174,7 +178,8 @@ begin
     task_type: Geminize::Models::EmbeddingRequest::RETRIEVAL_DOCUMENT,
     title: "Paris Facts" # Titles can be used with RETRIEVAL_DOCUMENT
   )
-  puts "\n3. RETRIEVAL_DOCUMENT task type with title:"
+  # Adjusting print index due to removal above
+  puts "\n2. RETRIEVAL_DOCUMENT task type with title:" # Index changed from 3 to 2
   puts "   Title: \"Paris Facts\""
   puts "   First 5 values: #{document_response.embedding.take(5).inspect}"
 
@@ -184,7 +189,8 @@ begin
     nil, # Use default model
     task_type: Geminize::Models::EmbeddingRequest::FACT_VERIFICATION
   )
-  puts "\n4. FACT_VERIFICATION task type:"
+  # Adjusting print index due to removal above
+  puts "\n3. FACT_VERIFICATION task type:" # Index changed from 4 to 3
   puts "   Text: \"#{fact}\""
   puts "   First 5 values: #{fact_response.embedding.take(5).inspect}"
 
