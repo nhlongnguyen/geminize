@@ -6,7 +6,7 @@
 
 - [ ] Review and improve YARD documentation
 - [ ] Add more code examples
-- [ ] Update README with latest features
+- [x] Update README with latest features
 - [ ] Create diagrams for architecture overview
 
 ### Feature Development
@@ -18,14 +18,17 @@
     - [x] Update ContentRequest to support tools and functions
     - [x] Update request builder and response handling
     - [x] Add module-level convenience methods
+    - [x] Add comprehensive VCR tests for function calling
   - [x] **JSON Mode Support**
     - [x] Add MIME type support for JSON responses
     - [x] Implement helper methods for JSON generation
     - [x] Add validation for JSON response structures
+    - [x] Add tests for JSON mode functionality
   - [x] **Safety Settings**
     - [x] Create SafetySetting model
     - [x] Add safety configuration to requests
     - [x] Implement module-level safety methods
+    - [x] Add tests for safety settings
   - [ ] **Code Execution Support**
     - [ ] Create code execution model classes
     - [ ] Implement code execution tools in requests
@@ -46,10 +49,10 @@
 
 - [ ] Expand test coverage
 - [ ] Add integration tests for streaming
-- [ ] Update VCR cassettes with latest API responses
+- [x] Update VCR cassettes with latest API responses
 - [ ] Add benchmarks for performance testing
-- [ ] Create test fixtures for new Gemini API features
-- [ ] Add VCR cassettes for function calling responses
+- [x] Create test fixtures for new Gemini API features
+- [x] Add VCR cassettes for function calling responses
 
 ### Improvements
 
@@ -84,18 +87,32 @@
   - [x] Implement helper methods for model capability filtering
   - [x] Add comprehensive tests for models functionality
   - [x] Update documentation with models API examples
+- [x] Function Calling Support
+  - [x] Create function declaration, tool, and response models
+  - [x] Implement request and response extensions
+  - [x] Add module-level methods for function calling
+  - [x] Add VCR tests for real API interactions
+- [x] JSON Mode Support
+  - [x] Add MIME type support and JSON response parsing
+  - [x] Add structured data generation features
+- [x] Safety Settings Support
+  - [x] Implement safety categories and thresholds
+  - [x] Add safety-focused generation methods
 
 ### Documentation
 
 - [x] Initial README with examples
 - [x] YARD documentation for public methods
 - [x] Example scripts
+- [x] Update README with function calling, JSON mode, and safety settings
 
 ### Testing
 
 - [x] Basic test suite with RSpec
 - [x] VCR setup for API mocking
 - [x] Unit tests for core functionality
+- [x] Integration tests for function calling
+- [x] Tests for JSON mode and safety settings
 
 ### Error Handling
 
