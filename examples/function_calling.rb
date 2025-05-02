@@ -5,7 +5,6 @@ require "bundler/setup"
 require "geminize"
 require "json"
 
-
 # Configure the API key
 Geminize.configure do |config|
   config.api_key = ENV["GEMINI_API_KEY"] # Make sure to set your API key in the environment
@@ -39,7 +38,7 @@ def get_weather_batch(locations, unit = "celsius")
     end
     results
   else
-    { locations => get_weather(locations, unit) }
+    {locations => get_weather(locations, unit)}
   end
 end
 
