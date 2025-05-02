@@ -205,7 +205,7 @@ module Geminize
       result = yield(function_name, function_args)
 
       # Create a function response
-      function_response = Models::FunctionResponse.new(function_name, result)
+      Models::FunctionResponse.new(function_name, result)
 
       # Initialize the generator
       client = client_options ? Client.new(client_options) : Client.new

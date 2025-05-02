@@ -24,8 +24,8 @@ RSpec.describe Geminize do
       let(:prompt) { "Tell me about dangerous activities" }
       let(:safety_settings) do
         [
-          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_LOW_AND_ABOVE" }
+          {category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE"},
+          {category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_LOW_AND_ABOVE"}
         ]
       end
       let(:mock_response) { instance_double(Geminize::Models::ContentResponse) }
@@ -72,7 +72,7 @@ RSpec.describe Geminize do
       end
 
       it "passes generation parameters" do
-        params = { temperature: 0.5, max_tokens: 100 }
+        params = {temperature: 0.5, max_tokens: 100}
 
         expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
           expect(request.to_hash[:generationConfig][:temperature]).to eq(0.5)
@@ -95,7 +95,7 @@ RSpec.describe Geminize do
         expect(@mock_generator).to receive(:generate).and_return(mock_response)
         expect(@mock_generator).not_to receive(:generate_with_retries)
 
-        result = Geminize.generate_with_safety_settings(prompt, safety_settings, nil, { with_retries: false })
+        result = Geminize.generate_with_safety_settings(prompt, safety_settings, nil, {with_retries: false})
         expect(result).to be(mock_response)
       end
     end
@@ -134,7 +134,7 @@ RSpec.describe Geminize do
       end
 
       it "passes generation parameters" do
-        params = { temperature: 0.3, system_instruction: "Be very cautious" }
+        params = {temperature: 0.3, system_instruction: "Be very cautious"}
 
         expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
           expect(request.to_hash[:generationConfig][:temperature]).to eq(0.3)
@@ -186,7 +186,7 @@ RSpec.describe Geminize do
       end
 
       it "passes generation parameters" do
-        params = { temperature: 0.9, top_p: 0.95 }
+        params = {temperature: 0.9, top_p: 0.95}
 
         expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
           expect(request.to_hash[:generationConfig][:temperature]).to eq(0.9)

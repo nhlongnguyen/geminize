@@ -24,7 +24,7 @@ module Geminize
       def validate!
         unless EXECUTION_MODES.include?(@execution_mode)
           raise Geminize::ValidationError.new(
-            "Invalid execution mode: #{@execution_mode}. Must be one of: #{EXECUTION_MODES.join(', ')}",
+            "Invalid execution mode: #{@execution_mode}. Must be one of: #{EXECUTION_MODES.join(", ")}",
             "INVALID_ARGUMENT"
           )
         end

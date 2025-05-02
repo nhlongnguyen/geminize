@@ -74,7 +74,7 @@ module Geminize
 
         unless HARM_CATEGORIES.include?(@category)
           raise Geminize::ValidationError.new(
-            "Invalid harm category: #{@category}. Must be one of: #{HARM_CATEGORIES.join(', ')}",
+            "Invalid harm category: #{@category}. Must be one of: #{HARM_CATEGORIES.join(", ")}",
             "INVALID_ARGUMENT"
           )
         end
@@ -92,7 +92,7 @@ module Geminize
 
         unless THRESHOLD_LEVELS.include?(@threshold)
           raise Geminize::ValidationError.new(
-            "Invalid threshold level: #{@threshold}. Must be one of: #{THRESHOLD_LEVELS.join(', ')}",
+            "Invalid threshold level: #{@threshold}. Must be one of: #{THRESHOLD_LEVELS.join(", ")}",
             "INVALID_ARGUMENT"
           )
         end

@@ -6,7 +6,7 @@ RSpec.describe Geminize::Models::ContentRequest do
   describe "function calling extensions" do
     let(:prompt) { "What's the weather in New York?" }
     let(:model_name) { "gemini-1.5-pro" }
-    let(:params) { { temperature: 0.7 } }
+    let(:params) { {temperature: 0.7} }
     let(:function_name) { "get_weather" }
     let(:function_description) { "Get the current weather for a location" }
     let(:function_parameters) do
@@ -37,7 +37,7 @@ RSpec.describe Geminize::Models::ContentRequest do
 
       it "allows adding multiple functions" do
         subject.add_function(function_name, function_description, function_parameters)
-        subject.add_function("get_temperature", "Get temperature", { type: "object" })
+        subject.add_function("get_temperature", "Get temperature", {type: "object"})
 
         expect(subject.tools.size).to eq(2)
         expect(subject.tools[0].function_declaration.name).to eq(function_name)

@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe Geminize::Models::FunctionResponse do
   let(:valid_name) { "get_weather" }
-  let(:valid_response) { { temperature: 22, conditions: "Sunny" } }
+  let(:valid_response) { {temperature: 22, conditions: "Sunny"} }
 
   describe "#initialize" do
     it "creates a valid function response" do
@@ -29,7 +29,7 @@ RSpec.describe Geminize::Models::FunctionResponse do
     it "accepts various types for response" do
       # Hash
       expect {
-        described_class.new(valid_name, { key: "value" })
+        described_class.new(valid_name, {key: "value"})
       }.not_to raise_error
 
       # Array
@@ -61,7 +61,7 @@ RSpec.describe Geminize::Models::FunctionResponse do
 
   describe ".from_hash" do
     it "creates a function response from a hash with symbol keys" do
-      hash = { name: valid_name, response: valid_response }
+      hash = {name: valid_name, response: valid_response}
       function_response = described_class.from_hash(hash)
 
       expect(function_response.name).to eq(valid_name)
@@ -69,7 +69,7 @@ RSpec.describe Geminize::Models::FunctionResponse do
     end
 
     it "creates a function response from a hash with string keys" do
-      hash = { "name" => valid_name, "response" => valid_response }
+      hash = {"name" => valid_name, "response" => valid_response}
       function_response = described_class.from_hash(hash)
 
       expect(function_response.name).to eq(valid_name)

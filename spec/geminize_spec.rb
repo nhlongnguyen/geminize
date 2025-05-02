@@ -953,23 +953,22 @@ RSpec.describe Geminize do
 
         # The API may be returning a formatted string like 'get_weather("New York")'
         # instead of a proper function call object. Create a function call from this.
-        if response.text.match?(/get_weather\(\"([^\"]+)\"/)
+        if response.text.match?(/get_weather\("([^\"]+)"/)
           # Extract location from the function call text
-          location = response.text.match(/get_weather\(\"([^\"]+)\"/).captures.first
+          location = response.text.match(/get_weather\("([^\"]+)"/).captures.first
 
           mock_function_call = Geminize::Models::FunctionResponse.new(
             "get_weather",
-            { "location" => location }
+            {"location" => location}
           )
-          response.instance_variable_set(:@function_call, mock_function_call)
         else
           # Fallback to default location
           mock_function_call = Geminize::Models::FunctionResponse.new(
             "get_weather",
-            { "location" => "New York, NY" }
+            {"location" => "New York, NY"}
           )
-          response.instance_variable_set(:@function_call, mock_function_call)
         end
+        response.instance_variable_set(:@function_call, mock_function_call)
         expect(response.has_function_call?).to be true
       end
     end
@@ -996,26 +995,25 @@ RSpec.describe Geminize do
 
         # The API may be returning a formatted string like 'get_weather("New York")'
         # instead of a proper function call object. Create a function call from this.
-        if response.text.match?(/get_weather\(\"([^\"]+)\"/)
+        if response.text.match?(/get_weather\("([^\"]+)"/)
           # Extract location from the function call text
-          location = response.text.match(/get_weather\(\"([^\"]+)\"/).captures.first
+          location = response.text.match(/get_weather\("([^\"]+)"/).captures.first
 
           # For parameters, try to extract unit parameter if present
-          unit = response.text.match(/get_weather\([^)]*,\s*\"([^\"]+)\"/)&.captures&.first || "fahrenheit"
+          unit = response.text.match(/get_weather\([^)]*,\s*"([^\"]+)"/)&.captures&.first || "fahrenheit"
 
           mock_function_call = Geminize::Models::FunctionResponse.new(
             "get_weather",
-            { "location" => location, "unit" => unit }
+            {"location" => location, "unit" => unit}
           )
-          response.instance_variable_set(:@function_call, mock_function_call)
         else
           # Fallback to default location and unit
           mock_function_call = Geminize::Models::FunctionResponse.new(
             "get_weather",
-            { "location" => "New York, NY", "unit" => "fahrenheit" }
+            {"location" => "New York, NY", "unit" => "fahrenheit"}
           )
-          response.instance_variable_set(:@function_call, mock_function_call)
         end
+        response.instance_variable_set(:@function_call, mock_function_call)
         expect(response.has_function_call?).to be true
       end
     end
@@ -1038,13 +1036,13 @@ RSpec.describe Geminize do
 
         # The API is returning a formatted string like 'get_weather("New York")'
         # instead of a proper function call object. Create a function call from this.
-        if initial_response.text.match?(/get_weather\(\"([^\"]+)\"/)
+        if initial_response.text.match?(/get_weather\("([^\"]+)"/)
           # Extract location from the function call text
-          location = initial_response.text.match(/get_weather\(\"([^\"]+)\"/).captures.first
+          location = initial_response.text.match(/get_weather\("([^\"]+)"/).captures.first
 
           mock_function_call = Geminize::Models::FunctionResponse.new(
             "get_weather",
-            { "location" => location }
+            {"location" => location}
           )
           initial_response.instance_variable_set(:@function_call, mock_function_call)
           puts "Created a function call from text format: location=#{location}"
@@ -1052,7 +1050,7 @@ RSpec.describe Geminize do
           # Fallback to default location
           mock_function_call = Geminize::Models::FunctionResponse.new(
             "get_weather",
-            { "location" => "New York, NY" }
+            {"location" => "New York, NY"}
           )
           initial_response.instance_variable_set(:@function_call, mock_function_call)
         end

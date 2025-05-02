@@ -6,7 +6,7 @@ RSpec.describe Geminize::Models::ContentRequest do
   describe "safety settings extensions" do
     let(:prompt) { "Tell me about dangerous activities" }
     let(:model_name) { "gemini-1.5-pro" }
-    let(:params) { { temperature: 0.7 } }
+    let(:params) { {temperature: 0.7} }
     let(:valid_category) { "HARM_CATEGORY_HARASSMENT" }
     let(:valid_threshold) { "BLOCK_MEDIUM_AND_ABOVE" }
 

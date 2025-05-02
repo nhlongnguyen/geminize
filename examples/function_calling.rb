@@ -19,13 +19,13 @@ def get_weather(location, unit = "celsius")
   # For this example, we'll return mock data
   case location.downcase
   when /new york/
-    { temperature: unit == "celsius" ? 22 : 72, conditions: "Sunny", humidity: 45 }
+    {temperature: (unit == "celsius") ? 22 : 72, conditions: "Sunny", humidity: 45}
   when /london/
-    { temperature: unit == "celsius" ? 15 : 59, conditions: "Rainy", humidity: 80 }
+    {temperature: (unit == "celsius") ? 15 : 59, conditions: "Rainy", humidity: 80}
   when /tokyo/
-    { temperature: unit == "celsius" ? 26 : 79, conditions: "Partly Cloudy", humidity: 65 }
+    {temperature: (unit == "celsius") ? 26 : 79, conditions: "Partly Cloudy", humidity: 65}
   else
-    { temperature: unit == "celsius" ? 20 : 68, conditions: "Unknown", humidity: 50 }
+    {temperature: (unit == "celsius") ? 20 : 68, conditions: "Unknown", humidity: 50}
   end
 end
 

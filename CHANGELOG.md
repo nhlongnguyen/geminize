@@ -1,3 +1,25 @@
+## [1.2.0] - 2025-05-02
+
+### Added
+
+- Function calling capabilities for working with the Gemini API's tool features
+  - Added `generate_with_functions` method to create content with function definitions
+  - Added `process_function_call` method to handle function responses
+  - Added support for multiple function declarations in a single request
+  - Added configurable tool execution modes (AUTO, MANUAL, NONE)
+  - Implemented comprehensive test suite for function calling features
+  - Added tool-related model classes (Tool, ToolConfig, FunctionDeclaration, FunctionResponse)
+- JSON mode for structured data responses
+  - Added `generate_json` method for receiving JSON-formatted responses
+  - Implemented automatic parsing of JSON responses
+  - Added type-checking and validation for JSON mode configuration
+- Safety settings for controlled content generation
+  - Added `generate_with_safety_settings` method for customizing safety settings
+  - Added `generate_text_safe` for maximum content safety
+  - Added `generate_text_permissive` for minimum content filtering
+  - Added comprehensive safety categories and threshold levels
+  - Implemented validation for safety setting configurations
+
 ## [1.1.0] - 2025-05-02
 
 ### Added

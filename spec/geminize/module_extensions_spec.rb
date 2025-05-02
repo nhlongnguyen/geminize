@@ -82,7 +82,7 @@ RSpec.describe Geminize do
       end
 
       it "passes generation parameters" do
-        params = { temperature: 0.5, max_tokens: 100 }
+        params = {temperature: 0.5, max_tokens: 100}
 
         expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
           expect(request.to_hash[:generationConfig][:temperature]).to eq(0.5)
@@ -100,7 +100,7 @@ RSpec.describe Geminize do
           mock_response
         end
 
-        result = Geminize.generate_with_functions(prompt, functions, nil, { tool_execution_mode: "MANUAL" })
+        result = Geminize.generate_with_functions(prompt, functions, nil, {tool_execution_mode: "MANUAL"})
         expect(result).to be(mock_response)
       end
 
@@ -115,7 +115,7 @@ RSpec.describe Geminize do
         expect(@mock_generator).to receive(:generate).and_return(mock_response)
         expect(@mock_generator).not_to receive(:generate_with_retries)
 
-        result = Geminize.generate_with_functions(prompt, functions, nil, { with_retries: false })
+        result = Geminize.generate_with_functions(prompt, functions, nil, {with_retries: false})
         expect(result).to be(mock_response)
       end
     end
@@ -159,7 +159,7 @@ RSpec.describe Geminize do
       end
 
       it "passes generation parameters" do
-        params = { temperature: 0.3, system_instruction: "Return accurate data" }
+        params = {temperature: 0.3, system_instruction: "Return accurate data"}
 
         expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
           expect(request.to_hash[:generationConfig][:temperature]).to eq(0.3)
@@ -185,7 +185,7 @@ RSpec.describe Geminize do
         expect(@mock_generator).to receive(:generate).and_return(mock_response)
         expect(@mock_generator).not_to receive(:generate_with_retries)
 
-        result = Geminize.generate_json(prompt, nil, { with_retries: false })
+        result = Geminize.generate_json(prompt, nil, {with_retries: false})
         expect(result).to be(mock_response)
       end
     end
@@ -194,15 +194,13 @@ RSpec.describe Geminize do
       let(:function_response) do
         instance_double(Geminize::Models::FunctionResponse,
           name: "get_weather",
-          response: { "location" => "New York, NY" }
-        )
+          response: {"location" => "New York, NY"})
       end
 
       let(:content_response) do
         instance_double(Geminize::Models::ContentResponse,
           has_function_call?: true,
-          function_call: function_response
-        )
+          function_call: function_response)
       end
 
       let(:mock_final_response) { instance_double(Geminize::Models::ContentResponse) }
@@ -215,8 +213,7 @@ RSpec.describe Geminize do
 
       it "raises an error if response has no function call" do
         no_function_response = instance_double(Geminize::Models::ContentResponse,
-          has_function_call?: false
-        )
+          has_function_call?: false)
 
         expect {
           Geminize.process_function_call(no_function_response) { |_, _| }
@@ -239,17 +236,17 @@ RSpec.describe Geminize do
           block_executed = true
           block_name = name
           block_args = args
-          { "temperature" => 22, "conditions" => "Sunny" }
+          {"temperature" => 22, "conditions" => "Sunny"}
         end
 
         expect(block_executed).to be true
         expect(block_name).to eq("get_weather")
-        expect(block_args).to eq({ "location" => "New York, NY" })
+        expect(block_args).to eq({"location" => "New York, NY"})
       end
 
       it "creates a ContentRequest with the function result" do
         # The function result we'll return from the block
-        function_result = { "temperature" => 22, "conditions" => "Sunny" }
+        function_result = {"temperature" => 22, "conditions" => "Sunny"}
 
         expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
           # Expect the request to include info about the function result
@@ -270,7 +267,7 @@ RSpec.describe Geminize do
 
       it "passes the model name when provided" do
         model_name = "specific-model"
-        function_result = { "result" => "data" }
+        function_result = {"result" => "data"}
 
         expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
           expect(request.model_name).to eq(model_name)

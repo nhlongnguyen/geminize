@@ -6,7 +6,7 @@ RSpec.describe Geminize::Models::ContentRequest do
   describe "debug to_hash" do
     let(:prompt) { "What's the weather in New York?" }
     let(:model_name) { "gemini-1.5-pro" }
-    let(:params) { { temperature: 0.7 } }
+    let(:params) { {temperature: 0.7} }
 
     it "inspects the original to_hash method" do
       request = described_class.new(prompt, model_name, params)
@@ -20,7 +20,7 @@ RSpec.describe Geminize::Models::ContentRequest do
       request.add_function(
         "get_weather",
         "Get weather",
-        { type: "object" }
+        {type: "object"}
       )
       pp request.to_hash
 
