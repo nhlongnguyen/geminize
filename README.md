@@ -310,104 +310,6 @@ end
 puts "\n" # Add a newline after streaming
 ```
 
-### Setup
-
-1. Add Geminize to your Gemfile:
-
-```ruby
-gem 'geminize'
-```
-
-2. Create a configuration initializer at `config/initializers/geminize.rb`:
-
-```ruby
-Geminize.configure do |config|
-  config.api_key = ENV["GEMINI_API_KEY"]
-  config.api_version = "v1beta"
-  config.default_model = ""
-  config.timeout = 30
-  config.open_timeout = 10
-  config.log_requests = true
-end
-```
-
-3. Add your API key to the initializer or via environment variables.
-
-### Controller Integration
-
-In your controllers, include the Geminize controller concern:
-
-```ruby
-class ChatController < ApplicationController
-  # Add Geminize functionality to this controller
-  geminize_controller
-
-  def index
-    # Optionally reset the conversation
-    # reset_gemini_conversation("New chat session") if params[:reset]
-  end
-
-  def create
-    # Send a message to Gemini and get the response
-    @response = send_gemini_message(params[:message])
-
-    respond_to do |format|
-      format.html { redirect_to chat_path }
-      format.turbo_stream
-      format.json { render json: { message: @response.text } }
-    end
-  end
-end
-```
-
-The concern provides the following methods:
-
-- `current_gemini_conversation` - Access the current conversation (stored in session)
-- `send_gemini_message(message, model_name=nil, params={})` - Send a message in the current conversation
-- `generate_gemini_text(prompt, model_name=nil, params={})` - Generate text with Gemini
-- `generate_gemini_multimodal(prompt, images, model_name=nil, params={})` - Generate text with images
-- `generate_gemini_embedding(text, model_name=nil, params={})` - Generate embeddings
-- `reset_gemini_conversation(title=nil)` - Start a new conversation
-
-### View Integration
-
-Include the Geminize view helpers in your application:
-
-```ruby
-# In app/helpers/application_helper.rb
-module ApplicationHelper
-  # Include Geminize view helpers
-  geminize_helper
-end
-```
-
-This provides the following helper methods:
-
-- `render_gemini_conversation(conversation=nil, options={})` - Render the conversation as HTML
-- `render_gemini_message(message, options={})` - Render a single message
-- `gemini_chat_form(options={})` - Create a chat form
-- `markdown_to_html(text, options={})` - Render Markdown as HTML (requires redcarpet gem)
-- `highlight_code(html)` - Add syntax highlighting to code blocks (requires rouge gem)
-
-Example view:
-
-```erb
-<%# app/views/chat/index.html.erb %>
-<div class="chat-container">
-  <h1>Chat with Gemini</h1>
-
-  <div class="conversation">
-    <%= render_gemini_conversation %>
-  </div>
-
-  <div class="chat-form">
-    <%= gemini_chat_form(placeholder: "Ask me anything...", submit_text: "Send") %>
-  </div>
-</div>
-```
-
-## Example Applications
-
 Check out these example applications to see Geminize in action:
 
 - [Configuration Example](examples/configuration.rb)
@@ -421,7 +323,7 @@ Ruby version: 3.1.0 or later
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+After checking out the repo, run `bin/setup` to install dependencies. Then, run `bundle exec rspec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
 To install this gem onto your local machine, run `bundle exec rake install`.
 
