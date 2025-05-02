@@ -56,11 +56,8 @@ GOOGLE_AI_API_KEY=your_api_key_here
 
 # API Configuration
 GOOGLE_AI_API_VERSION=v1beta
-GEMINI_DEFAULT_MODEL=gemini-1.5-pro-latest
-
-# Generation Parameters
-GEMINI_TEMPERATURE=0.7
-GEMINI_MAX_TOKENS=8192
+GEMINI_MODEL=gemini-2.0-flash
+GEMINI_EMBEDDING_MODEL=gemini-embedding-exp-03-07
 ```
 
 2. Add `.env` to your `.gitignore` file to keep your API keys secure:

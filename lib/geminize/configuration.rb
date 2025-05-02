@@ -17,7 +17,7 @@ module Geminize
     DEFAULT_MODEL = "gemini-2.0-flash"
 
     # Default embedding model
-    DEFAULT_EMBEDDING_MODEL = "embedding-001"
+    DEFAULT_EMBEDDING_MODEL = "gemini-embedding-exp-03-07"
 
     # Default timeout values (in seconds)
     DEFAULT_TIMEOUT = 30
@@ -69,9 +69,9 @@ module Geminize
     # @return [void]
     def reset!
       @api_key = ENV["GEMINI_API_KEY"]
-      @api_version = DEFAULT_API_VERSION
-      @default_model = DEFAULT_MODEL
-      @default_embedding_model = DEFAULT_EMBEDDING_MODEL
+      @api_version = ENV["GEMINI_API_VERSION"] || DEFAULT_API_VERSION
+      @default_model = ENV["GEMINI_MODEL"] || DEFAULT_MODEL
+      @default_embedding_model = ENV["GEMINI_EMBEDDING_MODEL"] || DEFAULT_EMBEDDING_MODEL
       @timeout = DEFAULT_TIMEOUT
       @open_timeout = DEFAULT_OPEN_TIMEOUT
       @streaming_timeout = DEFAULT_STREAMING_TIMEOUT
