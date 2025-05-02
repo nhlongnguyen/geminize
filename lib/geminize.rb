@@ -37,7 +37,6 @@ require_relative "geminize/conversation_repository"
 require_relative "geminize/conversation_service"
 require_relative "geminize/model_info"
 
-
 # Main module for the Geminize gem
 module Geminize
   class Error < StandardError; end

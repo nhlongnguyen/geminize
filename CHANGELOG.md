@@ -2,7 +2,7 @@
 
 ### Removed
 
-- Rails related integration to keep the usage simple
+- Removed Rails-related integration from the gem, simplifying usage.
 
 ## [0.1.1] - 2025-05-01
 
