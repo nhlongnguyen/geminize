@@ -1,0 +1,107 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=<GEMINI_API_KEY>
+    body:
+      encoding: UTF-8
+      string: '{"model":"gemini-2.0-flash","contents":[{"parts":[{"text":"What is
+        the sum of the first 10 prime numbers? Generate and run code for the calculation."}]}],"systemInstruction":{"parts":[{"text":"You
+        are a helpful assistant with the ability to generate and execute Python code.
+        When appropriate, use code to solve problems or complete tasks. "}]},"tools":[{"code_execution":{}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.0
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Date:
+      - Fri, 02 May 2025 19:10:30 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=3032
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "Here's how to calculate the sum of the first 10 prime numbers:\n\n1.  **Identify the first 10 prime numbers:** A prime number is a whole number greater than 1 that has only two divisors: 1 and itself. The first 10 prime numbers are 2, 3, 5, 7, 11, 13, 17, 19, 23, and 29.\n2.  **Sum the prime numbers:** Add the numbers together: 2 + 3 + 5 + 7 + 11 + 13 + 17 + 19 + 23 + 29.\n\nNow, I'll use Python to calculate the sum.\n\n"
+                  },
+                  {
+                    "executableCode": {
+                      "language": "PYTHON",
+                      "code": "primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]\nsum_of_primes = sum(primes)\nprint(sum_of_primes)\n"
+                    }
+                  },
+                  {
+                    "codeExecutionResult": {
+                      "outcome": "OUTCOME_OK",
+                      "output": "129\n"
+                    }
+                  },
+                  {
+                    "text": "The sum of the first 10 prime numbers is 129.\n"
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 49,
+            "candidatesTokenCount": 243,
+            "totalTokenCount": 567,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 49
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 243
+              }
+            ],
+            "toolUsePromptTokenCount": 275,
+            "toolUsePromptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 275
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash"
+        }
+  recorded_at: Fri, 02 May 2025 19:10:30 GMT
+recorded_with: VCR 6.3.1

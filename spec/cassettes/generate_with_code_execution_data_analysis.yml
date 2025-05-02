@@ -1,0 +1,108 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=<GEMINI_API_KEY>
+    body:
+      encoding: UTF-8
+      string: '{"model":"gemini-2.0-flash","contents":[{"parts":[{"text":"I have a
+        list of temperatures: 32, 25, 30, 22, 28, 27, 35, 31, 29, 26. Calculate the
+        mean, median, and standard deviation."}]}],"systemInstruction":{"parts":[{"text":"You
+        are a helpful assistant with the ability to generate and execute Python code.
+        When appropriate, use code to solve problems or complete tasks. "}]},"tools":[{"code_execution":{}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.0
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Date:
+      - Fri, 02 May 2025 19:10:27 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=2920
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "Okay, I can help you calculate the mean, median, and standard deviation of the given list of temperatures. I'll use Python to do this accurately.\n\n"
+                  },
+                  {
+                    "executableCode": {
+                      "language": "PYTHON",
+                      "code": "import statistics\n\ntemperatures = [32, 25, 30, 22, 28, 27, 35, 31, 29, 26]\n\nmean = statistics.mean(temperatures)\nmedian = statistics.median(temperatures)\nstdev = statistics.stdev(temperatures)\n\nprint(f'{mean=}')\nprint(f'{median=}')\nprint(f'{stdev=}')\n"
+                    }
+                  },
+                  {
+                    "codeExecutionResult": {
+                      "outcome": "OUTCOME_OK",
+                      "output": "mean=28.5\nmedian=28.5\nstdev=3.7490739597339977\n"
+                    }
+                  },
+                  {
+                    "text": "Here are the results:\n\n*   **Mean:** 28.5\n*   **Median:** 28.5\n*   **Standard Deviation:** 3.749\n\nThe mean temperature is 28.5, the median temperature is 28.5, and the standard deviation is approximately 3.749.\n"
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 85,
+            "candidatesTokenCount": 248,
+            "totalTokenCount": 591,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 85
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 248
+              }
+            ],
+            "toolUsePromptTokenCount": 258,
+            "toolUsePromptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 258
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash"
+        }
+  recorded_at: Fri, 02 May 2025 19:10:27 GMT
+recorded_with: VCR 6.3.1

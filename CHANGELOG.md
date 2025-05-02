@@ -1,3 +1,17 @@
+## [1.3.0] - 2024-05-02
+
+### Added
+
+- Code execution capabilities for generating and running Python code
+  - Added `generate_with_code_execution` method to create and execute Python code
+  - Implemented `ExecutableCode` model for representing generated code
+  - Added `CodeExecutionResult` model for capturing execution output and status
+  - Added support for visualizations and data analysis with matplotlib and other libraries
+  - Extended tool system to support code execution tools
+  - Updated content request/response handling for code execution
+  - Added comprehensive test suite with VCR tests for code execution
+  - Added examples demonstrating code execution functionality
+
 ## [1.2.0] - 2025-05-02
 
 ### Added

@@ -454,6 +454,48 @@ Available threshold levels (from most to least restrictive):
 - `BLOCK_ONLY_HIGH`
 - `BLOCK_NONE`
 
+## Code Execution
+
+Generate and run Python code to solve problems or analyze data:
+
+```ruby
+require 'geminize'
+# Assumes API key is configured via .env
+
+# Ask Gemini to solve a problem with code
+response = Geminize.generate_with_code_execution(
+  "Calculate the sum of the first 10 prime numbers",
+  "gemini-2.0-flash", # Use a model that supports code execution
+  { temperature: 0.2 }
+)
+
+# Display the response text
+puts "Gemini's explanation:"
+puts response.text
+
+# Access the generated code
+if response.has_executable_code?
+  puts "\nGenerated Python code:"
+  puts response.executable_code.code
+end
+
+# Access the code execution result
+if response.has_code_execution_result?
+  puts "\nExecution result:"
+  puts "Outcome: #{response.code_execution_result.outcome}"
+  puts "Output: #{response.code_execution_result.output}"
+end
+```
+
+Code execution is perfect for:
+
+- Solving mathematical problems
+- Data analysis and visualization
+- Algorithm implementation
+- Demonstrating programming concepts
+
+The model generates Python code, executes it in a secure environment, and returns both the code and its execution results.
+
 ## Streaming Responses
 
 Get real-time, token-by-token responses:
@@ -496,6 +538,8 @@ Check out these example applications to see Geminize in action:
 - [Multimodal Example](examples/multimodal.rb)
 - [System Instructions Example](examples/system_instructions.rb)
 - [Models API Example](examples/models_api.rb)
+- [Function Calling Example](examples/function_calling.rb)
+- [Code Execution Example](examples/code_execution.rb)
 
 ## Working with Models
 

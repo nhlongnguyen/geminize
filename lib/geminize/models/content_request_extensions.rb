@@ -31,6 +31,14 @@ module Geminize
         self
       end
 
+      # Enable code execution for the request
+      # @return [self] The request object for chaining
+      def enable_code_execution
+        @tools ||= []
+        @tools << Tool.new(nil, true)
+        self
+      end
+
       # Set the tool config for function execution
       # @param execution_mode [String] The execution mode for functions ("AUTO", "MANUAL", or "NONE")
       # @return [self] The request object for chaining
