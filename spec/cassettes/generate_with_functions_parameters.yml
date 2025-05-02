@@ -1,0 +1,185 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=<GEMINI_API_KEY>
+    body:
+      encoding: UTF-8
+      string: '{"model":"gemini-1.5-pro","contents":[{"parts":[{"text":"What''s the
+        weather in New York?"}]}],"generationConfig":{"temperature":0.1},"systemInstruction":{"parts":[{"text":"You
+        are a helpful assistant. When you encounter a question that you can answer
+        by calling a function, you must always use the provided function. Always respond
+        using the function call format, not with your own text. You are a helpful
+        assistant that ALWAYS uses the provided functions. ALWAYS call the get_weather
+        function when asked about weather. NEVER respond with your own text when a
+        function is available."}]}}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.0
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Date:
+      - Fri, 02 May 2025 17:05:05 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=539
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "get_weather(\"New York\")\n"
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -0.0034088040702044964
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 87,
+            "candidatesTokenCount": 8,
+            "totalTokenCount": 95,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 87
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 8
+              }
+            ]
+          },
+          "modelVersion": "gemini-1.5-pro-002"
+        }
+  recorded_at: Fri, 02 May 2025 17:05:05 GMT
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=<GEMINI_API_KEY>
+    body:
+      encoding: UTF-8
+      string: '{"model":"gemini-1.5-pro","contents":[{"parts":[{"text":"What''s the
+        weather in New York?"}]}],"generationConfig":{"temperature":0.1},"systemInstruction":{"parts":[{"text":"You
+        are a helpful assistant. When you encounter a question that you can answer
+        by calling a function, you must always use the provided function. Always respond
+        using the function call format, not with your own text. You are a helpful
+        assistant that ALWAYS uses the provided functions. ALWAYS call the get_weather
+        function when asked about weather. NEVER respond with your own text when a
+        function is available."}]},"tools":[{"functionDeclarations":{"name":"get_weather","description":"Get
+        the current weather for a location","parameters":{"type":"object","properties":{"location":{"type":"string","description":"The
+        city and state, e.g. New York, NY"},"unit":{"type":"string","enum":["celsius","fahrenheit"],"description":"The
+        unit of temperature"}},"required":["location"]}}}],"toolConfig":{"function_calling_config":{"mode":"AUTO"}}}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.0
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Date:
+      - Fri, 02 May 2025 17:24:31 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=772
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "functionCall": {
+                      "name": "get_weather",
+                      "args": {
+                        "location": "New York, NY"
+                      }
+                    }
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -9.9981152743566781e-06
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 124,
+            "candidatesTokenCount": 8,
+            "totalTokenCount": 132,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 124
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 8
+              }
+            ]
+          },
+          "modelVersion": "gemini-1.5-pro-002"
+        }
+  recorded_at: Fri, 02 May 2025 17:24:31 GMT
+recorded_with: VCR 6.3.1

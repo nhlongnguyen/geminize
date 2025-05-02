@@ -9,6 +9,9 @@
 - Multimodal content handling (text + images)
 - Embeddings generation
 - Streaming responses
+- Function calling capabilities
+- JSON mode for structured responses
+- Safety settings for content moderation
 
 ### Key Implementation Details
 
@@ -18,6 +21,23 @@
 - System instructions for guiding model behavior
 - Generation parameters (temperature, top_k, top_p)
 - Support for stop sequences
+- Safety settings for content moderation
+
+#### Function Calling
+
+- Tool integration with Gemini API
+- Function declaration and response models
+- Support for multiple function definitions
+- Tool execution modes (AUTO, MANUAL, NONE)
+- Function result processing
+- String-based function call detection
+
+#### JSON Mode
+
+- Structured data response handling
+- Automatic JSON parsing
+- JSON schema integration
+- Response validation
 
 #### Multimodal Support
 
@@ -69,10 +89,14 @@
 - Streaming response optimizations
 - Comprehensive documentation
 - Error handling refinements
+- Models API integration
+- Function calling support
 
 ### Upcoming Features
 
-- Support for newer Gemini models
+- Code execution support
+- Additional content types (audio, PDF)
+- Caching support
 - Advanced parameter tuning
 - Additional vector operations
 - Improved conversation persistence

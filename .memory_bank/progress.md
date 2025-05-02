@@ -2,7 +2,7 @@
 
 ## Current Status
 
-Geminize is a functional Ruby gem providing a complete interface to the Google Gemini API. The current implementation includes all core features with a focus on stability, documentation, and ease of use.
+Geminize is a functional Ruby gem providing a complete interface to the Google Gemini API. The current implementation includes all core features with a focus on stability, documentation, and ease of use. The gem now also includes function calling, JSON mode, and safety settings features.
 
 ## Development Progress
 
@@ -15,6 +15,10 @@ Geminize is a functional Ruby gem providing a complete interface to the Google G
 - **Streaming Responses**: ✅ Complete
 - **Error Handling**: ✅ Complete
 - **Configuration System**: ✅ Complete
+- **Models API**: ✅ Complete
+- **Function Calling**: ✅ Complete
+- **JSON Mode**: ✅ Complete
+- **Safety Settings**: ✅ Complete
 
 ### Documentation
 
@@ -26,7 +30,7 @@ Geminize is a functional Ruby gem providing a complete interface to the Google G
 ### Testing
 
 - **Unit Tests**: ✅ Complete
-- **Integration Tests**: 🟡 Partially Complete (70%)
+- **Integration Tests**: 🟡 Partially Complete (85%)
 - **Performance Tests**: ❌ Not Started
 
 ### Deployment
@@ -50,27 +54,35 @@ Geminize is a functional Ruby gem providing a complete interface to the Google G
 - Additional embedding task types
 - Improved documentation
 
-### v1.0.0 (Planned for 2025-05-02)
+### v1.0.0 (2025-05-02)
 
 - Removed Rails-specific integration
 - Simplified usage
 - API stabilization
 
+### v1.1.0 (2025-05-02)
+
+- Support for Gemini Models API
+- Model discovery and filtering functionality
+- Pagination support
+- Improved documentation
+
+### v1.2.0 (2025-05-02)
+
+- Added function calling capabilities
+- Added JSON mode for structured responses
+- Added safety settings for content moderation
+- Comprehensive test suite for new features
+- Updated documentation
+
 ## Upcoming Milestones
 
-### v1.1.0 (Planned)
+### v1.3.0 (Planned)
 
-- Support for latest Gemini models
-- Advanced vector operations
-- Improved streaming performance
-- Enhanced documentation
-
-### v1.2.0 (Planned)
-
-- Batch processing capabilities
+- Code execution support
+- Additional content types (audio, PDF)
+- Caching mechanisms
 - Improved conversation persistence
-- Additional configuration options
-- Memory optimizations
 
 ### v2.0.0 (Planned)
 
@@ -78,3 +90,4 @@ Geminize is a functional Ruby gem providing a complete interface to the Google G
 - Advanced function calling support
 - Performance improvements
 - Additional middleware options
+- Async API support

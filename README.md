@@ -10,6 +10,9 @@ A convenient and robust Ruby interface for the Google Gemini API, enabling easy 
 - Multimodal inputs (text + images)
 - Embeddings generation
 - Support for streaming responses
+- Function calling capabilities for tool integration
+- JSON mode for structured data responses
+- Safety settings for content moderation
 - Comprehensive error handling
 - Complete Models API for discovering and filtering available models
 
@@ -272,6 +275,184 @@ end
 ```
 
 See the `examples/embeddings.rb` file for more comprehensive examples of working with embeddings.
+
+## Function Calling
+
+Geminize provides support for Gemini's function calling capabilities, allowing the AI model to call functions defined by you:
+
+```ruby
+require 'geminize'
+# Assumes API key is configured via .env
+
+# Define functions that the model can call
+weather_functions = [
+  {
+    name: "get_weather",
+    description: "Get the current weather for a location",
+    parameters: {
+      type: "object",
+      properties: {
+        location: {
+          type: "string",
+          description: "The city and state, e.g. New York, NY"
+        },
+        unit: {
+          type: "string",
+          enum: ["celsius", "fahrenheit"],
+          description: "The unit of temperature"
+        }
+      },
+      required: ["location"]
+    }
+  }
+]
+
+# Generate a response that may include a function call
+response = Geminize.generate_with_functions(
+  "What's the weather in San Francisco?",
+  weather_functions,
+  "gemini-1.5-pro", # Make sure you use a model that supports function calling
+  {
+    temperature: 0.2,
+    system_instruction: "Use the provided function to get weather information."
+  }
+)
+
+# Check if the response contains a function call
+if response.has_function_call?
+  function_call = response.function_call
+  puts "Function called: #{function_call.name}"
+  puts "Arguments: #{function_call.response.inspect}"
+
+  # Process the function call with your implementation
+  final_response = Geminize.process_function_call(response) do |name, args|
+    if name == "get_weather"
+      location = args["location"]
+      # Call your actual weather API here
+      # For this example, we'll just return mock data
+      {
+        temperature: 72,
+        conditions: "partly cloudy",
+        humidity: 65,
+        location: location
+      }
+    end
+  end
+
+  # Display the final response
+  puts "Final response: #{final_response.text}"
+else
+  puts "No function call in response: #{response.text}"
+end
+```
+
+### Function Call Options
+
+You can customize function calling behavior:
+
+```ruby
+# Set the tool execution mode:
+# - "AUTO": Model decides when to call functions
+# - "MANUAL": Functions are only used when explicitly requested
+# - "NONE": Functions are ignored
+response = Geminize.generate_with_functions(
+  prompt,
+  functions,
+  model_name,
+  { tool_execution_mode: "MANUAL" }
+)
+
+# Control retry behavior
+response = Geminize.generate_with_functions(
+  prompt,
+  functions,
+  model_name,
+  with_retries: false # Disable automatic retries on failure
+)
+```
+
+## JSON Mode
+
+Generate structured JSON responses from the model:
+
+```ruby
+require 'geminize'
+# Assumes API key is configured via .env
+
+# Request JSON-formatted data
+response = Geminize.generate_json(
+  "List the three largest planets in our solar system with their diameters in km",
+  "gemini-1.5-pro", # Use a model that supports JSON mode
+  { temperature: 0.2 }
+)
+
+# Access the parsed JSON data
+if response.has_json_response?
+  planets = response.json_response
+  puts "Received structured data:"
+  planets.each do |planet|
+    puts "#{planet['name']}: #{planet['diameter']} km"
+  end
+else
+  puts "No valid JSON in response: #{response.text}"
+end
+```
+
+The JSON mode is ideal for getting structured data that you can programmatically process in your application.
+
+## Safety Settings
+
+Control content generation with safety settings:
+
+```ruby
+require 'geminize'
+# Assumes API key is configured via .env
+
+# Generate content with custom safety settings
+safety_settings = [
+  { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+  { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_LOW_AND_ABOVE" }
+]
+
+response = Geminize.generate_with_safety_settings(
+  "Explain the concept of nuclear fission",
+  safety_settings,
+  "gemini-1.5-pro",
+  { temperature: 0.7 }
+)
+
+puts response.text
+
+# For maximum safety (blocks most potentially harmful content)
+safe_response = Geminize.generate_text_safe(
+  "Tell me about controversial political topics",
+  "gemini-1.5-pro"
+)
+
+puts "Safe response: #{safe_response.text}"
+
+# For minimum filtering (blocks only the most harmful content)
+permissive_response = Geminize.generate_text_permissive(
+  "Describe a controversial historical event",
+  "gemini-1.5-pro"
+)
+
+puts "Permissive response: #{permissive_response.text}"
+```
+
+Available safety categories:
+
+- `HARM_CATEGORY_HATE_SPEECH`
+- `HARM_CATEGORY_DANGEROUS_CONTENT`
+- `HARM_CATEGORY_HARASSMENT`
+- `HARM_CATEGORY_SEXUALLY_EXPLICIT`
+
+Available threshold levels (from most to least restrictive):
+
+- `BLOCK_LOW_AND_ABOVE`
+- `BLOCK_MEDIUM_AND_ABOVE`
+- `BLOCK_ONLY_HIGH`
+- `BLOCK_NONE`
 
 ## Streaming Responses
 

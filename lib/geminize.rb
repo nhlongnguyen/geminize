@@ -28,6 +28,11 @@ require_relative "geminize/models/memory"
 require_relative "geminize/models/conversation"
 require_relative "geminize/models/embedding_request"
 require_relative "geminize/models/embedding_response"
+require_relative "geminize/models/function_declaration"
+require_relative "geminize/models/tool"
+require_relative "geminize/models/tool_config"
+require_relative "geminize/models/function_response"
+require_relative "geminize/models/safety_setting"
 require_relative "geminize/request_builder"
 require_relative "geminize/vector_utils"
 require_relative "geminize/text_generation"
@@ -36,6 +41,13 @@ require_relative "geminize/chat"
 require_relative "geminize/conversation_repository"
 require_relative "geminize/conversation_service"
 require_relative "geminize/model_info"
+
+# Load extensions
+require_relative "geminize/models/content_request_extensions"
+require_relative "geminize/models/content_response_extensions"
+require_relative "geminize/models/content_request_safety"
+require_relative "geminize/module_extensions"
+require_relative "geminize/module_safety"
 
 # Main module for the Geminize gem
 module Geminize
