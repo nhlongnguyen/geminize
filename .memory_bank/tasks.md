@@ -29,10 +29,12 @@
     - [x] Add safety configuration to requests
     - [x] Implement module-level safety methods
     - [x] Add tests for safety settings
-  - [ ] **Code Execution Support**
-    - [ ] Create code execution model classes
-    - [ ] Implement code execution tools in requests
-    - [ ] Update response handling for code execution
+  - [x] **Code Execution Support**
+    - [x] Create code execution model classes
+    - [x] Implement code execution tools in requests
+    - [x] Update response handling for code execution
+    - [x] Add module-level code execution methods
+    - [x] Create example script for code execution
   - [ ] **Additional Content Types**
     - [ ] Audio content support
     - [ ] Document/PDF content support

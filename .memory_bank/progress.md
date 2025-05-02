@@ -2,7 +2,7 @@
 
 ## Current Status
 
-Geminize is a functional Ruby gem providing a complete interface to the Google Gemini API. The current implementation includes all core features with a focus on stability, documentation, and ease of use. The gem now also includes function calling, JSON mode, and safety settings features.
+Geminize is a functional Ruby gem providing a complete interface to the Google Gemini API. The current implementation includes all core features with a focus on stability, documentation, and ease of use. The gem now also includes function calling, JSON mode, safety settings, and code execution features.
 
 ## Development Progress
 
@@ -19,6 +19,7 @@ Geminize is a functional Ruby gem providing a complete interface to the Google G
 - **Function Calling**: ✅ Complete
 - **JSON Mode**: ✅ Complete
 - **Safety Settings**: ✅ Complete
+- **Code Execution**: ✅ Complete
 
 ### Documentation
 
@@ -79,7 +80,7 @@ Geminize is a functional Ruby gem providing a complete interface to the Google G
 
 ### v1.3.0 (Planned)
 
-- Code execution support
+- Added code execution support
 - Additional content types (audio, PDF)
 - Caching mechanisms
 - Improved conversation persistence

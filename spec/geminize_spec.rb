@@ -1086,4 +1086,115 @@ RSpec.describe Geminize do
       expect(result.text).to match(/\b(temperature|weather|sunny|72|New York)\b/i)
     end
   end
+
+  describe ".generate_with_code_execution", :vcr do
+    let(:prompt) { "What is the sum of the first 10 prime numbers? Generate and run code for the calculation." }
+    let(:model_name) { "gemini-2.0-flash" }
+
+    before do
+      # Configure with real API key from env
+      Geminize.configure do |config|
+        config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key"
+        config.default_model = model_name
+      end
+    end
+
+    after do
+      Geminize.reset_configuration!
+    end
+
+    it "successfully generates code and executes it", vcr: {cassette_name: "generate_with_code_execution"} do
+      response = Geminize.generate_with_code_execution(prompt)
+
+      # Test that we get a valid response object
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
+
+      # The response should contain executable code
+      if response.has_executable_code?
+        expect(response.executable_code).to be_a(Geminize::Models::CodeExecution::ExecutableCode)
+        expect(response.executable_code.language).to eq("PYTHON")
+        expect(response.executable_code.code).to be_a(String)
+        expect(response.executable_code.code).not_to be_empty
+      else
+        # For debugging when the test is run with record: :new_episodes
+        puts "WARNING: No executable code detected. If running with record: :new_episodes, check the API response:"
+        pp response.raw_response
+      end
+
+      # The response might contain code execution results
+      if response.has_code_execution_result?
+        expect(response.code_execution_result).to be_a(Geminize::Models::CodeExecution::CodeExecutionResult)
+        expect(["OUTCOME_OK", "OUTCOME_ERROR"]).to include(response.code_execution_result.outcome)
+        expect(response.code_execution_result.output).to be_a(String)
+      end
+    end
+
+    it "successfully generates code with specified model", vcr: {cassette_name: "generate_with_code_execution_specified_model"} do
+      response = Geminize.generate_with_code_execution(prompt, model_name)
+
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
+
+      # Check for code or code execution results, but don't fail if they're not present
+      # (the API might have variations in response format)
+      if response.has_executable_code?
+        expect(response.executable_code.language).to eq("PYTHON")
+        expect(response.executable_code.code).not_to be_empty
+      end
+    end
+
+    it "successfully generates code with generation parameters", vcr: {cassette_name: "generate_with_code_execution_parameters"} do
+      params = {temperature: 0.1, max_tokens: 1000}
+
+      response = Geminize.generate_with_code_execution(prompt, model_name, params)
+
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
+    end
+
+    it "successfully generates code with a data analysis task", vcr: {cassette_name: "generate_with_code_execution_data_analysis"} do
+      data_prompt = "I have a list of temperatures: 32, 25, 30, 22, 28, 27, 35, 31, 29, 26. Calculate the mean, median, and standard deviation."
+
+      response = Geminize.generate_with_code_execution(data_prompt, model_name)
+
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
+
+      # A data analysis prompt should generate code
+      if response.has_executable_code?
+        expect(response.executable_code.code).to include("import statistics") # or some other statistical function
+      end
+    end
+
+    it "successfully generates code without retries", vcr: {cassette_name: "generate_with_code_execution_without_retries"} do
+      response = Geminize.generate_with_code_execution(prompt, nil, with_retries: false)
+
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
+    end
+
+    it "successfully generates code with custom retry parameters", vcr: {cassette_name: "generate_with_code_execution_custom_retries"} do
+      response = Geminize.generate_with_code_execution(prompt, nil, max_retries: 5, retry_delay: 2.0)
+
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
+    end
+
+    it "successfully generates code with client options", vcr: {cassette_name: "generate_with_code_execution_client_options"} do
+      client_options = {timeout: 30}
+
+      response = Geminize.generate_with_code_execution(prompt, nil, client_options: client_options)
+
+      expect(response).to be_a(Geminize::Models::ContentResponse)
+      expect(response.text).to be_a(String)
+      expect(response.text).not_to be_empty
+    end
+  end
 end

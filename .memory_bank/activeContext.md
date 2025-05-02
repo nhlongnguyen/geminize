@@ -12,6 +12,7 @@
 - Function calling capabilities
 - JSON mode for structured responses
 - Safety settings for content moderation
+- Code execution capabilities
 
 ### Key Implementation Details
 
@@ -31,6 +32,15 @@
 - Tool execution modes (AUTO, MANUAL, NONE)
 - Function result processing
 - String-based function call detection
+
+#### Code Execution
+
+- Python code generation and execution support
+- Code execution result handling
+- Support for code libraries like matplotlib, numpy, etc.
+- Tool-based code execution integration
+- Executable code response parsing
+- Code output result parsing
 
 #### JSON Mode
 
@@ -91,10 +101,10 @@
 - Error handling refinements
 - Models API integration
 - Function calling support
+- Code execution capabilities
 
 ### Upcoming Features
 
-- Code execution support
 - Additional content types (audio, PDF)
 - Caching support
 - Advanced parameter tuning
