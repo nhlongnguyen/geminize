@@ -54,7 +54,7 @@ RSpec.describe Geminize::Models::CodeExecution::CodeExecutionResult do
   describe "with error outcome" do
     let(:outcome) { "OUTCOME_ERROR" }
     let(:output) { "Error: Division by zero" }
-    
+
     it "initializes with error outcome" do
       expect(code_execution_result.outcome).to eq(outcome)
       expect(code_execution_result.output).to eq(output)

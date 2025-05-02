@@ -10,9 +10,9 @@ RSpec.describe Geminize::Models::ContentRequest do
   describe "#enable_code_execution" do
     it "adds a code execution tool to the request" do
       expect(content_request.tools).to be_nil
-      
+
       content_request.enable_code_execution
-      
+
       expect(content_request.tools).to be_an(Array)
       expect(content_request.tools.size).to eq(1)
       expect(content_request.tools[0].code_execution).to be true
@@ -31,17 +31,17 @@ RSpec.describe Geminize::Models::ContentRequest do
     it "includes code execution tool in the hash" do
       hash = content_request.to_hash
       expect(hash[:tools]).to be_an(Array)
-      expect(hash[:tools][0]).to eq({ code_execution: {} })
+      expect(hash[:tools][0]).to eq({code_execution: {}})
     end
-    
+
     it "includes content, model, and code execution tool" do
       hash = content_request.to_hash
-      
+
       # Check that content is included
       expect(hash[:contents][0][:parts][0][:text]).to eq(prompt)
-      
+
       # Check that code execution tool is included
-      expect(hash[:tools][0]).to eq({ code_execution: {} })
+      expect(hash[:tools][0]).to eq({code_execution: {}})
     end
   end
 
@@ -62,15 +62,15 @@ RSpec.describe Geminize::Models::ContentRequest do
           required: ["query"]
         }
       )
-      
+
       # Enable code execution
       content_request.enable_code_execution
-      
+
       # Validate the request has both tools
       expect(content_request.tools.size).to eq(2)
       expect(content_request.tools[0].function_declaration).not_to be_nil
       expect(content_request.tools[1].code_execution).to be true
-      
+
       # Check hash representation
       hash = content_request.to_hash
       expect(hash[:tools].size).to eq(2)

@@ -8,15 +8,15 @@ RSpec.describe Geminize::Models::ContentResponse do
     let(:language) { "PYTHON" }
     let(:code) { "def is_prime(n):\n    if n <= 1:\n        return False\n    for i in range(2, int(n**0.5) + 1):\n        if n % i == 0:\n            return False\n    return True\n\nprimes = [n for n in range(2, 50) if is_prime(n)]\nprint(f\"First 10 prime numbers: {primes[:10]}\")" }
     let(:execution_output) { "First 10 prime numbers: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]" }
-    
+
     let(:response_data_with_code_execution) do
       {
         "candidates" => [
           {
             "content" => {
               "parts" => [
-                { "text" => text_content },
-                { 
+                {"text" => text_content},
+                {
                   "executableCode" => {
                     "language" => language,
                     "code" => code
@@ -66,8 +66,8 @@ RSpec.describe Geminize::Models::ContentResponse do
           {
             "content" => {
               "parts" => [
-                { "text" => "There was an error in the code execution." },
-                { 
+                {"text" => "There was an error in the code execution."},
+                {
                   "executableCode" => {
                     "language" => "PYTHON",
                     "code" => "print(10/0)"
@@ -105,7 +105,7 @@ RSpec.describe Geminize::Models::ContentResponse do
           {
             "content" => {
               "parts" => [
-                { "text" => "This is a regular text response without code execution." }
+                {"text" => "This is a regular text response without code execution."}
               ],
               "role" => "model"
             },

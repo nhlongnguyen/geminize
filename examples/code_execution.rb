@@ -53,8 +53,8 @@ puts "Asking Gemini to analyze some text data..."
 begin
   # Generate a response with code execution for data analysis
   response = Geminize.generate_with_code_execution(
-    "I have a list of temperatures: 32, 25, 30, 22, 28, 27, 35, 31, 29, 26. " +
-    "Please write code to calculate the mean, median, and standard deviation. " +
+    "I have a list of temperatures: 32, 25, 30, 22, 28, 27, 35, 31, 29, 26. " \
+    "Please write code to calculate the mean, median, and standard deviation. " \
     "Also, create a simple histogram visualization using matplotlib.",
     nil,
     {temperature: 0.2}
@@ -88,8 +88,8 @@ puts "Asking Gemini to solve a complex problem using code execution..."
 begin
   # Generate a response for a more complex problem
   response = Geminize.generate_with_code_execution(
-    "Write a Python function to find the nth Fibonacci number where n is a positive integer. " +
-    "Then use this function to calculate the 50th Fibonacci number. " +
+    "Write a Python function to find the nth Fibonacci number where n is a positive integer. " \
+    "Then use this function to calculate the 50th Fibonacci number. " \
     "Implement it efficiently using memoization to avoid redundant calculations.",
     nil,
     {temperature: 0.2}
