@@ -11,7 +11,6 @@ A convenient and robust Ruby interface for the Google Gemini API, enabling easy 
 - Embeddings generation
 - Support for streaming responses
 - Comprehensive error handling
-- Rails integration with controller concerns and view helpers
 
 ## Installation
 
@@ -311,10 +310,6 @@ end
 puts "\n" # Add a newline after streaming
 ```
 
-## Rails Integration
-
-Geminize provides seamless integration with Rails applications.
-
 ### Setup
 
 1. Add Geminize to your Gemfile:
@@ -323,13 +318,18 @@ Geminize provides seamless integration with Rails applications.
 gem 'geminize'
 ```
 
-2. Run the installer generator:
+2. Create a configuration initializer at `config/initializers/geminize.rb`:
 
-```bash
-rails generate geminize:install
+```ruby
+Geminize.configure do |config|
+  config.api_key = ENV["GEMINI_API_KEY"]
+  config.api_version = "v1beta"
+  config.default_model = ""
+  config.timeout = 30
+  config.open_timeout = 10
+  config.log_requests = true
+end
 ```
-
-This creates a configuration initializer at `config/initializers/geminize.rb`
 
 3. Add your API key to the initializer or via environment variables.
 
@@ -413,14 +413,11 @@ Check out these example applications to see Geminize in action:
 - [Configuration Example](examples/configuration.rb)
 - [Embeddings Example](examples/embeddings.rb)
 - [Multimodal Example](examples/multimodal.rb)
-- [Rails Initializer Example](examples/rails_initializer.rb)
 - [System Instructions Example](examples/system_instructions.rb)
-- [Rails Chat Application](examples/rails_chat)
 
 ## Compatibility
 
 Ruby version: 3.1.0 or later
-Rails version: 6.0 or later (for Rails integration)
 
 ## Development
 

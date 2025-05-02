@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email = ["nhatlongnguyen1992@gmail.com"]
 
   spec.summary = "Ruby interface for Google's Gemini AI API"
-  spec.description = "A convenient and robust Ruby interface for the Google Gemini API, enabling easy integration of powerful generative AI models into your applications. Includes support for text generation, chat conversations, embeddings, multimodal content, and Rails integration."
+  spec.description = "A convenient and robust Ruby interface for the Google Gemini API, enabling easy integration of powerful generative AI models into your applications. Includes support for text generation, chat conversations, embeddings, multimodal content."
   spec.homepage = "https://github.com/nhlongnguyen/geminize"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.1.0"
@@ -26,6 +26,7 @@ Gem::Specification.new do |spec|
   spec.files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
     ls.readlines("\x0", chomp: true).reject do |f|
       (f == gemspec) ||
+        f.end_with?(".gem") ||
         f.start_with?(*%w[bin/ test/ spec/ features/ .git .github appveyor Gemfile])
     end
   end
