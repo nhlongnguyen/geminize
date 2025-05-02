@@ -113,7 +113,22 @@ module Geminize
         if @response_mime_type
           request[:generationConfig] ||= {}
           request[:generationConfig][:responseSchema] = {
-            type: "object"
+            type: "object",
+            properties: {
+              # Add a sample property to satisfy the API requirement
+              # This is a generic structure that will be overridden by the model's understanding
+              # of what properties to include based on the prompt
+              result: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    value: { type: "string" }
+                  }
+                }
+              }
+            }
           }
           request[:generationConfig][:responseMimeType] = @response_mime_type
         end
