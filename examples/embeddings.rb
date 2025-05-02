@@ -55,7 +55,6 @@ begin
 
   puts "\nGenerated #{embeddings.size} embeddings."
   puts "Total tokens (approximated by summing individual calls): #{total_tokens}"
-
 rescue => e
   puts "Error: #{e.message}"
 end
@@ -85,25 +84,24 @@ end
 puts "\n============================================================"
 puts "Example 4: Batch processing for large arrays (COMMENTED OUT)"
 puts "============================================================"
-=begin # Commenting out Example 4 due to potential model/API limitations with batching
-begin
-  # Create a larger array of texts
-  many_texts = Array.new(120) { |i| "This is sample text number #{i}" }
-
-  # Generate embeddings with automatic batch processing
-  response = Geminize.generate_embedding(
-    many_texts,
-    nil, # Use default model
-    batch_size: 40 # Process in batches of 40 texts each
-  )
-
-  puts "Generated embeddings for #{response.batch_size} texts"
-  puts "First text embedding dimensions: #{response.embedding_size}"
-  puts "Total tokens processed: #{response.total_tokens}"
-rescue => e
-  puts "Error: #{e.message}"
-end
-=end
+# # Commenting out Example 4 due to potential model/API limitations with batching
+# begin
+#   # Create a larger array of texts
+#   many_texts = Array.new(120) { |i| "This is sample text number #{i}" }
+#
+#   # Generate embeddings with automatic batch processing
+#   response = Geminize.generate_embedding(
+#     many_texts,
+#     nil, # Use default model
+#     batch_size: 40 # Process in batches of 40 texts each
+#   )
+#
+#   puts "Generated embeddings for #{response.batch_size} texts"
+#   puts "First text embedding dimensions: #{response.embedding_size}"
+#   puts "Total tokens processed: #{response.total_tokens}"
+# rescue => e
+#   puts "Error: #{e.message}"
+# end
 puts "# Example 4 skipped due to potential issues with batch embedding support."
 
 puts "\n============================================================"

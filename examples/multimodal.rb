@@ -20,7 +20,7 @@ begin
   # Generate content with an image from a file
   response = Geminize.generate_text_multimodal(
     "Describe this image in detail:",
-    [{source_type: "file", data: "./examples/ruby.png"}] # Updated path
+    [{source_type: "file", data: File.join(File.dirname(__FILE__), "ruby.png")}] # Use relative path from script
   )
 
   puts "Response:"
@@ -28,7 +28,7 @@ begin
   puts "\nFinish reason: #{response.finish_reason}"
 rescue => e
   puts "Error: #{e.message}"
-  puts "Make sure the path './examples/ruby.png' is correct relative to the project root."
+  puts "Make sure the path './ruby.png' is correct relative to the project root."
 end
 
 puts "\n============================================================"
@@ -60,8 +60,8 @@ begin
   response = Geminize.generate_text_multimodal(
     "Compare these two images and describe the differences (they might be the same):",
     [
-      {source_type: "file", data: "./examples/ruby.png"}, # Updated path
-      {source_type: "file", data: "./examples/ruby.png"}  # Updated path
+      {source_type: "file", data: File.join(File.dirname(__FILE__), "ruby.png")}, # Use relative path from script
+      {source_type: "file", data: File.join(File.dirname(__FILE__), "ruby.png")}  # Use relative path from script
     ],
     "gemini-1.5-pro-latest", # Explicitly specify model
     max_tokens: 500
@@ -71,7 +71,7 @@ begin
   puts response.text
 rescue => e
   puts "Error: #{e.message}"
-  puts "Make sure the path './examples/ruby.png' is correct."
+  puts "Make sure the path './ruby.png' is correct."
 end
 
 puts "\n============================================================"
@@ -80,7 +80,7 @@ puts "============================================================"
 
 begin
   # Read image directly into bytes
-  image_bytes = File.binread("./examples/ruby.png") # Updated path
+  image_bytes = File.binread(File.join(File.dirname(__FILE__), "ruby.png")) # Use relative path from script
 
   # Generate content with raw image bytes
   response = Geminize.generate_text_multimodal(
@@ -92,7 +92,7 @@ begin
   puts response.text
 rescue => e
   puts "Error: #{e.message}"
-  puts "Make sure the path './examples/ruby.png' is correct."
+  puts "Make sure the path './ruby.png' is correct."
 end
 
 puts "\n============================================================"
@@ -112,7 +112,7 @@ begin
   )
 
   # Add multiple images using different methods
-  request.add_image_from_file("./examples/ruby.png") # Updated path
+  request.add_image_from_file(File.join(File.dirname(__FILE__), "ruby.png")) # Use relative path from script
   request.add_image_from_url("https://miro.medium.com/v2/resize:fit:720/format:webp/1*zkA1cWgJDlMUxI5TRcIHdQ.jpeg") # Updated URL
 
   # Generate the response
@@ -122,7 +122,7 @@ begin
   puts response.text
 
   # Check if usage data is available before accessing it
-  if response.usage && response.usage.total_tokens
+  if response.usage&.total_tokens
     puts "\nUsed #{response.usage.total_tokens} tokens total"
   else
     puts "\nUsage data not available in the response."

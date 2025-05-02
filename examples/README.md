@@ -25,7 +25,7 @@ All examples should be run from the **project root directory** (the directory co
 Demonstrates different ways to configure the Geminize client.
 
 ```bash
-ruby examples/configuration.rb
+bundle exec ruby examples/configuration.rb
 ```
 
 ### 2. Embeddings (`embeddings.rb`)
@@ -33,7 +33,7 @@ ruby examples/configuration.rb
 Shows how to generate text embeddings and calculate cosine similarity.
 
 ```bash
-ruby examples/embeddings.rb
+bundle exec ruby examples/embeddings.rb
 ```
 
 ### 3. Multimodal (`multimodal.rb`)
@@ -43,7 +43,7 @@ Illustrates sending text and image inputs to the Gemini API.
 _Note: You may need to update the image file paths within the script (`path/to/image.jpg`) to point to actual image files on your system._
 
 ```bash
-ruby examples/multimodal.rb
+bundle exec ruby examples/multimodal.rb
 ```
 
 ### 4. Rails Initializer (`rails_initializer.rb`)
@@ -51,7 +51,7 @@ ruby examples/multimodal.rb
 Shows the configuration structure typically used in a Rails initializer (this script is meant for illustration and doesn't require a Rails app to run).
 
 ```bash
-ruby examples/rails_initializer.rb
+bundle exec ruby examples/rails_initializer.rb
 ```
 
 ### 5. System Instructions (`system_instructions.rb`)
@@ -59,7 +59,7 @@ ruby examples/rails_initializer.rb
 Demonstrates using system instructions to guide the model's behavior and personality.
 
 ```bash
-ruby examples/system_instructions.rb
+bundle exec ruby examples/system_instructions.rb
 ```
 
 ### 6. Rails Chat Application (`rails_chat/`)

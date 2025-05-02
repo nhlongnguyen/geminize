@@ -214,7 +214,7 @@ module Geminize
         # Map content_parts to the structure the API expects
         api_parts = @content_parts.map do |part|
           if part[:type] == "text"
-            { text: part[:text] }
+            {text: part[:text]}
           elsif part[:type] == "image"
             {
               inlineData: {
