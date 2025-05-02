@@ -52,6 +52,35 @@ module Geminize
       def build_streaming_endpoint(model_name)
         build_model_endpoint(model_name, "streamGenerateContent")
       end
+
+      # Build a models list request parameters
+      # @param page_size [Integer, nil] Number of models to return per page
+      # @param page_token [String, nil] Token for retrieving a specific page
+      # @return [Hash] The query parameters for models listing
+      def build_models_list_params(page_size = nil, page_token = nil)
+        params = {}
+        params[:pageSize] = page_size if page_size
+        params[:pageToken] = page_token if page_token
+        params
+      end
+
+      # Build a specific model endpoint for the get model info API
+      # @param model_name [String] The model name or ID to get info for
+      # @return [String] The complete API endpoint path for getting model info
+      def build_get_model_endpoint(model_name)
+        # Handle both formats: "models/gemini-1.5-pro" or just "gemini-1.5-pro"
+        unless model_name.start_with?("models/")
+          model_name = "models/#{model_name}"
+        end
+        model_name
+      end
+
+      # Build the endpoint for embedding generation
+      # @param model_name [String] The name of the model
+      # @return [String] The complete API endpoint path for embedding generation
+      def build_embedding_endpoint(model_name)
+        build_model_endpoint(model_name, "embedContent")
+      end
     end
   end
 end

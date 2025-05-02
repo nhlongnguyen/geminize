@@ -711,4 +711,183 @@ RSpec.describe Geminize do
       expect(result[:response].text).not_to be_empty
     end
   end
+
+  describe ".list_models", :vcr do
+    before do
+      Geminize.configure do |config|
+        config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key"
+        config.api_version = "v1"
+      end
+    end
+
+    after do
+      Geminize.reset_configuration!
+    end
+
+    it "retrieves a list of models", vcr: {cassette_name: "list_models"} do
+      model_list = Geminize.list_models
+
+      expect(model_list).to be_a(Geminize::Models::ModelList)
+      expect(model_list.size).to be > 0
+
+      # Verify the model objects have the expected structure
+      first_model = model_list.first
+      expect(first_model).to be_a(Geminize::Models::Model)
+      expect(first_model.name).to be_a(String)
+      expect(first_model.name).to include("models/")
+    end
+
+    it "handles pagination parameters", vcr: {cassette_name: "list_models_with_pagination"} do
+      # First get a page of results
+      first_page = Geminize.list_models(page_size: 2)
+
+      # If there's a next page, get it
+      if first_page.has_more_pages?
+        second_page = Geminize.list_models(page_size: 2, page_token: first_page.next_page_token)
+        expect(second_page).to be_a(Geminize::Models::ModelList)
+        expect(second_page.size).to be > 0
+
+        # The models on second page should be different from the first page
+        expect(second_page.first.name).not_to eq(first_page.first.name)
+      else
+        # Skip this test if we don't have enough models to paginate
+        skip "Not enough models to test pagination"
+      end
+    end
+  end
+
+  describe ".list_all_models", :vcr do
+    before do
+      Geminize.configure do |config|
+        config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key"
+        config.api_version = "v1"
+      end
+    end
+
+    after do
+      Geminize.reset_configuration!
+    end
+
+    it "retrieves all models across pages", vcr: {cassette_name: "list_all_models"} do
+      all_models = Geminize.list_all_models
+
+      expect(all_models).to be_a(Geminize::Models::ModelList)
+      expect(all_models.size).to be > 0
+
+      # We can't know the exact number, but we should have several models
+      expect(all_models.size).to be >= 5
+    end
+  end
+
+  describe ".get_model", :vcr do
+    let(:model_name) { "gemini-1.5-pro" }
+
+    before do
+      Geminize.configure do |config|
+        config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key"
+        config.api_version = "v1"
+      end
+    end
+
+    after do
+      Geminize.reset_configuration!
+    end
+
+    it "retrieves a specific model by name", vcr: {cassette_name: "get_model"} do
+      model = Geminize.get_model(model_name)
+
+      expect(model).to be_a(Geminize::Models::Model)
+      expect(model.name).to include(model_name)
+      expect(model.id).to eq(model_name)
+
+      # Check that the model has all expected attributes
+      expect(model.display_name).to be_a(String)
+      expect(model.description).to be_a(String)
+      expect(model.supported_generation_methods).to be_an(Array)
+    end
+
+    it "handles models with full path names", vcr: {cassette_name: "get_model_full_path"} do
+      full_name = "models/#{model_name}"
+      model = Geminize.get_model(full_name)
+
+      expect(model).to be_a(Geminize::Models::Model)
+      expect(model.id).to eq(model_name)
+    end
+
+    it "raises an error for non-existent models", vcr: {cassette_name: "get_non_existent_model"} do
+      expect {
+        Geminize.get_model("non-existent-model-123456")
+      }.to raise_error(Geminize::ResourceNotFoundError)
+    end
+  end
+
+  describe "model filtering methods", :vcr do
+    before do
+      Geminize.configure do |config|
+        config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key"
+        config.api_version = "v1"
+      end
+    end
+
+    after do
+      Geminize.reset_configuration!
+    end
+
+    it "filters content generation models", vcr: {cassette_name: "get_content_generation_models"} do
+      models = Geminize.get_content_generation_models
+
+      expect(models).to be_a(Geminize::Models::ModelList)
+      expect(models.size).to be > 0
+
+      # All returned models should support content generation
+      models.each do |model|
+        expect(model.supports_content_generation?).to be true
+      end
+    end
+
+    it "filters embedding models", vcr: {cassette_name: "get_embedding_models"} do
+      models = Geminize.get_embedding_models
+
+      expect(models).to be_a(Geminize::Models::ModelList)
+
+      # All returned models should support embeddings
+      models.each do |model|
+        expect(model.supports_embedding?).to be true
+      end
+    end
+
+    it "filters chat models", vcr: {cassette_name: "get_chat_models"} do
+      models = Geminize.get_chat_models
+
+      expect(models).to be_a(Geminize::Models::ModelList)
+
+      # All returned models should support chat
+      models.each do |model|
+        expect(model.supports_message_generation?).to be true
+      end
+    end
+
+    it "filters streaming models", vcr: {cassette_name: "get_streaming_models"} do
+      models = Geminize.get_streaming_models
+
+      expect(models).to be_a(Geminize::Models::ModelList)
+
+      # All returned models should support streaming
+      models.each do |model|
+        expect(model.supports_streaming?).to be true
+      end
+    end
+
+    it "gets models by a specific generation method", vcr: {cassette_name: "get_models_by_method"} do
+      models = Geminize.get_models_by_method("generateContent")
+
+      expect(models).to be_a(Geminize::Models::ModelList)
+      expect(models.size).to be > 0
+
+      # All returned models should support the specified method
+      models.each do |model|
+        expect(model.supports_method?("generateContent")).to be true
+      end
+    end
+  end
 end

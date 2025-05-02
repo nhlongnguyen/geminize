@@ -11,6 +11,7 @@ A convenient and robust Ruby interface for the Google Gemini API, enabling easy 
 - Embeddings generation
 - Support for streaming responses
 - Comprehensive error handling
+- Complete Models API for discovering and filtering available models
 
 ## Installation
 
@@ -313,6 +314,45 @@ Check out these example applications to see Geminize in action:
 - [Embeddings Example](examples/embeddings.rb)
 - [Multimodal Example](examples/multimodal.rb)
 - [System Instructions Example](examples/system_instructions.rb)
+- [Models API Example](examples/models_api.rb)
+
+## Working with Models
+
+Geminize provides a comprehensive API for querying and working with available Gemini models:
+
+```ruby
+require 'geminize'
+# Assumes API key is set via environment variables (e.g., in .env)
+
+# List available models
+models = Geminize.list_models
+puts "Available models: #{models.size}"
+
+# Get details about a specific model
+model = Geminize.get_model("gemini-1.5-pro")
+puts "Model: #{model.display_name}"
+puts "Token limits: #{model.input_token_limit} input, #{model.output_token_limit} output"
+
+# Find models by capability
+embedding_models = Geminize.get_embedding_models
+content_models = Geminize.get_content_generation_models
+streaming_models = Geminize.get_streaming_models
+
+# Check if a model supports a specific capability
+if model.supports_content_generation?
+  puts "This model supports content generation"
+end
+
+if model.supports_embedding?
+  puts "This model supports embeddings"
+end
+
+# Find models with high context windows
+high_context_models = Geminize.list_all_models.filter_by_min_input_tokens(100_000)
+puts "Models with 100k+ context: #{high_context_models.map(&:id).join(', ')}"
+```
+
+For more comprehensive examples, see [examples/models_api.rb](examples/models_api.rb).
 
 ## Compatibility
 

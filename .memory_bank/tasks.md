@@ -15,6 +15,16 @@
 - [ ] Add support for function calling capabilities
 - [ ] Implement batch embedding generation
 - [ ] Improve conversation persistence with adapter pattern for multiple storage options
+- [ ] **Models API Integration**:
+  - [x] Enhance `model_info.rb` to support full model metadata
+  - [x] Update/create `Models::Model` class to match API response structure
+  - [x] Implement `Models::ModelList` class for handling paginated results
+  - [x] Add methods to `RequestBuilder` for models endpoints
+  - [x] Add client methods for models endpoints
+  - [x] Add convenience methods to main Geminize module
+  - [x] Implement helper methods for model capability filtering
+  - [x] Add comprehensive tests for models functionality
+  - [x] Update documentation with models API examples
 
 ### Testing
 
@@ -46,6 +56,7 @@
 - [x] Chat conversation support
 - [x] Embeddings generation
 - [x] Streaming response handling
+- [x] Models API Integration
 
 ### Documentation
 
@@ -74,6 +85,10 @@
 - [ ] Advanced vector operations
 - [ ] Batch processing for multiple requests
 - [ ] CLI tool for quick testing
+- [ ] Models API enhancements:
+  - [ ] Caching model information to reduce API calls
+  - [ ] Smart model selection based on input requirements
+  - [ ] Model comparison utilities
 
 ### Optimizations
 

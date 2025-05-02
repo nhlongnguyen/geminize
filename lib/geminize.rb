@@ -478,35 +478,92 @@ module Geminize
       )
     end
 
-    # Get a list of available models from the Gemini API
+    # List available models from the Gemini API
+    # @param page_size [Integer, nil] Number of models to return per page (max 1000)
+    # @param page_token [String, nil] Token for retrieving a specific page
     # @param force_refresh [Boolean] Force a refresh from the API instead of using cache
     # @param client_options [Hash] Options to pass to the client
     # @return [Geminize::Models::ModelList] List of available models
     # @raise [Geminize::GeminizeError] If the request fails
-    # @example Get a list of all available models
-    #   models = Geminize.list_models
-    # @example Get a fresh list bypassing cache
-    #   models = Geminize.list_models(force_refresh: true)
-    # @example Filter models by capability
-    #   vision_models = Geminize.list_models.vision_models
-    def list_models(force_refresh: false, client_options: {})
+    def list_models(page_size: nil, page_token: nil, force_refresh: false, client_options: {})
       validate_configuration!
       model_info = ModelInfo.new(nil, client_options)
-      model_info.list_models(force_refresh: force_refresh)
+      model_info.list_models(page_size: page_size, page_token: page_token, force_refresh: force_refresh)
+    end
+
+    # Get all available models, handling pagination automatically
+    # @param force_refresh [Boolean] Force a refresh from the API instead of using cache
+    # @param client_options [Hash] Options to pass to the client
+    # @return [Geminize::Models::ModelList] Complete list of all available models
+    # @raise [Geminize::GeminizeError] If the request fails
+    def list_all_models(force_refresh: false, client_options: {})
+      validate_configuration!
+      model_info = ModelInfo.new(nil, client_options)
+      model_info.list_all_models(force_refresh: force_refresh)
     end
 
     # Get information about a specific model
-    # @param model_id [String] The model ID to retrieve
+    # @param model_name [String] The model name to retrieve (can be "models/gemini-1.5-pro" or just "gemini-1.5-pro")
     # @param force_refresh [Boolean] Force a refresh from the API instead of using cache
     # @param client_options [Hash] Options to pass to the client
     # @return [Geminize::Models::Model] The model information
     # @raise [Geminize::GeminizeError] If the request fails or model is not found
-    # @example Get information about a specific model
-    #   model = Geminize.get_model("gemini-1.5-pro")
-    def get_model(model_id, force_refresh: false, client_options: {})
+    def get_model(model_name, force_refresh: false, client_options: {})
       validate_configuration!
       model_info = ModelInfo.new(nil, client_options)
-      model_info.get_model(model_id, force_refresh: force_refresh)
+      model_info.get_model(model_name, force_refresh: force_refresh)
+    end
+
+    # Get models that support a specific generation method
+    # @param method [String] The generation method (e.g., "generateContent", "embedContent")
+    # @param force_refresh [Boolean] Force a refresh from the API instead of using cache
+    # @param client_options [Hash] Options to pass to the client
+    # @return [Geminize::Models::ModelList] List of models that support the method
+    # @raise [Geminize::GeminizeError] If the request fails
+    def get_models_by_method(method, force_refresh: false, client_options: {})
+      validate_configuration!
+      model_info = ModelInfo.new(nil, client_options)
+      model_info.get_models_by_method(method, force_refresh: force_refresh)
+    end
+
+    # Get models that support content generation
+    # @param force_refresh [Boolean] Force a refresh from the API instead of using cache
+    # @param client_options [Hash] Options to pass to the client
+    # @return [Geminize::Models::ModelList] List of models that support content generation
+    # @raise [Geminize::GeminizeError] If the request fails
+    def get_content_generation_models(force_refresh: false, client_options: {})
+      models = list_all_models(force_refresh: force_refresh, client_options: client_options)
+      models.content_generation_models
+    end
+
+    # Get models that support embedding generation
+    # @param force_refresh [Boolean] Force a refresh from the API instead of using cache
+    # @param client_options [Hash] Options to pass to the client
+    # @return [Geminize::Models::ModelList] List of models that support embedding generation
+    # @raise [Geminize::GeminizeError] If the request fails
+    def get_embedding_models(force_refresh: false, client_options: {})
+      models = list_all_models(force_refresh: force_refresh, client_options: client_options)
+      models.embedding_models
+    end
+
+    # Get models that support chat generation
+    # @param force_refresh [Boolean] Force a refresh from the API instead of using cache
+    # @param client_options [Hash] Options to pass to the client
+    # @return [Geminize::Models::ModelList] List of models that support chat generation
+    # @raise [Geminize::GeminizeError] If the request fails
+    def get_chat_models(force_refresh: false, client_options: {})
+      models = list_all_models(force_refresh: force_refresh, client_options: client_options)
+      models.chat_models
+    end
+
+    # Get models that support streaming generation
+    # @param force_refresh [Boolean] Force a refresh from the API instead of using cache
+    # @param client_options [Hash] Options to pass to the client
+    # @return [Geminize::Models::ModelList] List of models that support streaming generation
+    # @raise [Geminize::GeminizeError] If the request fails
+    def get_streaming_models(force_refresh: false, client_options: {})
+      models = list_all_models(force_refresh: force_refresh, client_options: client_options)
+      models.streaming_models
     end
 
     # Update a conversation's system instruction
