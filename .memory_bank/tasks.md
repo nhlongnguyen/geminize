@@ -12,19 +12,35 @@
 ### Feature Development
 
 - [ ] Support for new Gemini models as they become available
-- [ ] Add support for function calling capabilities
+- [ ] Implement Gemini API missing features:
+  - [x] **Function Calling Support**
+    - [x] Create model classes for function calling structures
+    - [x] Update ContentRequest to support tools and functions
+    - [x] Update request builder and response handling
+    - [x] Add module-level convenience methods
+  - [x] **JSON Mode Support**
+    - [x] Add MIME type support for JSON responses
+    - [x] Implement helper methods for JSON generation
+    - [x] Add validation for JSON response structures
+  - [x] **Safety Settings**
+    - [x] Create SafetySetting model
+    - [x] Add safety configuration to requests
+    - [x] Implement module-level safety methods
+  - [ ] **Code Execution Support**
+    - [ ] Create code execution model classes
+    - [ ] Implement code execution tools in requests
+    - [ ] Update response handling for code execution
+  - [ ] **Additional Content Types**
+    - [ ] Audio content support
+    - [ ] Document/PDF content support
+    - [ ] Video content support
+  - [ ] **Caching Support**
+    - [ ] Add caching to content requests
+    - [ ] Implement cached content handling
+    - [ ] Add module-level caching methods
+- [x] Add support for function calling capabilities
 - [ ] Implement batch embedding generation
 - [ ] Improve conversation persistence with adapter pattern for multiple storage options
-- [ ] **Models API Integration**:
-  - [x] Enhance `model_info.rb` to support full model metadata
-  - [x] Update/create `Models::Model` class to match API response structure
-  - [x] Implement `Models::ModelList` class for handling paginated results
-  - [x] Add methods to `RequestBuilder` for models endpoints
-  - [x] Add client methods for models endpoints
-  - [x] Add convenience methods to main Geminize module
-  - [x] Implement helper methods for model capability filtering
-  - [x] Add comprehensive tests for models functionality
-  - [x] Update documentation with models API examples
 
 ### Testing
 
@@ -32,6 +48,8 @@
 - [ ] Add integration tests for streaming
 - [ ] Update VCR cassettes with latest API responses
 - [ ] Add benchmarks for performance testing
+- [ ] Create test fixtures for new Gemini API features
+- [ ] Add VCR cassettes for function calling responses
 
 ### Improvements
 
@@ -57,6 +75,15 @@
 - [x] Embeddings generation
 - [x] Streaming response handling
 - [x] Models API Integration
+  - [x] Enhance `model_info.rb` to support full model metadata
+  - [x] Update/create `Models::Model` class to match API response structure
+  - [x] Implement `Models::ModelList` class for handling paginated results
+  - [x] Add methods to `RequestBuilder` for models endpoints
+  - [x] Add client methods for models endpoints
+  - [x] Add convenience methods to main Geminize module
+  - [x] Implement helper methods for model capability filtering
+  - [x] Add comprehensive tests for models functionality
+  - [x] Update documentation with models API examples
 
 ### Documentation
 
