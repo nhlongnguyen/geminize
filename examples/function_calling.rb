@@ -5,17 +5,14 @@ require "bundler/setup"
 require "geminize"
 require "json"
 
-# Set to true to use mock responses instead of real API calls
-# Useful for testing when API rate limits are exceeded
-USE_MOCK = true
 
 # Configure the API key
 Geminize.configure do |config|
-  config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key-for-mock-mode" # Make sure to set your API key in the environment
+  config.api_key = ENV["GEMINI_API_KEY"] # Make sure to set your API key in the environment
   config.default_model = "gemini-1.5-pro-latest" # Use the latest model that supports function calling
 end
 
-# Define a weather function
+# Define a weather function that can handle a location and unit
 def get_weather(location, unit = "celsius")
   puts "Getting weather for #{location} in #{unit}..."
 
@@ -33,39 +30,16 @@ def get_weather(location, unit = "celsius")
   end
 end
 
-# Define a mock response class that mimics ContentResponse
-class MockContentResponse
-  attr_reader :text, :raw_response
-
-  def initialize(text, has_function_call = false, function_name = nil, function_args = {})
-    @text = text
-    @has_function_call = has_function_call
-    @function_name = function_name
-    @function_args = function_args
-  end
-
-  def has_function_call?
-    @has_function_call
-  end
-
-  def function_call
-    return nil unless @has_function_call
-
-    # Return a mock function response object
-    mock_function = Struct.new(:name, :response).new(@function_name, @function_args)
-    def mock_function.to_s
-      "Function: #{name}(#{response.inspect})"
+# Enhanced weather function that can handle a batch of locations
+def get_weather_batch(locations, unit = "celsius")
+  if locations.is_a?(Array)
+    results = {}
+    locations.each do |location|
+      results[location] = get_weather(location, unit)
     end
-    mock_function
-  end
-
-  def has_json_response?
-    @text.start_with?("{", "[")
-  end
-
-  def json_response
-    return nil unless has_json_response?
-    JSON.parse(@text)
+    results
+  else
+    { locations => get_weather(locations, unit) }
   end
 end
 
@@ -90,90 +64,156 @@ weather_function = {
   }
 }
 
-puts "Asking Gemini about the weather..."
+# Define a batch weather function schema that can handle multiple locations
+batch_weather_function = {
+  name: "get_weather_batch",
+  description: "Get the current weather for multiple locations at once",
+  parameters: {
+    type: "object",
+    properties: {
+      locations: {
+        type: "array",
+        items: {
+          type: "string"
+        },
+        description: "List of cities, e.g., ['New York, NY', 'London, UK', 'Tokyo, Japan']"
+      },
+      unit: {
+        type: "string",
+        enum: ["celsius", "fahrenheit"],
+        description: "The unit of temperature"
+      }
+    },
+    required: ["locations"]
+  }
+}
 
-response = if USE_MOCK
-  # Create a mock response with a function call
-  MockContentResponse.new(
-    "I'll check the weather for you!",
-    true,
-    "get_weather",
-    {"location" => "New York, NY"}
-  )
-else
-  # First, generate a response with the function definition
-  Geminize.generate_with_functions(
-    "What's the weather like in New York, Tokyo, and London?",
+puts "==========================================="
+puts "= GEMINIZE FUNCTION CALLING & JSON EXAMPLES ="
+puts "==========================================="
+
+puts "\n=== FUNCTION CALLING EXAMPLE ==="
+puts "Asking Gemini about the weather in New York..."
+
+begin
+  # Generate a response with the function definition
+  response = Geminize.generate_with_functions(
+    "What's the weather like in New York?",
     [weather_function],
     nil,
     {temperature: 0.2}
   )
-end
 
-# Check if the model wants to call a function
-if response.has_function_call?
-  function_call = response.function_call
-  puts "Model wants to call function: #{function_call.name}"
-  puts "With arguments: #{function_call.response.inspect}"
+  # Check if the model wants to call a function
+  if response.has_function_call?
+    function_call = response.function_call
+    puts "Model wants to call function: #{function_call.name}"
+    puts "With arguments: #{function_call.response.inspect}"
 
-  # We'll need to handle multiple function calls for multiple cities
-  # Let's process them one by one
+    function_name = function_call.name
+    args = function_call.response
 
-  # Process the first function call
-  function_name = function_call.name
-  args = function_call.response
+    if function_name == "get_weather"
+      location = args["location"]
+      unit = args["unit"] || "celsius"
 
-  if function_name == "get_weather"
-    location = args["location"]
-    unit = args["unit"] || "celsius"
+      # Call our weather function
+      weather_data = get_weather(location, unit)
+      puts "Weather data for #{location}: #{weather_data.inspect}"
 
-    # Call our weather function
-    weather_data = get_weather(location, unit)
-    puts "Weather data for #{location}: #{weather_data.inspect}"
-
-    final_response = if USE_MOCK
-      # Create a mock final response
-      MockContentResponse.new(
-        "Based on the weather data provided:\n\n" \
-        "In New York, it's currently 22°C (72°F) and Sunny with 45% humidity."
-      )
-    else
       # Process the function result
-      Geminize.process_function_call(response) do |name, arguments|
+      final_response = Geminize.process_function_call(response) do |name, arguments|
         get_weather(arguments["location"], arguments["unit"])
       end
-    end
 
-    puts "\nFinal response from Gemini:"
-    puts final_response.text
+      puts "\nFinal response from Gemini:"
+      puts final_response.text
+    else
+      puts "Unexpected function call: #{function_name}"
+    end
+  else
+    puts "Model did not request to call a function."
+    puts "Response: #{response.text}"
   end
-else
-  puts "Model did not request to call a function."
-  puts "Response: #{response.text}"
+rescue => e
+  puts "Error during function calling: #{e.message}"
 end
 
 # Example of using JSON mode
-puts "\n\nUsing JSON mode to get weather data in structured format..."
+puts "\n\n=== JSON MODE EXAMPLE ==="
+puts "Using JSON mode to get weather data in structured format..."
 
-json_response = if USE_MOCK
-  # Create a mock JSON response
-  MockContentResponse.new(
-    '[{"city":"New York","temperature":22,"conditions":"Sunny"},
-      {"city":"Tokyo","temperature":26,"conditions":"Partly Cloudy"},
-      {"city":"London","temperature":15,"conditions":"Rainy"}]'
-  )
-else
-  Geminize.generate_json(
-    "Get the current temperature and weather conditions for New York, Tokyo, and London.",
+begin
+  json_response = Geminize.generate_json(
+    "Get the current temperature and weather conditions for New York.",
     nil,
-    {system_instruction: "Return a JSON array with objects containing city, temperature in celsius, and conditions."}
+    {
+      system_instruction: "Return a JSON object with temperature in celsius and conditions."
+    }
   )
+
+  if json_response.has_json_response?
+    puts "Structured JSON response:"
+    puts JSON.pretty_generate(json_response.json_response)
+  else
+    puts "Raw text response (not valid JSON):"
+    puts json_response.text
+  end
+rescue => e
+  puts "Error during JSON mode: #{e.message}"
 end
 
-if json_response.has_json_response?
-  puts "Structured JSON response:"
-  puts JSON.pretty_generate(json_response.json_response)
-else
-  puts "Raw text response (not valid JSON):"
-  puts json_response.text
+puts "\n\n=== BATCH FUNCTION CALL EXAMPLE ==="
+puts "Using batch function to efficiently get weather for multiple cities at once..."
+
+begin
+  # Use a batch function to get all cities at once (more efficient)
+  response = Geminize.generate_with_functions(
+    "I need weather information for New York, Tokyo, and London. Please get all this information in a single function call.",
+    [batch_weather_function],
+    nil,
+    {temperature: 0.2}
+  )
+
+  # Check if the model wants to call the batch function
+  if response.has_function_call?
+    function_call = response.function_call
+    puts "Model wants to call function: #{function_call.name}"
+    puts "With arguments: #{function_call.response.inspect}"
+
+    function_name = function_call.name
+    args = function_call.response
+
+    if function_name == "get_weather_batch"
+      locations = args["locations"]
+      unit = args["unit"] || "celsius"
+
+      # Get weather for all locations at once
+      weather_data = get_weather_batch(locations, unit)
+      puts "Weather data for multiple locations: #{weather_data.inspect}"
+
+      # Process the function result with a single API call
+      final_response = Geminize.process_function_call(response) do |name, arguments|
+        get_weather_batch(arguments["locations"], arguments["unit"])
+      end
+
+      puts "\nFinal response from Gemini:"
+      puts final_response.text
+    else
+      puts "Unexpected function call: #{function_name}"
+    end
+  else
+    puts "Model did not request to call a function."
+    puts "Response: #{response.text}"
+  end
+rescue => e
+  puts "Error during batch function calling: #{e.message}"
+  puts "\nNOTE: If you hit a quota limit, try:"
+  puts "1. Using a paid API key with higher quotas"
+  puts "2. Reducing the number of examples you run"
+  puts "3. Adding delays between API calls"
 end
+
+puts "\n==========================================="
+puts "= END OF EXAMPLES ="
+puts "==========================================="
