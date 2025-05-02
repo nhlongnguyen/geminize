@@ -123,8 +123,8 @@ module Geminize
                 items: {
                   type: "object",
                   properties: {
-                    name: { type: "string" },
-                    value: { type: "string" }
+                    name: {type: "string"},
+                    value: {type: "string"}
                   }
                 }
               }

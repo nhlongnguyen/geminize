@@ -60,7 +60,7 @@ class MockContentResponse
   end
 
   def has_json_response?
-    @text.start_with?("{") || @text.start_with?("[")
+    @text.start_with?("{", "[")
   end
 
   def json_response
@@ -92,9 +92,9 @@ weather_function = {
 
 puts "Asking Gemini about the weather..."
 
-if USE_MOCK
+response = if USE_MOCK
   # Create a mock response with a function call
-  response = MockContentResponse.new(
+  MockContentResponse.new(
     "I'll check the weather for you!",
     true,
     "get_weather",
@@ -102,11 +102,11 @@ if USE_MOCK
   )
 else
   # First, generate a response with the function definition
-  response = Geminize.generate_with_functions(
+  Geminize.generate_with_functions(
     "What's the weather like in New York, Tokyo, and London?",
     [weather_function],
     nil,
-    { temperature: 0.2 }
+    {temperature: 0.2}
   )
 end
 
@@ -131,15 +131,15 @@ if response.has_function_call?
     weather_data = get_weather(location, unit)
     puts "Weather data for #{location}: #{weather_data.inspect}"
 
-    if USE_MOCK
+    final_response = if USE_MOCK
       # Create a mock final response
-      final_response = MockContentResponse.new(
-        "Based on the weather data provided:\n\n" +
+      MockContentResponse.new(
+        "Based on the weather data provided:\n\n" \
         "In New York, it's currently 22°C (72°F) and Sunny with 45% humidity."
       )
     else
       # Process the function result
-      final_response = Geminize.process_function_call(response) do |name, arguments|
+      Geminize.process_function_call(response) do |name, arguments|
         get_weather(arguments["location"], arguments["unit"])
       end
     end
@@ -155,18 +155,18 @@ end
 # Example of using JSON mode
 puts "\n\nUsing JSON mode to get weather data in structured format..."
 
-if USE_MOCK
+json_response = if USE_MOCK
   # Create a mock JSON response
-  json_response = MockContentResponse.new(
+  MockContentResponse.new(
     '[{"city":"New York","temperature":22,"conditions":"Sunny"},
       {"city":"Tokyo","temperature":26,"conditions":"Partly Cloudy"},
       {"city":"London","temperature":15,"conditions":"Rainy"}]'
   )
 else
-  json_response = Geminize.generate_json(
+  Geminize.generate_json(
     "Get the current temperature and weather conditions for New York, Tokyo, and London.",
     nil,
-    { system_instruction: "Return a JSON array with objects containing city, temperature in celsius, and conditions." }
+    {system_instruction: "Return a JSON array with objects containing city, temperature in celsius, and conditions."}
   )
 end
 
