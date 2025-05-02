@@ -1,3 +1,23 @@
+## [1.1.0] - 2025-05-02
+
+### Added
+
+- Comprehensive Models API for discovering and filtering Gemini models
+  - Added `list_models` and `list_all_models` methods for retrieving available models
+  - Added `get_model` method for fetching specific model details
+  - Added filtering methods to find models by capability:
+    - `get_content_generation_models`
+    - `get_embedding_models`
+    - `get_chat_models`
+    - `get_streaming_models`
+  - Added `get_models_by_method` to filter by specific generation methods
+  - Extended `ModelList` class with comprehensive filtering capabilities
+  - Added model capability inspection methods
+  - Implemented pagination support for model listing
+  - Added caching for model information to reduce API calls
+  - Added comprehensive VCR tests for Models API functionality
+  - Updated documentation with Models API examples
+
 ## [1.0.0] - 2025-05-02
 
 ### Removed

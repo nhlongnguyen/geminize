@@ -1,0 +1,165 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://generativelanguage.googleapis.com/v1/models?key=<GEMINI_API_KEY>&pageSize=2&pageToken
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Faraday v2.13.0
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Date:
+      - Fri, 02 May 2025 15:00:48 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=36
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        {
+          "models": [
+            {
+              "name": "models/gemini-1.0-pro-vision-latest",
+              "version": "001",
+              "displayName": "Gemini 1.0 Pro Vision",
+              "description": "The original Gemini 1.0 Pro Vision model version which was optimized for image understanding. Gemini 1.0 Pro Vision was deprecated on July 12, 2024. Move to a newer Gemini version.",
+              "inputTokenLimit": 12288,
+              "outputTokenLimit": 4096,
+              "supportedGenerationMethods": [
+                "generateContent",
+                "countTokens"
+              ],
+              "temperature": 0.4,
+              "topP": 1,
+              "topK": 32
+            },
+            {
+              "name": "models/gemini-pro-vision",
+              "version": "001",
+              "displayName": "Gemini 1.0 Pro Vision",
+              "description": "The original Gemini 1.0 Pro Vision model version which was optimized for image understanding. Gemini 1.0 Pro Vision was deprecated on July 12, 2024. Move to a newer Gemini version.",
+              "inputTokenLimit": 12288,
+              "outputTokenLimit": 4096,
+              "supportedGenerationMethods": [
+                "generateContent",
+                "countTokens"
+              ],
+              "temperature": 0.4,
+              "topP": 1,
+              "topK": 32
+            }
+          ],
+          "nextPageToken": "Chhtb2RlbHMvZ2VtaW5pLXByby12aXNpb24="
+        }
+  recorded_at: Fri, 02 May 2025 15:00:48 GMT
+- request:
+    method: get
+    uri: https://generativelanguage.googleapis.com/v1/models?key=<GEMINI_API_KEY>&pageSize=2&pageToken=Chhtb2RlbHMvZ2VtaW5pLXByby12aXNpb24=
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Faraday v2.13.0
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Date:
+      - Fri, 02 May 2025 15:00:48 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=32
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        {
+          "models": [
+            {
+              "name": "models/gemini-1.5-pro-001",
+              "version": "001",
+              "displayName": "Gemini 1.5 Pro 001",
+              "description": "Stable version of Gemini 1.5 Pro, our mid-size multimodal model that supports up to 2 million tokens, released in May of 2024.",
+              "inputTokenLimit": 2000000,
+              "outputTokenLimit": 8192,
+              "supportedGenerationMethods": [
+                "generateContent",
+                "countTokens",
+                "createCachedContent"
+              ],
+              "temperature": 1,
+              "topP": 0.95,
+              "topK": 64,
+              "maxTemperature": 2
+            },
+            {
+              "name": "models/gemini-1.5-pro-002",
+              "version": "002",
+              "displayName": "Gemini 1.5 Pro 002",
+              "description": "Stable version of Gemini 1.5 Pro, our mid-size multimodal model that supports up to 2 million tokens, released in September of 2024.",
+              "inputTokenLimit": 2000000,
+              "outputTokenLimit": 8192,
+              "supportedGenerationMethods": [
+                "generateContent",
+                "countTokens",
+                "createCachedContent"
+              ],
+              "temperature": 1,
+              "topP": 0.95,
+              "topK": 40,
+              "maxTemperature": 2
+            }
+          ],
+          "nextPageToken": "Chltb2RlbHMvZ2VtaW5pLTEuNS1wcm8tMDAy"
+        }
+  recorded_at: Fri, 02 May 2025 15:00:48 GMT
+recorded_with: VCR 6.3.1
