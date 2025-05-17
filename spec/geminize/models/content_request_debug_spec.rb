@@ -5,7 +5,7 @@ require "spec_helper"
 RSpec.describe Geminize::Models::ContentRequest do
   describe "debug to_hash" do
     let(:prompt) { "What's the weather in New York?" }
-    let(:model_name) { "gemini-1.5-pro" }
+    let(:model_name) { "gemini-2.0-flash" }
     let(:params) { {temperature: 0.7} }
 
     it "inspects the original to_hash method" do

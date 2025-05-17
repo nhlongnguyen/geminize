@@ -48,8 +48,6 @@ require_relative "geminize/model_info"
 require_relative "geminize/models/content_request_extensions"
 require_relative "geminize/models/content_response_extensions"
 require_relative "geminize/models/content_request_safety"
-require_relative "geminize/module_extensions"
-require_relative "geminize/module_safety"
 
 # Main module for the Geminize gem
 module Geminize
@@ -101,7 +99,7 @@ module Geminize
     #   Geminize.configure do |config|
     #     config.api_key = "your-api-key"
     #     config.api_version = "v1beta"
-    #     config.default_model = "gemini-1.5-pro-latest"
+    #     config.default_model = "gemini-2.0-flash"
     #   end
     def configure
       yield(configuration) if block_given?
@@ -517,7 +515,7 @@ module Geminize
     end
 
     # Get information about a specific model
-    # @param model_name [String] The model name to retrieve (can be "models/gemini-1.5-pro" or just "gemini-1.5-pro")
+    # @param model_name [String] The model name to retrieve (can be "models/gemini-2.0-flash" or just "gemini-2.0-flash")
     # @param force_refresh [Boolean] Force a refresh from the API instead of using cache
     # @param client_options [Hash] Options to pass to the client
     # @return [Geminize::Models::Model] The model information
@@ -590,6 +588,414 @@ module Geminize
     def update_conversation_system_instruction(id, system_instruction)
       validate_configuration!
       conversation_service.update_conversation_system_instruction(id, system_instruction)
+    end
+
+    # Generate text with custom safety settings
+    # @param prompt [String] The input prompt
+    # @param safety_settings [Array<Hash>] Array of safety setting definitions
+    # @param model_name [String, nil] The model to use (optional)
+    # @param params [Hash] Additional generation parameters
+    # @option params [Float] :temperature Controls randomness (0.0-1.0)
+    # @option params [Integer] :max_tokens Maximum tokens to generate
+    # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
+    # @option params [Integer] :top_k Top-k value for sampling
+    # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+    # @option params [String] :system_instruction System instruction to guide model behavior
+    # @option params [Boolean] :with_retries Enable retries for transient errors (default: true)
+    # @option params [Integer] :max_retries Maximum retry attempts (default: 3)
+    # @option params [Float] :retry_delay Initial delay between retries in seconds (default: 1.0)
+    # @option params [Hash] :client_options Options to pass to the client
+    # @return [Geminize::Models::ContentResponse] The generation response
+    # @raise [Geminize::GeminizeError] If the request fails
+    # @example Generate text with specific safety settings
+    #   Geminize.generate_with_safety_settings(
+    #     "Tell me a scary story",
+    #     [
+    #       {category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE"},
+    #       {category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_LOW_AND_ABOVE"}
+    #     ]
+    #   )
+    def generate_with_safety_settings(prompt, safety_settings, model_name = nil, params = {})
+      validate_configuration!
+
+      # Extract special options
+      with_retries = params.delete(:with_retries) != false # Default to true
+      max_retries = params.delete(:max_retries) || 3
+      retry_delay = params.delete(:retry_delay) || 1.0
+      client_options = params.delete(:client_options) || {}
+
+      # Create the generator and content request
+      generator = TextGeneration.new(nil, client_options)
+      content_request = Models::ContentRequest.new(
+        prompt,
+        model_name || configuration.default_model,
+        params
+      )
+
+      # Add safety settings to the request
+      safety_settings.each do |setting|
+        content_request.add_safety_setting(
+          setting[:category],
+          setting[:threshold]
+        )
+      end
+
+      # Generate with or without retries
+      if with_retries
+        generator.generate_with_retries(content_request, max_retries, retry_delay)
+      else
+        generator.generate(content_request)
+      end
+    end
+
+    # Generate text with maximum safety (blocks most potentially harmful content)
+    # @param prompt [String] The input prompt
+    # @param model_name [String, nil] The model to use (optional)
+    # @param params [Hash] Additional generation parameters
+    # @return [Geminize::Models::ContentResponse] The generation response
+    # @raise [Geminize::GeminizeError] If the request fails
+    # @example Generate text with maximum safety
+    #   Geminize.generate_text_safe("Tell me about conflicts", nil, temperature: 0.7)
+    def generate_text_safe(prompt, model_name = nil, params = {})
+      validate_configuration!
+
+      # Extract special options
+      with_retries = params.delete(:with_retries) != false # Default to true
+      max_retries = params.delete(:max_retries) || 3
+      retry_delay = params.delete(:retry_delay) || 1.0
+      client_options = params.delete(:client_options) || {}
+
+      # Create the generator and content request
+      generator = TextGeneration.new(nil, client_options)
+      content_request = Models::ContentRequest.new(
+        prompt,
+        model_name || configuration.default_model,
+        params
+      )
+
+      # Set maximum safety (block low and above)
+      content_request.block_all_harmful_content
+
+      # Generate with or without retries
+      if with_retries
+        generator.generate_with_retries(content_request, max_retries, retry_delay)
+      else
+        generator.generate(content_request)
+      end
+    end
+
+    # Generate text with minimum safety (blocks only high-risk content)
+    # @param prompt [String] The input prompt
+    # @param model_name [String, nil] The model to use (optional)
+    # @param params [Hash] Additional generation parameters
+    # @return [Geminize::Models::ContentResponse] The generation response
+    # @raise [Geminize::GeminizeError] If the request fails
+    # @example Generate text with minimum safety
+    #   Geminize.generate_text_permissive("Tell me about conflicts", nil, temperature: 0.7)
+    def generate_text_permissive(prompt, model_name = nil, params = {})
+      validate_configuration!
+
+      # Extract special options
+      with_retries = params.delete(:with_retries) != false # Default to true
+      max_retries = params.delete(:max_retries) || 3
+      retry_delay = params.delete(:retry_delay) || 1.0
+      client_options = params.delete(:client_options) || {}
+
+      # Create the generator and content request
+      generator = TextGeneration.new(nil, client_options)
+      content_request = Models::ContentRequest.new(
+        prompt,
+        model_name || configuration.default_model,
+        params
+      )
+
+      # Set minimum safety (block only high risk)
+      content_request.block_only_high_risk_content
+
+      # Generate with or without retries
+      if with_retries
+        generator.generate_with_retries(content_request, max_retries, retry_delay)
+      else
+        generator.generate(content_request)
+      end
+    end
+
+    # Generate text with function calling capabilities
+    # @param prompt [String] The input prompt
+    # @param functions [Array<Hash>] Array of function definitions
+    # @param model_name [String, nil] The model to use, defaults to the configured default model
+    # @param params [Hash] Additional parameters for generation
+    # @option params [Float] :temperature Controls randomness (0.0-1.0)
+    # @option params [Integer] :max_tokens Maximum tokens to generate
+    # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
+    # @option params [Integer] :top_k Top-k value for sampling
+    # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+    # @option params [String] :system_instruction System instruction to guide model behavior
+    # @option params [String] :tool_execution_mode Tool execution mode ("AUTO", "MANUAL", or "NONE")
+    # @param with_retries [Boolean] Whether to retry the generation if it fails
+    # @param max_retries [Integer] Maximum number of retries
+    # @param retry_delay [Float] Delay between retries in seconds
+    # @param client_options [Hash] Options for the HTTP client
+    # @return [Geminize::Models::ContentResponse] The generated response
+    # @raise [Geminize::Error] If the generation fails
+    # @example Generate text with a function call
+    #   Geminize.generate_with_functions(
+    #     "What's the weather in New York?",
+    #     [
+    #       {
+    #         name: "get_weather",
+    #         description: "Get the current weather in a location",
+    #         parameters: {
+    #           type: "object",
+    #           properties: {
+    #             location: {
+    #               type: "string",
+    #               description: "The city and state, e.g. New York, NY"
+    #             },
+    #             unit: {
+    #               type: "string",
+    #               enum: ["celsius", "fahrenheit"],
+    #               description: "The unit of temperature"
+    #             }
+    #           },
+    #           required: ["location"]
+    #         }
+    #       }
+    #     ]
+    #   )
+    def generate_with_functions(prompt, functions, model_name = nil, params = {}, with_retries: true, max_retries: 3, retry_delay: 1.0, client_options: nil)
+      validate_configuration!
+
+      # Initialize the generator
+      client = client_options ? Client.new(client_options) : Client.new
+      generator = TextGeneration.new(client)
+
+      # Parse functions
+      if functions.nil? || !functions.is_a?(Array) || functions.empty?
+        raise Geminize::ValidationError.new(
+          "Functions must be a non-empty array",
+          "INVALID_ARGUMENT"
+        )
+      end
+
+      # Set up params with defaults
+      generation_params = params.dup
+      tool_execution_mode = generation_params.delete(:tool_execution_mode) || "AUTO"
+      with_retries = generation_params.delete(:with_retries) != false if generation_params.key?(:with_retries)
+
+      # Enhance the system instruction to ensure function calling
+      generation_params[:system_instruction] ||= ""
+      generation_params[:system_instruction] = "You are a helpful assistant. When you encounter a question that you can answer by calling a function, you must always use the provided function. Always respond using the function call format, not with your own text. " + generation_params[:system_instruction]
+
+      # Create the request
+      content_request = Models::ContentRequest.new(
+        prompt,
+        model_name || configuration.default_model,
+        generation_params
+      )
+
+      # Add functions to the request
+      functions.each do |function|
+        content_request.add_function(
+          function[:name],
+          function[:description],
+          function[:parameters]
+        )
+      end
+
+      # Set the tool config
+      content_request.set_tool_config(tool_execution_mode)
+
+      # Generate the response
+      if with_retries
+        generator.generate_with_retries(content_request, max_retries, retry_delay)
+      else
+        generator.generate(content_request)
+      end
+    end
+
+    # Generate JSON output from a prompt using the Gemini API
+    # @param prompt [String] The input prompt
+    # @param model_name [String, nil] The model to use, defaults to the configured default model
+    # @param params [Hash] Additional parameters for generation
+    # @option params [Float] :temperature Controls randomness (0.0-1.0)
+    # @option params [Integer] :max_tokens Maximum tokens to generate
+    # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
+    # @option params [Integer] :top_k Top-k value for sampling
+    # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+    # @option params [String] :system_instruction System instruction to guide model behavior
+    # @param with_retries [Boolean] Whether to retry the generation if it fails
+    # @param max_retries [Integer] Maximum number of retries
+    # @param retry_delay [Float] Delay between retries in seconds
+    # @param client_options [Hash] Options for the HTTP client
+    # @option params [Hash] :json_schema Schema for the JSON output (optional)
+    # @return [Geminize::Models::ContentResponse] The generated response with JSON content
+    # @raise [Geminize::Error] If the generation fails
+    # @example Generate JSON output
+    #   response = Geminize.generate_json(
+    #     "List 3 planets with their diameter",
+    #     nil,
+    #     system_instruction: "Return the information as a JSON array"
+    #   )
+    #   planets = response.json_response # Returns parsed JSON
+    def generate_json(prompt, model_name = nil, params = {}, with_retries: true, max_retries: 3, retry_delay: 1.0, client_options: nil)
+      validate_configuration!
+
+      # Initialize the generator
+      client = client_options ? Client.new(client_options) : Client.new
+      generator = TextGeneration.new(client)
+
+      # Set up params with defaults
+      generation_params = params.dup
+      with_retries = generation_params.delete(:with_retries) != false if generation_params.key?(:with_retries)
+
+      # Enhance the system instruction for JSON output
+      generation_params[:system_instruction] ||= ""
+      generation_params[:system_instruction] = "You must respond with valid JSON only, with no explanation or other text. " + generation_params[:system_instruction]
+
+      # Create the request
+      content_request = Models::ContentRequest.new(
+        prompt,
+        model_name || configuration.default_model,
+        generation_params
+      )
+
+      # Enable JSON mode
+      content_request.enable_json_mode
+
+      # Generate the response
+      if with_retries
+        generator.generate_with_retries(content_request, max_retries, retry_delay)
+      else
+        generator.generate(content_request)
+      end
+    end
+
+    # Process a function call by executing a provided block and returning the result to Gemini
+    # @param response [Geminize::Models::ContentResponse] The response containing a function call
+    # @param model_name [String, nil] The model to use for the followup, defaults to the configured default model
+    # @param with_retries [Boolean] Whether to retry the generation if it fails
+    # @param max_retries [Integer] Maximum number of retries
+    # @param retry_delay [Float] Delay between retries in seconds
+    # @param client_options [Hash] Options for the HTTP client
+    # @yield [function_name, args] Block to execute the function
+    # @yieldparam function_name [String] The name of the function to execute
+    # @yieldparam args [Hash] The arguments to pass to the function
+    # @yieldreturn [Hash, Array, String, Numeric, Boolean, nil] The result of the function
+    # @return [Geminize::Models::ContentResponse] The response after processing the function
+    # @raise [Geminize::Error] If processing fails
+    # @example Process a function call
+    #   response = Geminize.generate_with_functions("What's the weather in New York?", [...])
+    #   if response.has_function_call?
+    #     final_response = Geminize.process_function_call(response) do |function_name, args|
+    #       if function_name == "get_weather"
+    #         # Call a real weather API here
+    #         { temperature: 72, conditions: "sunny" }
+    #       end
+    #     end
+    #     puts final_response.text
+    #   end
+    def process_function_call(response, model_name = nil, with_retries: true, max_retries: 3, retry_delay: 1.0, client_options: nil)
+      validate_configuration!
+
+      # Ensure a block is provided
+      unless block_given?
+        raise Geminize::ValidationError.new(
+          "A block must be provided to process the function call",
+          "INVALID_ARGUMENT"
+        )
+      end
+
+      # Ensure the response has a function call
+      unless response.has_function_call?
+        raise Geminize::ValidationError.new(
+          "The response does not contain a function call",
+          "INVALID_ARGUMENT"
+        )
+      end
+
+      # Extract function call information
+      function_call = response.function_call
+      function_name = function_call.name
+      function_args = function_call.response
+
+      # Call the provided block with the function information
+      result = yield(function_name, function_args)
+
+      # Create a function response
+      Models::FunctionResponse.new(function_name, result)
+
+      # Initialize the generator
+      client = client_options ? Client.new(client_options) : Client.new
+      generator = TextGeneration.new(client)
+
+      # Create a request with the function result
+      content_request = Models::ContentRequest.new(
+        "Function #{function_name} returned: #{result.inspect}",
+        model_name || configuration.default_model
+      )
+
+      # Generate the response
+      if with_retries
+        generator.generate_with_retries(content_request, max_retries, retry_delay)
+      else
+        generator.generate(content_request)
+      end
+    end
+
+    # Generate text with code execution capabilities
+    # @param prompt [String] The input prompt
+    # @param model_name [String, nil] The model to use, defaults to the configured default model
+    # @param params [Hash] Additional parameters for generation
+    # @option params [Float] :temperature Controls randomness (0.0-1.0)
+    # @option params [Integer] :max_tokens Maximum tokens to generate
+    # @option params [Float] :top_p Top-p value for nucleus sampling (0.0-1.0)
+    # @option params [Integer] :top_k Top-k value for sampling
+    # @option params [Array<String>] :stop_sequences Stop sequences to end generation
+    # @option params [String] :system_instruction System instruction to guide model behavior
+    # @param with_retries [Boolean] Whether to retry the generation if it fails
+    # @param max_retries [Integer] Maximum number of retries
+    # @param retry_delay [Float] Delay between retries in seconds
+    # @param client_options [Hash] Options for the HTTP client
+    # @return [Geminize::Models::ContentResponse] The generated response
+    # @raise [Geminize::Error] If the generation fails
+    # @example Generate text with code execution
+    #   Geminize.generate_with_code_execution(
+    #     "What is the sum of the first 50 prime numbers?",
+    #     nil,
+    #     { temperature: 0.2 }
+    #   )
+    def generate_with_code_execution(prompt, model_name = nil, params = {}, with_retries: true, max_retries: 3, retry_delay: 1.0, client_options: nil)
+      validate_configuration!
+
+      # Initialize the generator
+      client = client_options ? Client.new(client_options) : Client.new
+      generator = TextGeneration.new(client)
+
+      # Set up params with defaults
+      generation_params = params.dup
+      with_retries = generation_params.delete(:with_retries) != false if generation_params.key?(:with_retries)
+
+      # Enhance the system instruction to ensure code execution is effective
+      generation_params[:system_instruction] ||= ""
+      generation_params[:system_instruction] = "You are a helpful assistant with the ability to generate and execute Python code. When appropriate, use code to solve problems or complete tasks. " + generation_params[:system_instruction]
+
+      # Create the request
+      content_request = Models::ContentRequest.new(
+        prompt,
+        model_name || configuration.default_model,
+        generation_params
+      )
+
+      # Enable code execution
+      content_request.enable_code_execution
+
+      # Generate the response
+      if with_retries
+        generator.generate_with_retries(content_request, max_retries, retry_delay)
+      else
+        generator.generate(content_request)
+      end
     end
   end
 end

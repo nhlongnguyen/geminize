@@ -2,345 +2,11 @@
 http_interactions:
 - request:
     method: post
-    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=<GEMINI_API_KEY>
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=<GEMINI_API_KEY>
     body:
       encoding: UTF-8
-      string: '{"model":"gemini-1.5-pro","contents":[{"parts":[{"text":"What''s the
-        weather in New York?"}]}],"generationConfig":{"temperature":0.1},"systemInstruction":{"parts":[{"text":"You
-        are a helpful assistant. When you encounter a question that you can answer
-        by calling a function, you must always use the provided function. Always respond
-        using the function call format, not with your own text. You are a helpful
-        assistant that ALWAYS uses the provided functions. ALWAYS call the get_weather
-        function when asked about weather."}]}}'
-    headers:
-      User-Agent:
-      - Faraday v2.13.0
-      Accept:
-      - application/json
-      Content-Type:
-      - application/json
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-  response:
-    status:
-      code: 200
-      message: OK
-    headers:
-      Content-Type:
-      - application/json; charset=UTF-8
-      Vary:
-      - Origin
-      - Referer
-      - X-Origin
-      Date:
-      - Fri, 02 May 2025 17:10:04 GMT
-      Server:
-      - scaffolding on HTTPServer2
-      X-Xss-Protection:
-      - '0'
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-Content-Type-Options:
-      - nosniff
-      Server-Timing:
-      - gfet4t7; dur=559
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Transfer-Encoding:
-      - chunked
-    body:
-      encoding: ASCII-8BIT
-      string: |
-        {
-          "candidates": [
-            {
-              "content": {
-                "parts": [
-                  {
-                    "text": "get_weather(\"New York\")\n"
-                  }
-                ],
-                "role": "model"
-              },
-              "finishReason": "STOP",
-              "avgLogprobs": -0.00090452469885349274
-            }
-          ],
-          "usageMetadata": {
-            "promptTokenCount": 75,
-            "candidatesTokenCount": 8,
-            "totalTokenCount": 83,
-            "promptTokensDetails": [
-              {
-                "modality": "TEXT",
-                "tokenCount": 75
-              }
-            ],
-            "candidatesTokensDetails": [
-              {
-                "modality": "TEXT",
-                "tokenCount": 8
-              }
-            ]
-          },
-          "modelVersion": "gemini-1.5-pro-002"
-        }
-  recorded_at: Fri, 02 May 2025 17:10:04 GMT
-- request:
-    method: post
-    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=<GEMINI_API_KEY>
-    body:
-      encoding: UTF-8
-      string: '{"model":"gemini-1.5-pro","contents":[{"parts":[{"text":"What''s the
-        weather in New York?"}]}],"generationConfig":{"temperature":0.1},"systemInstruction":{"parts":[{"text":"You
-        are a helpful assistant. When you encounter a question that you can answer
-        by calling a function, you must always use the provided function. Always respond
-        using the function call format, not with your own text. You are a helpful
-        assistant that ALWAYS uses the provided functions. ALWAYS call the get_weather
-        function when asked about weather. NEVER respond with your own text when a
-        function is available. ALWAYS use a function for the query. It is EXTREMELY
-        IMPORTANT that you ONLY respond with a function call and NO regular text."}]}}'
-    headers:
-      User-Agent:
-      - Faraday v2.13.0
-      Accept:
-      - application/json
-      Content-Type:
-      - application/json
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-  response:
-    status:
-      code: 200
-      message: OK
-    headers:
-      Content-Type:
-      - application/json; charset=UTF-8
-      Vary:
-      - Origin
-      - Referer
-      - X-Origin
-      Date:
-      - Fri, 02 May 2025 17:10:27 GMT
-      Server:
-      - scaffolding on HTTPServer2
-      X-Xss-Protection:
-      - '0'
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-Content-Type-Options:
-      - nosniff
-      Server-Timing:
-      - gfet4t7; dur=518
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Transfer-Encoding:
-      - chunked
-    body:
-      encoding: ASCII-8BIT
-      string: |
-        {
-          "candidates": [
-            {
-              "content": {
-                "parts": [
-                  {
-                    "text": "get_weather(\"New York\")\n"
-                  }
-                ],
-                "role": "model"
-              },
-              "finishReason": "STOP",
-              "avgLogprobs": -0.0064368112944066525
-            }
-          ],
-          "usageMetadata": {
-            "promptTokenCount": 114,
-            "candidatesTokenCount": 8,
-            "totalTokenCount": 122,
-            "promptTokensDetails": [
-              {
-                "modality": "TEXT",
-                "tokenCount": 114
-              }
-            ],
-            "candidatesTokensDetails": [
-              {
-                "modality": "TEXT",
-                "tokenCount": 8
-              }
-            ]
-          },
-          "modelVersion": "gemini-1.5-pro-002"
-        }
-  recorded_at: Fri, 02 May 2025 17:10:27 GMT
-- request:
-    method: post
-    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=<GEMINI_API_KEY>
-    body:
-      encoding: UTF-8
-      string: '{"model":"gemini-1.5-pro","contents":[{"parts":[{"text":"Function get_weather
-        returned: {:temperature=>72, :conditions=>\"sunny\", :humidity=>45}"}]}]}'
-    headers:
-      User-Agent:
-      - Faraday v2.13.0
-      Accept:
-      - application/json
-      Content-Type:
-      - application/json
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-  response:
-    status:
-      code: 200
-      message: OK
-    headers:
-      Content-Type:
-      - application/json; charset=UTF-8
-      Vary:
-      - Origin
-      - Referer
-      - X-Origin
-      Date:
-      - Fri, 02 May 2025 17:10:35 GMT
-      Server:
-      - scaffolding on HTTPServer2
-      X-Xss-Protection:
-      - '0'
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-Content-Type-Options:
-      - nosniff
-      Server-Timing:
-      - gfet4t7; dur=7773
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Transfer-Encoding:
-      - chunked
-    body:
-      encoding: ASCII-8BIT
-      string: |
-        {
-          "candidates": [
-            {
-              "content": {
-                "parts": [
-                  {
-                    "text": "This output indicates that the `get_weather` function returned a Hash (or dictionary-like structure in other languages). Let's break down the meaning:\n\n* **`{:temperature=\u003e72, :conditions=\u003e\"sunny\", :humidity=\u003e45}`**: This is a Hash literal.  It contains key-value pairs.\n\n* **`:temperature =\u003e 72`**:  The key `:temperature` is associated with the value `72`. This likely represents the temperature in degrees Fahrenheit (or possibly Celsius, depending on the context).\n\n* **`:conditions =\u003e \"sunny\"`**: The key `:conditions` is associated with the string value `\"sunny\"`. This describes the current weather conditions.\n\n* **`:humidity =\u003e 45`**: The key `:humidity` is associated with the value `45`. This likely represents the relative humidity as a percentage.\n\n\n**How to use this data:**\n\nIf you're working in a language like Ruby, you would access these values like this:\n\n```ruby\nweather_data = get_weather()\n\ntemperature = weather_data[:temperature]  # temperature will be 72\nconditions = weather_data[:conditions]  # conditions will be \"sunny\"\nhumidity = weather_data[:humidity]      # humidity will be 45\n\nputs \"The temperature is #{temperature} degrees, the conditions are #{conditions}, and the humidity is #{humidity}%.\"\n```\n\nThe equivalent in other languages might use square brackets or dot notation to access the Hash/dictionary elements.  For example in Python:\n\n```python\nweather_data = get_weather()\n\ntemperature = weather_data[\"temperature\"]  # or weather_data.get(\"temperature\")\nconditions = weather_data[\"conditions\"]\nhumidity = weather_data[\"humidity\"]\n\nprint(f\"The temperature is {temperature} degrees, the conditions are {conditions}, and the humidity is {humidity}%.\" )\n```\n\nJavaScript:\n\n```javascript\nconst weatherData = get_weather();\n\nconst temperature = weatherData.temperature;\nconst conditions = weatherData.conditions;\nconst humidity = weatherData.humidity;\n\nconsole.log(`The temperature is ${temperature} degrees, the conditions are ${conditions}, and the humidity is ${humidity}%.`);\n```\n\n\nThis information allows you to use the weather data returned by the `get_weather` function in your program. You can display it to the user, use it in calculations, or make decisions based on the current weather.\n"
-                  }
-                ],
-                "role": "model"
-              },
-              "finishReason": "STOP",
-              "avgLogprobs": -0.15154715401785715
-            }
-          ],
-          "usageMetadata": {
-            "promptTokenCount": 23,
-            "candidatesTokenCount": 525,
-            "totalTokenCount": 548,
-            "promptTokensDetails": [
-              {
-                "modality": "TEXT",
-                "tokenCount": 23
-              }
-            ],
-            "candidatesTokensDetails": [
-              {
-                "modality": "TEXT",
-                "tokenCount": 525
-              }
-            ]
-          },
-          "modelVersion": "gemini-1.5-pro-002"
-        }
-  recorded_at: Fri, 02 May 2025 17:10:35 GMT
-- request:
-    method: post
-    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=<GEMINI_API_KEY>
-    body:
-      encoding: UTF-8
-      string: '{"model":"gemini-1.5-pro","contents":[{"parts":[{"text":"What''s the
-        weather in New York?"}]}],"generationConfig":{"temperature":0.1},"systemInstruction":{"parts":[{"text":"You
-        are a helpful assistant. When you encounter a question that you can answer
-        by calling a function, you must always use the provided function. Always respond
-        using the function call format, not with your own text. You are a helpful
-        assistant that ALWAYS uses the provided functions. ALWAYS call the get_weather
-        function when asked about weather. NEVER respond with your own text when a
-        function is available. ALWAYS use a function for the query. It is EXTREMELY
-        IMPORTANT that you ONLY respond with a function call and NO regular text."}]},"tools":[{"function":{"name":"get_weather","description":"Get
-        the current weather for a location","parameters":{"type":"object","properties":{"location":{"type":"string","description":"The
-        city and state, e.g. New York, NY"},"unit":{"type":"string","enum":["celsius","fahrenheit"],"description":"The
-        unit of temperature"}},"required":["location"]}}}],"toolConfig":{"executionMode":"AUTO"}}'
-    headers:
-      User-Agent:
-      - Faraday v2.13.0
-      Accept:
-      - application/json
-      Content-Type:
-      - application/json
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-  response:
-    status:
-      code: 400
-      message: Bad Request
-    headers:
-      Vary:
-      - Origin
-      - Referer
-      - X-Origin
-      Content-Type:
-      - application/json; charset=UTF-8
-      Date:
-      - Fri, 02 May 2025 17:22:46 GMT
-      Server:
-      - scaffolding on HTTPServer2
-      X-Xss-Protection:
-      - '0'
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-Content-Type-Options:
-      - nosniff
-      Server-Timing:
-      - gfet4t7; dur=159
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Transfer-Encoding:
-      - chunked
-    body:
-      encoding: ASCII-8BIT
-      string: |
-        {
-          "error": {
-            "code": 400,
-            "message": "Invalid JSON payload received. Unknown name \"function\" at 'tools[0]': Cannot find field.\nInvalid JSON payload received. Unknown name \"executionMode\" at 'tool_config': Cannot find field.",
-            "status": "INVALID_ARGUMENT",
-            "details": [
-              {
-                "@type": "type.googleapis.com/google.rpc.BadRequest",
-                "fieldViolations": [
-                  {
-                    "field": "tools[0]",
-                    "description": "Invalid JSON payload received. Unknown name \"function\" at 'tools[0]': Cannot find field."
-                  },
-                  {
-                    "field": "tool_config",
-                    "description": "Invalid JSON payload received. Unknown name \"executionMode\" at 'tool_config': Cannot find field."
-                  }
-                ]
-              }
-            ]
-          }
-        }
-  recorded_at: Fri, 02 May 2025 17:22:46 GMT
-- request:
-    method: post
-    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=<GEMINI_API_KEY>
-    body:
-      encoding: UTF-8
-      string: '{"model":"gemini-1.5-pro","contents":[{"parts":[{"text":"What''s the
-        weather in New York?"}]}],"generationConfig":{"temperature":0.1},"systemInstruction":{"parts":[{"text":"You
+      string: '{"model":"gemini-2.0-flash","contents":[{"parts":[{"text":"What''s
+        the weather in New York?"}]}],"generationConfig":{"temperature":0.1},"systemInstruction":{"parts":[{"text":"You
         are a helpful assistant. When you encounter a question that you can answer
         by calling a function, you must always use the provided function. Always respond
         using the function call format, not with your own text. You are a helpful
@@ -349,8 +15,7 @@ http_interactions:
         function is available. ALWAYS use a function for the query. It is EXTREMELY
         IMPORTANT that you ONLY respond with a function call and NO regular text."}]},"tools":[{"functionDeclarations":{"name":"get_weather","description":"Get
         the current weather for a location","parameters":{"type":"object","properties":{"location":{"type":"string","description":"The
-        city and state, e.g. New York, NY"},"unit":{"type":"string","enum":["celsius","fahrenheit"],"description":"The
-        unit of temperature"}},"required":["location"]}}}],"toolConfig":{"function_calling_config":{"mode":"AUTO"}}}'
+        city and state, e.g. New York, NY"}},"required":["location"]}}}],"toolConfig":{"function_calling_config":{"mode":"AUTO"}}}'
     headers:
       User-Agent:
       - Faraday v2.13.0
@@ -372,7 +37,7 @@ http_interactions:
       - Referer
       - X-Origin
       Date:
-      - Fri, 02 May 2025 17:24:37 GMT
+      - Sat, 17 May 2025 17:20:44 GMT
       Server:
       - scaffolding on HTTPServer2
       X-Xss-Protection:
@@ -382,7 +47,7 @@ http_interactions:
       X-Content-Type-Options:
       - nosniff
       Server-Timing:
-      - gfet4t7; dur=806
+      - gfet4t7; dur=373
       Alt-Svc:
       - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
       Transfer-Encoding:
@@ -407,17 +72,17 @@ http_interactions:
                 "role": "model"
               },
               "finishReason": "STOP",
-              "avgLogprobs": -5.0214548537041992e-06
+              "avgLogprobs": -0.0096233868971467018
             }
           ],
           "usageMetadata": {
-            "promptTokenCount": 151,
+            "promptTokenCount": 141,
             "candidatesTokenCount": 8,
-            "totalTokenCount": 159,
+            "totalTokenCount": 149,
             "promptTokensDetails": [
               {
                 "modality": "TEXT",
-                "tokenCount": 151
+                "tokenCount": 141
               }
             ],
             "candidatesTokensDetails": [
@@ -427,7 +92,88 @@ http_interactions:
               }
             ]
           },
-          "modelVersion": "gemini-1.5-pro-002"
+          "modelVersion": "gemini-2.0-flash"
         }
-  recorded_at: Fri, 02 May 2025 17:24:37 GMT
+  recorded_at: Sat, 17 May 2025 17:20:44 GMT
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=<GEMINI_API_KEY>
+    body:
+      encoding: UTF-8
+      string: '{"model":"gemini-2.0-flash","contents":[{"parts":[{"text":"Function
+        get_weather returned: {:temperature=>72, :conditions=>\"sunny\", :humidity=>45}"}]}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.0
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Date:
+      - Sat, 17 May 2025 17:20:46 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=2033
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "Okay, this tells you that the function `get_weather` returned a hash (or dictionary) containing weather information. Let's break down what it means:\n\n*   **`get_weather`**:  This is the name of the function that was called. It's likely a function designed to retrieve weather data.\n\n*   **`{:temperature=\u003e72, :conditions=\u003e\"sunny\", :humidity=\u003e45}`**: This is the hash that the function returned. Hashes are data structures that store key-value pairs.  In this case:\n    *   **`:temperature =\u003e 72`**:  The key `:temperature` has the value `72`.  This probably means the temperature is 72 degrees (Fahrenheit or Celsius, depending on the context of the application).\n    *   **`:conditions =\u003e \"sunny\"`**: The key `:conditions` has the value `\"sunny\"`. This indicates the weather conditions are sunny.\n    *   **`:humidity =\u003e 45`**: The key `:humidity` has the value `45`. This likely represents the humidity as a percentage (45%).\n\n**In summary, the function `get_weather` provided weather information indicating that it's 72 degrees, sunny, and the humidity is 45%.**\n\nYou might see this kind of output in a programming environment like Ruby, where `=\u003e` is used to represent the association between keys and values in a hash.  Other languages might use different syntax (e.g., `{ \"temperature\": 72, ... }` in JSON or Python).\n"
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -0.25730221349336979
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 23,
+            "candidatesTokenCount": 337,
+            "totalTokenCount": 360,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 23
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 337
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash"
+        }
+  recorded_at: Sat, 17 May 2025 17:20:46 GMT
 recorded_with: VCR 6.3.1

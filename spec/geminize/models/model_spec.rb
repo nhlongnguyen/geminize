@@ -4,8 +4,8 @@ RSpec.describe Geminize::Models::Model do
   describe ".from_api_data" do
     let(:api_data) do
       {
-        "name" => "models/gemini-1.5-pro",
-        "baseModelId" => "gemini-1.5-pro",
+        "name" => "models/gemini-2.0-flash",
+        "baseModelId" => "gemini-2.0-flash",
         "version" => "1.5",
         "displayName" => "Gemini 1.5 Pro",
         "description" => "A powerful multimodal model for text and vision",
@@ -26,15 +26,15 @@ RSpec.describe Geminize::Models::Model do
     subject(:model) { described_class.from_api_data(api_data) }
 
     it "extracts the resource name correctly" do
-      expect(model.name).to eq("models/gemini-1.5-pro")
+      expect(model.name).to eq("models/gemini-2.0-flash")
     end
 
     it "extracts the base model ID correctly" do
-      expect(model.base_model_id).to eq("gemini-1.5-pro")
+      expect(model.base_model_id).to eq("gemini-2.0-flash")
     end
 
     it "extracts the model ID (last part of name) correctly" do
-      expect(model.id).to eq("gemini-1.5-pro")
+      expect(model.id).to eq("gemini-2.0-flash")
     end
 
     it "extracts the version correctly" do
@@ -75,7 +75,7 @@ RSpec.describe Geminize::Models::Model do
   describe "#supports_method?" do
     subject(:model) do
       described_class.new(
-        name: "models/gemini-1.5-pro",
+        name: "models/gemini-2.0-flash",
         supported_generation_methods: ["generateContent", "streamGenerateContent", "embedContent"]
       )
     end
@@ -95,7 +95,7 @@ RSpec.describe Geminize::Models::Model do
   describe "capability helper methods" do
     subject(:model) do
       described_class.new(
-        name: "models/gemini-1.5-pro",
+        name: "models/gemini-2.0-flash",
         supported_generation_methods: ["generateContent", "streamGenerateContent", "embedContent"]
       )
     end
@@ -156,8 +156,8 @@ RSpec.describe Geminize::Models::Model do
   describe "#to_h" do
     subject(:model) do
       described_class.new(
-        name: "models/gemini-1.5-pro",
-        base_model_id: "gemini-1.5-pro",
+        name: "models/gemini-2.0-flash",
+        base_model_id: "gemini-2.0-flash",
         version: "1.5",
         display_name: "Gemini 1.5 Pro",
         description: "A powerful model",
@@ -174,9 +174,9 @@ RSpec.describe Geminize::Models::Model do
     it "returns a hash with all the model attributes" do
       hash = model.to_h
 
-      expect(hash[:name]).to eq("models/gemini-1.5-pro")
-      expect(hash[:id]).to eq("gemini-1.5-pro")
-      expect(hash[:base_model_id]).to eq("gemini-1.5-pro")
+      expect(hash[:name]).to eq("models/gemini-2.0-flash")
+      expect(hash[:id]).to eq("gemini-2.0-flash")
+      expect(hash[:base_model_id]).to eq("gemini-2.0-flash")
       expect(hash[:version]).to eq("1.5")
       expect(hash[:display_name]).to eq("Gemini 1.5 Pro")
       expect(hash[:description]).to eq("A powerful model")
@@ -193,7 +193,7 @@ RSpec.describe Geminize::Models::Model do
   describe "#to_json" do
     subject(:model) do
       described_class.new(
-        name: "models/gemini-1.5-pro",
+        name: "models/gemini-2.0-flash",
         display_name: "Gemini 1.5 Pro"
       )
     end
@@ -202,15 +202,15 @@ RSpec.describe Geminize::Models::Model do
       json = model.to_json
       parsed = JSON.parse(json)
 
-      expect(parsed["name"]).to eq("models/gemini-1.5-pro")
+      expect(parsed["name"]).to eq("models/gemini-2.0-flash")
       expect(parsed["display_name"]).to eq("Gemini 1.5 Pro")
     end
   end
 
   describe "#id" do
     it "returns the last part of the name path" do
-      model = described_class.new(name: "models/gemini-1.5-pro")
-      expect(model.id).to eq("gemini-1.5-pro")
+      model = described_class.new(name: "models/gemini-2.0-flash")
+      expect(model.id).to eq("gemini-2.0-flash")
     end
 
     it "returns nil when name is not set" do

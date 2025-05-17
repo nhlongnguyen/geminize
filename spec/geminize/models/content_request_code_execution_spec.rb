@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe Geminize::Models::ContentRequest do
   let(:prompt) { "Calculate the first 10 prime numbers" }
-  let(:model_name) { "gemini-1.5-pro" }
+  let(:model_name) { "gemini-2.0-flash" }
   let(:content_request) { described_class.new(prompt, model_name) }
 
   describe "#enable_code_execution" do

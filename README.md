@@ -311,7 +311,7 @@ weather_functions = [
 response = Geminize.generate_with_functions(
   "What's the weather in San Francisco?",
   weather_functions,
-  "gemini-1.5-pro", # Make sure you use a model that supports function calling
+  "gemini-2.0-flash", # Make sure you use a model that supports function calling
   {
     temperature: 0.2,
     system_instruction: "Use the provided function to get weather information."
@@ -382,7 +382,7 @@ require 'geminize'
 # Request JSON-formatted data
 response = Geminize.generate_json(
   "List the three largest planets in our solar system with their diameters in km",
-  "gemini-1.5-pro", # Use a model that supports JSON mode
+  "gemini-2.0-flash", # Use a model that supports JSON mode
   { temperature: 0.2 }
 )
 
@@ -417,7 +417,7 @@ safety_settings = [
 response = Geminize.generate_with_safety_settings(
   "Explain the concept of nuclear fission",
   safety_settings,
-  "gemini-1.5-pro",
+  "gemini-2.0-flash",
   { temperature: 0.7 }
 )
 
@@ -426,7 +426,7 @@ puts response.text
 # For maximum safety (blocks most potentially harmful content)
 safe_response = Geminize.generate_text_safe(
   "Tell me about controversial political topics",
-  "gemini-1.5-pro"
+  "gemini-2.0-flash"
 )
 
 puts "Safe response: #{safe_response.text}"
@@ -434,7 +434,7 @@ puts "Safe response: #{safe_response.text}"
 # For minimum filtering (blocks only the most harmful content)
 permissive_response = Geminize.generate_text_permissive(
   "Describe a controversial historical event",
-  "gemini-1.5-pro"
+  "gemini-2.0-flash"
 )
 
 puts "Permissive response: #{permissive_response.text}"
@@ -554,7 +554,7 @@ models = Geminize.list_models
 puts "Available models: #{models.size}"
 
 # Get details about a specific model
-model = Geminize.get_model("gemini-1.5-pro")
+model = Geminize.get_model("gemini-2.0-flash")
 puts "Model: #{model.display_name}"
 puts "Token limits: #{model.input_token_limit} input, #{model.output_token_limit} output"
 

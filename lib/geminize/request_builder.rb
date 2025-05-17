@@ -68,7 +68,7 @@ module Geminize
       # @param model_name [String] The model name or ID to get info for
       # @return [String] The complete API endpoint path for getting model info
       def build_get_model_endpoint(model_name)
-        # Handle both formats: "models/gemini-1.5-pro" or just "gemini-1.5-pro"
+        # Handle both formats: "models/gemini-2.0-flash" or just "gemini-2.0-flash"
         unless model_name.start_with?("models/")
           model_name = "models/#{model_name}"
         end

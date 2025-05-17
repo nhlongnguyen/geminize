@@ -1,63 +1,63 @@
 ---
 http_interactions:
-- request:
-    method: get
-    uri: https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro?key=<GEMINI_API_KEY>
-    body:
-      encoding: US-ASCII
-      string: ''
-    headers:
-      User-Agent:
-      - Faraday v2.13.0
-      Accept:
-      - application/json
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-  response:
-    status:
-      code: 200
-      message: OK
-    headers:
-      Content-Type:
-      - application/json; charset=UTF-8
-      Vary:
-      - Origin
-      - Referer
-      - X-Origin
-      Date:
-      - Fri, 02 May 2025 15:00:48 GMT
-      Server:
-      - scaffolding on HTTPServer2
-      X-Xss-Protection:
-      - '0'
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-Content-Type-Options:
-      - nosniff
-      Server-Timing:
-      - gfet4t7; dur=31
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Transfer-Encoding:
-      - chunked
-    body:
-      encoding: ASCII-8BIT
-      string: |
-        {
-          "name": "models/gemini-1.5-pro",
-          "version": "001",
-          "displayName": "Gemini 1.5 Pro",
-          "description": "Stable version of Gemini 1.5 Pro, our mid-size multimodal model that supports up to 2 million tokens, released in May of 2024.",
-          "inputTokenLimit": 2000000,
-          "outputTokenLimit": 8192,
-          "supportedGenerationMethods": [
-            "generateContent",
-            "countTokens"
-          ],
-          "temperature": 1,
-          "topP": 0.95,
-          "topK": 40,
-          "maxTemperature": 2
-        }
-  recorded_at: Fri, 02 May 2025 15:00:48 GMT
+  - request:
+      method: get
+      uri: https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash?key=<GEMINI_API_KEY>
+      body:
+        encoding: US-ASCII
+        string: ""
+      headers:
+        User-Agent:
+          - Faraday v2.13.0
+        Accept:
+          - application/json
+        Accept-Encoding:
+          - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+    response:
+      status:
+        code: 200
+        message: OK
+      headers:
+        Content-Type:
+          - application/json; charset=UTF-8
+        Vary:
+          - Origin
+          - Referer
+          - X-Origin
+        Date:
+          - Fri, 02 May 2025 15:00:48 GMT
+        Server:
+          - scaffolding on HTTPServer2
+        X-Xss-Protection:
+          - "0"
+        X-Frame-Options:
+          - SAMEORIGIN
+        X-Content-Type-Options:
+          - nosniff
+        Server-Timing:
+          - gfet4t7; dur=31
+        Alt-Svc:
+          - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+        Transfer-Encoding:
+          - chunked
+      body:
+        encoding: ASCII-8BIT
+        string: |
+          {
+            "name": "models/gemini-2.0-flash",
+            "version": "001",
+            "displayName": "Gemini 1.5 Pro",
+            "description": "Stable version of Gemini 1.5 Pro, our mid-size multimodal model that supports up to 2 million tokens, released in May of 2024.",
+            "inputTokenLimit": 2000000,
+            "outputTokenLimit": 8192,
+            "supportedGenerationMethods": [
+              "generateContent",
+              "countTokens"
+            ],
+            "temperature": 1,
+            "topP": 0.95,
+            "topK": 40,
+            "maxTemperature": 2
+          }
+    recorded_at: Fri, 02 May 2025 15:00:48 GMT
 recorded_with: VCR 6.3.1

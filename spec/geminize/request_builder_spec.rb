@@ -5,7 +5,7 @@ require "spec_helper"
 RSpec.describe Geminize::RequestBuilder do
   describe ".build_text_generation_request" do
     let(:prompt) { "Tell me a story about a dragon" }
-    let(:model_name) { "gemini-1.5-pro-latest" }
+    let(:model_name) { "gemini-2.0-flash" }
     let(:content_request) do
       Geminize::Models::ContentRequest.new(
         prompt,
@@ -34,15 +34,15 @@ RSpec.describe Geminize::RequestBuilder do
 
   describe ".build_model_endpoint" do
     it "builds an endpoint path with model name and action" do
-      endpoint = described_class.build_model_endpoint("gemini-1.5-pro-latest", "generateContent")
-      expect(endpoint).to eq("models/gemini-1.5-pro-latest:generateContent")
+      endpoint = described_class.build_model_endpoint("gemini-2.0-flash", "generateContent")
+      expect(endpoint).to eq("models/gemini-2.0-flash:generateContent")
     end
   end
 
   describe ".build_text_generation_endpoint" do
     it "builds the generateContent endpoint for a model" do
-      endpoint = described_class.build_text_generation_endpoint("gemini-1.5-pro-latest")
-      expect(endpoint).to eq("models/gemini-1.5-pro-latest:generateContent")
+      endpoint = described_class.build_text_generation_endpoint("gemini-2.0-flash")
+      expect(endpoint).to eq("models/gemini-2.0-flash:generateContent")
     end
   end
 end
