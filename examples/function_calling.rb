@@ -8,7 +8,7 @@ require "json"
 # Configure the API key
 Geminize.configure do |config|
   config.api_key = ENV["GEMINI_API_KEY"] # Make sure to set your API key in the environment
-  config.default_model = "gemini-1.5-pro-latest" # Use the latest model that supports function calling
+  config.default_model = "gemini-2.0-flash" # Use the latest model that supports function calling
 end
 
 # Define a weather function that can handle a location and unit

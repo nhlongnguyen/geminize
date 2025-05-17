@@ -5,7 +5,7 @@ require "spec_helper"
 RSpec.describe Geminize::Models::ContentRequest do
   describe "function calling extensions" do
     let(:prompt) { "What's the weather in New York?" }
-    let(:model_name) { "gemini-1.5-pro" }
+    let(:model_name) { "gemini-2.0-flash" }
     let(:params) { {temperature: 0.7} }
     let(:function_name) { "get_weather" }
     let(:function_description) { "Get the current weather for a location" }

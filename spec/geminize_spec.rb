@@ -320,7 +320,7 @@ RSpec.describe Geminize do
     end
 
     it "properly streams text with a specific model", vcr: {cassette_name: "generate_text_stream_specific_model"} do
-      custom_model = "gemini-1.5-pro"
+      custom_model = "gemini-2.0-flash"
       chunks_received = 0
       accumulated_text = ""
 
@@ -780,7 +780,7 @@ RSpec.describe Geminize do
   end
 
   describe ".get_model", :vcr do
-    let(:model_name) { "gemini-1.5-pro" }
+    let(:model_name) { "gemini-2.0-flash" }
 
     before do
       Geminize.configure do |config|
@@ -893,7 +893,7 @@ RSpec.describe Geminize do
 
   describe ".generate_with_functions", :vcr do
     let(:prompt) { "What's the weather in New York?" }
-    let(:model_name) { "gemini-1.5-pro" }
+    let(:model_name) { "gemini-2.0-flash" }
     let(:functions) do
       [
         {
@@ -905,11 +905,6 @@ RSpec.describe Geminize do
               location: {
                 type: "string",
                 description: "The city and state, e.g. New York, NY"
-              },
-              unit: {
-                type: "string",
-                enum: ["celsius", "fahrenheit"],
-                description: "The unit of temperature"
               }
             },
             required: ["location"]
@@ -1195,6 +1190,462 @@ RSpec.describe Geminize do
       expect(response).to be_a(Geminize::Models::ContentResponse)
       expect(response.text).to be_a(String)
       expect(response.text).not_to be_empty
+    end
+  end
+
+  describe "safety settings extensions" do
+    before do
+      # Mock the TextGeneration class
+      @mock_generator = instance_double(Geminize::TextGeneration)
+      allow(Geminize::TextGeneration).to receive(:new).and_return(@mock_generator)
+
+      # Configure with a dummy API key
+      Geminize.configure do |config|
+        config.api_key = "test-key"
+        config.default_model = "test-model"
+      end
+    end
+
+    after do
+      Geminize.reset_configuration!
+    end
+
+    describe ".generate_with_safety_settings" do
+      let(:prompt) { "Tell me about dangerous activities" }
+      let(:safety_settings) do
+        [
+          {category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE"},
+          {category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_LOW_AND_ABOVE"}
+        ]
+      end
+      let(:mock_response) { instance_double(Geminize::Models::ContentResponse) }
+
+      it "creates a ContentRequest with safety settings and generates content" do
+        # Expect generate_with_retries to be called with a ContentRequest that has safety settings
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request).to be_a(Geminize::Models::ContentRequest)
+          expect(request.safety_settings).to be_an(Array)
+          expect(request.safety_settings.size).to eq(2)
+          expect(request.safety_settings[0].category).to eq("HARM_CATEGORY_DANGEROUS_CONTENT")
+          expect(request.safety_settings[0].threshold).to eq("BLOCK_MEDIUM_AND_ABOVE")
+          expect(request.safety_settings[1].category).to eq("HARM_CATEGORY_HATE_SPEECH")
+          expect(request.safety_settings[1].threshold).to eq("BLOCK_LOW_AND_ABOVE")
+          expect(max_retries).to eq(3)
+          expect(retry_delay).to eq(1.0)
+          mock_response
+        end
+
+        result = Geminize.generate_with_safety_settings(prompt, safety_settings)
+        expect(result).to be(mock_response)
+      end
+
+      it "passes the model name when provided" do
+        model_name = "specific-model"
+
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request.model_name).to eq(model_name)
+          mock_response
+        end
+
+        result = Geminize.generate_with_safety_settings(prompt, safety_settings, model_name)
+        expect(result).to be(mock_response)
+      end
+
+      it "uses the default model when no model is provided" do
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request.model_name).to eq("test-model")
+          mock_response
+        end
+
+        result = Geminize.generate_with_safety_settings(prompt, safety_settings)
+        expect(result).to be(mock_response)
+      end
+
+      it "passes generation parameters" do
+        params = {temperature: 0.5, max_tokens: 100}
+
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request.to_hash[:generationConfig][:temperature]).to eq(0.5)
+          expect(request.to_hash[:generationConfig][:maxOutputTokens]).to eq(100)
+          mock_response
+        end
+
+        result = Geminize.generate_with_safety_settings(prompt, safety_settings, nil, params)
+        expect(result).to be(mock_response)
+      end
+
+      it "uses retries by default" do
+        expect(@mock_generator).to receive(:generate_with_retries).and_return(mock_response)
+
+        result = Geminize.generate_with_safety_settings(prompt, safety_settings)
+        expect(result).to be(mock_response)
+      end
+
+      it "skips retries when requested" do
+        expect(@mock_generator).to receive(:generate).and_return(mock_response)
+        expect(@mock_generator).not_to receive(:generate_with_retries)
+
+        result = Geminize.generate_with_safety_settings(prompt, safety_settings, nil, {with_retries: false})
+        expect(result).to be(mock_response)
+      end
+    end
+
+    describe ".generate_text_safe" do
+      let(:prompt) { "Tell me about dangerous activities" }
+      let(:mock_response) { instance_double(Geminize::Models::ContentResponse) }
+
+      it "creates a ContentRequest with maximum safety settings" do
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request).to be_a(Geminize::Models::ContentRequest)
+          expect(request.safety_settings).to be_an(Array)
+          expect(request.safety_settings.size).to eq(4) # All harm categories
+
+          # All settings should have BLOCK_LOW_AND_ABOVE threshold
+          thresholds = request.safety_settings.map(&:threshold).uniq
+          expect(thresholds).to eq(["BLOCK_LOW_AND_ABOVE"])
+
+          mock_response
+        end
+
+        result = Geminize.generate_text_safe(prompt)
+        expect(result).to be(mock_response)
+      end
+
+      it "passes the model name when provided" do
+        model_name = "specific-model"
+
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request.model_name).to eq(model_name)
+          mock_response
+        end
+
+        result = Geminize.generate_text_safe(prompt, model_name)
+        expect(result).to be(mock_response)
+      end
+
+      it "passes generation parameters" do
+        params = {temperature: 0.3, system_instruction: "Be very cautious"}
+
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request.to_hash[:generationConfig][:temperature]).to eq(0.3)
+
+          system_instruction = request.to_hash[:systemInstruction]
+          expect(system_instruction).to be_a(Hash)
+          expect(system_instruction[:parts]).to be_an(Array)
+          expect(system_instruction[:parts].first[:text]).to eq("Be very cautious")
+
+          mock_response
+        end
+
+        result = Geminize.generate_text_safe(prompt, nil, params)
+        expect(result).to be(mock_response)
+      end
+    end
+
+    describe ".generate_text_permissive" do
+      let(:prompt) { "Tell me about dangerous activities" }
+      let(:mock_response) { instance_double(Geminize::Models::ContentResponse) }
+
+      it "creates a ContentRequest with minimum safety settings" do
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request).to be_a(Geminize::Models::ContentRequest)
+          expect(request.safety_settings).to be_an(Array)
+          expect(request.safety_settings.size).to eq(4) # All harm categories
+
+          # All settings should have BLOCK_ONLY_HIGH threshold
+          thresholds = request.safety_settings.map(&:threshold).uniq
+          expect(thresholds).to eq(["BLOCK_ONLY_HIGH"])
+
+          mock_response
+        end
+
+        result = Geminize.generate_text_permissive(prompt)
+        expect(result).to be(mock_response)
+      end
+
+      it "passes the model name when provided" do
+        model_name = "specific-model"
+
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request.model_name).to eq(model_name)
+          mock_response
+        end
+
+        result = Geminize.generate_text_permissive(prompt, model_name)
+        expect(result).to be(mock_response)
+      end
+
+      it "passes generation parameters" do
+        params = {temperature: 0.9, top_p: 0.95}
+
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request.to_hash[:generationConfig][:temperature]).to eq(0.9)
+          expect(request.to_hash[:generationConfig][:topP]).to eq(0.95)
+          mock_response
+        end
+
+        result = Geminize.generate_text_permissive(prompt, nil, params)
+        expect(result).to be(mock_response)
+      end
+    end
+  end
+
+  describe "function calling and JSON mode extensions" do
+    before do
+      # Mock the TextGeneration class
+      @mock_generator = instance_double(Geminize::TextGeneration)
+      allow(Geminize::TextGeneration).to receive(:new).and_return(@mock_generator)
+
+      # Configure with a dummy API key
+      Geminize.configure do |config|
+        config.api_key = ENV["GEMINI_API_KEY"] || "dummy-key"
+        config.default_model = "test-model"
+        config.api_version = "v1" # Add explicit API version
+      end
+    end
+
+    after do
+      Geminize.reset_configuration!
+    end
+
+    describe ".generate_with_functions" do
+      let(:prompt) { "What's the weather in New York?" }
+      let(:functions) do
+        [
+          {
+            name: "get_weather",
+            description: "Get the current weather for a location",
+            parameters: {
+              type: "object",
+              properties: {
+                location: {
+                  type: "string",
+                  description: "The city and state, e.g. New York, NY"
+                }
+              },
+              required: ["location"]
+            }
+          }
+        ]
+      end
+      let(:mock_response) { instance_double(Geminize::Models::ContentResponse) }
+
+      it "creates a ContentRequest with functions and generates content" do
+        # Expect generate_with_retries to be called with a ContentRequest that has functions
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request).to be_a(Geminize::Models::ContentRequest)
+          expect(request.tools).to be_an(Array)
+          expect(request.tools.size).to eq(1)
+          expect(request.tools.first.function_declaration.name).to eq("get_weather")
+          expect(max_retries).to eq(3)
+          expect(retry_delay).to eq(1.0)
+          mock_response
+        end
+
+        result = Geminize.generate_with_functions(prompt, functions)
+        expect(result).to be(mock_response)
+      end
+
+      it "passes the model name when provided" do
+        model_name = "specific-model"
+
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request.model_name).to eq(model_name)
+          mock_response
+        end
+
+        result = Geminize.generate_with_functions(prompt, functions, model_name)
+        expect(result).to be(mock_response)
+      end
+
+      it "uses the default model when no model is provided" do
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request.model_name).to eq("test-model")
+          mock_response
+        end
+
+        result = Geminize.generate_with_functions(prompt, functions)
+        expect(result).to be(mock_response)
+      end
+
+      it "passes generation parameters" do
+        params = {temperature: 0.5, max_tokens: 100}
+
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request.to_hash[:generationConfig][:temperature]).to eq(0.5)
+          expect(request.to_hash[:generationConfig][:maxOutputTokens]).to eq(100)
+          mock_response
+        end
+
+        result = Geminize.generate_with_functions(prompt, functions, nil, params)
+        expect(result).to be(mock_response)
+      end
+
+      it "sets tool execution mode when provided" do
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request.tool_config.execution_mode).to eq("MANUAL")
+          mock_response
+        end
+
+        result = Geminize.generate_with_functions(prompt, functions, nil, {tool_execution_mode: "MANUAL"})
+        expect(result).to be(mock_response)
+      end
+
+      it "uses retries by default" do
+        expect(@mock_generator).to receive(:generate_with_retries).and_return(mock_response)
+
+        result = Geminize.generate_with_functions(prompt, functions)
+        expect(result).to be(mock_response)
+      end
+
+      it "skips retries when requested" do
+        expect(@mock_generator).to receive(:generate).and_return(mock_response)
+        expect(@mock_generator).not_to receive(:generate_with_retries)
+
+        result = Geminize.generate_with_functions(prompt, functions, nil, {with_retries: false})
+        expect(result).to be(mock_response)
+      end
+    end
+
+    describe ".generate_json" do
+      let(:prompt) { "List three planets with their diameters" }
+      let(:mock_response) { instance_double(Geminize::Models::ContentResponse) }
+
+      it "creates a ContentRequest with JSON mode enabled" do
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request).to be_a(Geminize::Models::ContentRequest)
+          expect(request.response_mime_type).to eq("application/json")
+          expect(request.to_hash[:generationConfig][:responseMimeType]).to eq("application/json")
+          mock_response
+        end
+
+        result = Geminize.generate_json(prompt)
+        expect(result).to be(mock_response)
+      end
+
+      it "passes the model name when provided" do
+        model_name = "specific-model"
+
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request.model_name).to eq(model_name)
+          mock_response
+        end
+
+        result = Geminize.generate_json(prompt, model_name)
+        expect(result).to be(mock_response)
+      end
+
+      it "uses the default model when no model is provided" do
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request.model_name).to eq("test-model")
+          mock_response
+        end
+
+        result = Geminize.generate_json(prompt)
+        expect(result).to be(mock_response)
+      end
+
+      it "passes generation parameters" do
+        params = {temperature: 0.3, system_instruction: "Return accurate data"}
+
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request.to_hash[:generationConfig][:temperature]).to eq(0.3)
+          system_instruction = request.to_hash[:systemInstruction]
+          expect(system_instruction).to be_a(Hash)
+          expect(system_instruction[:parts]).to be_an(Array)
+          expect(system_instruction[:parts].first[:text]).to include("Return accurate data")
+          mock_response
+        end
+
+        result = Geminize.generate_json(prompt, nil, params)
+        expect(result).to be(mock_response)
+      end
+
+      it "uses retries by default" do
+        expect(@mock_generator).to receive(:generate_with_retries).and_return(mock_response)
+
+        result = Geminize.generate_json(prompt)
+        expect(result).to be(mock_response)
+      end
+
+      it "skips retries when requested" do
+        expect(@mock_generator).to receive(:generate).and_return(mock_response)
+        expect(@mock_generator).not_to receive(:generate_with_retries)
+
+        result = Geminize.generate_json(prompt, nil, {with_retries: false})
+        expect(result).to be(mock_response)
+      end
+    end
+
+    describe ".process_function_call" do
+      let(:function_response) do
+        instance_double(Geminize::Models::FunctionResponse,
+          name: "get_weather",
+          response: {"location" => "New York, NY"})
+      end
+
+      let(:content_response) do
+        instance_double(Geminize::Models::ContentResponse,
+          has_function_call?: true,
+          function_call: function_response)
+      end
+
+      let(:mock_final_response) { instance_double(Geminize::Models::ContentResponse) }
+
+      it "requires a block" do
+        expect {
+          Geminize.process_function_call(content_response)
+        }.to raise_error(Geminize::ValidationError, /block must be provided/i)
+      end
+
+      it "raises an error if response has no function call" do
+        no_function_response = instance_double(Geminize::Models::ContentResponse,
+          has_function_call?: false)
+
+        expect {
+          Geminize.process_function_call(no_function_response) { |_, _| }
+        }.to raise_error(Geminize::ValidationError, /does not contain a function call/i)
+      end
+
+      it "executes the provided block with function name and args" do
+        block_executed = false
+        block_name = nil
+        block_args = nil
+
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request.to_hash[:contents].first[:parts].first[:text]).to include("get_weather")
+          expect(request.to_hash[:contents].first[:parts].first[:text]).to include("temperature")
+          expect(request.to_hash[:contents].first[:parts].first[:text]).to include("Sunny")
+          mock_final_response
+        end
+
+        Geminize.process_function_call(content_response) do |name, args|
+          block_executed = true
+          block_name = name
+          block_args = args
+          {"temperature" => 22, "conditions" => "Sunny"}
+        end
+
+        expect(block_executed).to be true
+        expect(block_name).to eq("get_weather")
+        expect(block_args).to eq({"location" => "New York, NY"})
+      end
+
+      it "creates a ContentRequest with the function result" do
+        # The function result we'll return from the block
+        function_result = {"temperature" => 22, "conditions" => "Sunny"}
+
+        expect(@mock_generator).to receive(:generate_with_retries) do |request, max_retries, retry_delay|
+          expect(request).to be_a(Geminize::Models::ContentRequest)
+          # Verify the prompt includes the function name and result
+          expect(request.to_hash[:contents].first[:parts].first[:text]).to eq(
+            "Function get_weather returned: #{function_result.inspect}"
+          )
+          mock_final_response
+        end
+
+        Geminize.process_function_call(content_response) { function_result }
+      end
     end
   end
 end

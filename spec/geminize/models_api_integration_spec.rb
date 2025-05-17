@@ -14,7 +14,7 @@ RSpec.describe "Geminize Models API Integration" do
     let(:model_list) do
       Geminize::Models::ModelList.new([
         Geminize::Models::Model.new(
-          name: "models/gemini-1.5-pro",
+          name: "models/gemini-2.0-flash",
           display_name: "Gemini 1.5 Pro"
         )
       ])
@@ -71,18 +71,18 @@ RSpec.describe "Geminize Models API Integration" do
   describe "Geminize.get_model" do
     let(:model) do
       Geminize::Models::Model.new(
-        name: "models/gemini-1.5-pro",
+        name: "models/gemini-2.0-flash",
         display_name: "Gemini 1.5 Pro"
       )
     end
 
     it "calls ModelInfo#get_model with the correct parameters" do
       expect(@mock_model_info).to receive(:get_model).with(
-        "gemini-1.5-pro",
+        "gemini-2.0-flash",
         force_refresh: true
       ).and_return(model)
 
-      result = Geminize.get_model("gemini-1.5-pro", force_refresh: true)
+      result = Geminize.get_model("gemini-2.0-flash", force_refresh: true)
       expect(result).to eq(model)
     end
 
@@ -91,7 +91,7 @@ RSpec.describe "Geminize Models API Integration" do
       expect(Geminize::ModelInfo).to receive(:new).with(nil, client_options).and_return(@mock_model_info)
       expect(@mock_model_info).to receive(:get_model).and_return(model)
 
-      Geminize.get_model("gemini-1.5-pro", client_options: client_options)
+      Geminize.get_model("gemini-2.0-flash", client_options: client_options)
     end
   end
 
@@ -128,7 +128,7 @@ RSpec.describe "Geminize Models API Integration" do
     let(:models) do
       Geminize::Models::ModelList.new([
         Geminize::Models::Model.new(
-          name: "models/gemini-1.5-pro",
+          name: "models/gemini-2.0-flash",
           supported_generation_methods: ["generateContent", "streamGenerateContent", "embedContent"]
         ),
         Geminize::Models::Model.new(
@@ -155,7 +155,7 @@ RSpec.describe "Geminize Models API Integration" do
         result = Geminize.get_content_generation_models
         expect(result.size).to eq(2)
         expect(result.map(&:name)).to contain_exactly(
-          "models/gemini-1.5-pro",
+          "models/gemini-2.0-flash",
           "models/gemini-1.5-flash"
         )
       end
@@ -166,7 +166,7 @@ RSpec.describe "Geminize Models API Integration" do
         result = Geminize.get_embedding_models
         expect(result.size).to eq(2)
         expect(result.map(&:name)).to contain_exactly(
-          "models/gemini-1.5-pro",
+          "models/gemini-2.0-flash",
           "models/embedding-001"
         )
       end
@@ -185,7 +185,7 @@ RSpec.describe "Geminize Models API Integration" do
         result = Geminize.get_streaming_models
         expect(result.size).to eq(2)
         expect(result.map(&:name)).to contain_exactly(
-          "models/gemini-1.5-pro",
+          "models/gemini-2.0-flash",
           "models/gemini-1.5-flash"
         )
       end

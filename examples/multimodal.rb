@@ -63,7 +63,7 @@ begin
       {source_type: "file", data: File.join(File.dirname(__FILE__), "ruby.png")}, # Use relative path from script
       {source_type: "file", data: File.join(File.dirname(__FILE__), "ruby.png")}  # Use relative path from script
     ],
-    "gemini-1.5-pro-latest", # Explicitly specify model
+    "gemini-2.0-flash", # Explicitly specify model
     max_tokens: 500
   )
 
@@ -106,7 +106,7 @@ begin
   # Create a content request
   request = Geminize::Models::ContentRequest.new(
     "Tell me about these images:",
-    "gemini-1.5-pro-latest",
+    "gemini-2.0-flash",
     temperature: 0.3,
     max_tokens: 800
   )

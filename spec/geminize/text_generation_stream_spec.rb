@@ -91,7 +91,7 @@ RSpec.describe Geminize::TextGeneration do
 
     describe "#generate_stream" do
       before do
-        allow(Geminize::RequestBuilder).to receive(:build_text_generation_endpoint).and_return("models/gemini-1.5-pro-latest:generateContent")
+        allow(Geminize::RequestBuilder).to receive(:build_text_generation_endpoint).and_return("models/gemini-2.0-flash:generateContent")
         allow(Geminize::RequestBuilder).to receive(:build_text_generation_request).and_return({})
 
         # Mock StreamResponse behavior

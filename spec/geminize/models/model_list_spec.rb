@@ -3,8 +3,8 @@
 RSpec.describe Geminize::Models::ModelList do
   let(:model1) do
     Geminize::Models::Model.new(
-      name: "models/gemini-1.5-pro",
-      base_model_id: "gemini-1.5-pro",
+      name: "models/gemini-2.0-flash",
+      base_model_id: "gemini-2.0-flash",
       version: "1.5",
       display_name: "Gemini 1.5 Pro",
       input_token_limit: 30720,
@@ -80,7 +80,7 @@ RSpec.describe Geminize::Models::ModelList do
 
   describe "#find_by_name" do
     it "returns the model with the matching name" do
-      result = model_list.find_by_name("models/gemini-1.5-pro")
+      result = model_list.find_by_name("models/gemini-2.0-flash")
       expect(result).to eq(model1)
     end
 
@@ -92,7 +92,7 @@ RSpec.describe Geminize::Models::ModelList do
 
   describe "#find_by_id" do
     it "returns the model with the matching ID" do
-      result = model_list.find_by_id("gemini-1.5-pro")
+      result = model_list.find_by_id("gemini-2.0-flash")
       expect(result).to eq(model1)
     end
 
@@ -197,7 +197,7 @@ RSpec.describe Geminize::Models::ModelList do
 
   describe "#filter_by_base_model_id" do
     it "filters models by base model ID" do
-      result = model_list.filter_by_base_model_id("gemini-1.5-pro")
+      result = model_list.filter_by_base_model_id("gemini-2.0-flash")
 
       expect(result.size).to eq(1)
       expect(result.first).to eq(model1)
@@ -250,8 +250,8 @@ RSpec.describe Geminize::Models::ModelList do
       {
         "models" => [
           {
-            "name" => "models/gemini-1.5-pro",
-            "baseModelId" => "gemini-1.5-pro",
+            "name" => "models/gemini-2.0-flash",
+            "baseModelId" => "gemini-2.0-flash",
             "version" => "1.5",
             "displayName" => "Gemini 1.5 Pro"
           },
@@ -280,7 +280,7 @@ RSpec.describe Geminize::Models::ModelList do
 
       expect(result).to be_a(described_class)
       expect(result.size).to eq(2)
-      expect(result.map(&:name)).to contain_exactly("models/gemini-1.5-pro", "models/embedding-001")
+      expect(result.map(&:name)).to contain_exactly("models/gemini-2.0-flash", "models/embedding-001")
       expect(result.next_page_token).to eq("abc123token")
     end
 
@@ -333,7 +333,7 @@ RSpec.describe Geminize::Models::ModelList do
 
       expect(parsed).to be_an(Array)
       expect(parsed.size).to eq(3)
-      expect(parsed.first["name"]).to eq("models/gemini-1.5-pro")
+      expect(parsed.first["name"]).to eq("models/gemini-2.0-flash")
     end
   end
 
@@ -347,10 +347,10 @@ RSpec.describe Geminize::Models::ModelList do
 
     it "supports other enumerable methods" do
       result = model_list.map { |model| model.id }
-      expect(result).to eq(["gemini-1.5-pro", "gemini-1.5-flash", "embedding-001"])
+      expect(result).to eq(["gemini-2.0-flash", "gemini-1.5-flash", "embedding-001"])
 
       result = model_list.select { |model| model.id.start_with?("gemini") }
-      expect(result.map(&:id)).to eq(["gemini-1.5-pro", "gemini-1.5-flash"])
+      expect(result.map(&:id)).to eq(["gemini-2.0-flash", "gemini-1.5-flash"])
     end
   end
 

@@ -1,3 +1,9 @@
+## [1.3.1] - 2025-05-17
+
+### Changed
+
+- Refactored `Geminize::ModuleExtensions` and `Geminize::ModuleSafety` into the main `Geminize` module for a flatter internal structure. This change is internal and does not affect the public API.
+
 ## [1.3.0] - 2024-05-02
 
 ### Added

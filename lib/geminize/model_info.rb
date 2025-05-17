@@ -104,7 +104,7 @@ module Geminize
     # @return [Geminize::Models::Model] The model information
     # @raise [Geminize::GeminizeError] If the request fails or model is not found
     def get_model(model_name, force_refresh: false)
-      # Handle both formats: "models/gemini-1.5-pro" or just "gemini-1.5-pro"
+      # Handle both formats: "models/gemini-2.0-flash" or just "gemini-2.0-flash"
       unless model_name.start_with?("models/")
         model_name = "models/#{model_name}"
       end

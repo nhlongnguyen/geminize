@@ -2,176 +2,11 @@
 http_interactions:
 - request:
     method: post
-    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=<GEMINI_API_KEY>
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=<GEMINI_API_KEY>
     body:
       encoding: UTF-8
-      string: '{"model":"gemini-1.5-pro","contents":[{"parts":[{"text":"What''s the
-        weather in New York?"}]}],"generationConfig":{"temperature":0.1},"systemInstruction":{"parts":[{"text":"You
-        are a helpful assistant. When you encounter a question that you can answer
-        by calling a function, you must always use the provided function. Always respond
-        using the function call format, not with your own text. You are a helpful
-        assistant that ALWAYS uses the provided functions. ALWAYS call the get_weather
-        function when asked about weather. NEVER respond with your own text when a
-        function is available. ALWAYS use a function for the query."}]}}'
-    headers:
-      User-Agent:
-      - Faraday v2.13.0
-      Accept:
-      - application/json
-      Content-Type:
-      - application/json
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-  response:
-    status:
-      code: 200
-      message: OK
-    headers:
-      Content-Type:
-      - application/json; charset=UTF-8
-      Vary:
-      - Origin
-      - Referer
-      - X-Origin
-      Date:
-      - Fri, 02 May 2025 17:05:05 GMT
-      Server:
-      - scaffolding on HTTPServer2
-      X-Xss-Protection:
-      - '0'
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-Content-Type-Options:
-      - nosniff
-      Server-Timing:
-      - gfet4t7; dur=463
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Transfer-Encoding:
-      - chunked
-    body:
-      encoding: ASCII-8BIT
-      string: |
-        {
-          "candidates": [
-            {
-              "content": {
-                "parts": [
-                  {
-                    "text": "get_weather(\"New York\")\n"
-                  }
-                ],
-                "role": "model"
-              },
-              "finishReason": "STOP",
-              "avgLogprobs": -0.0021920353174209595
-            }
-          ],
-          "usageMetadata": {
-            "promptTokenCount": 95,
-            "candidatesTokenCount": 8,
-            "totalTokenCount": 103,
-            "promptTokensDetails": [
-              {
-                "modality": "TEXT",
-                "tokenCount": 95
-              }
-            ],
-            "candidatesTokensDetails": [
-              {
-                "modality": "TEXT",
-                "tokenCount": 8
-              }
-            ]
-          },
-          "modelVersion": "gemini-1.5-pro-002"
-        }
-  recorded_at: Fri, 02 May 2025 17:05:05 GMT
-- request:
-    method: post
-    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=<GEMINI_API_KEY>
-    body:
-      encoding: UTF-8
-      string: '{"model":"gemini-1.5-pro","contents":[{"parts":[{"text":"What''s the
-        weather in New York?"}]}],"generationConfig":{"temperature":0.1},"systemInstruction":{"parts":[{"text":"You
-        are a helpful assistant. When you encounter a question that you can answer
-        by calling a function, you must always use the provided function. Always respond
-        using the function call format, not with your own text. You are a helpful
-        assistant that ALWAYS uses the provided functions. ALWAYS call the get_weather
-        function when asked about weather. NEVER respond with your own text when a
-        function is available. ALWAYS use a function for the query."}]},"tools":[{"function":{"name":"get_weather","description":"Get
-        the current weather for a location","parameters":{"type":"object","properties":{"location":{"type":"string","description":"The
-        city and state, e.g. New York, NY"},"unit":{"type":"string","enum":["celsius","fahrenheit"],"description":"The
-        unit of temperature"}},"required":["location"]}}}],"toolConfig":{"executionMode":"AUTO"}}'
-    headers:
-      User-Agent:
-      - Faraday v2.13.0
-      Accept:
-      - application/json
-      Content-Type:
-      - application/json
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-  response:
-    status:
-      code: 400
-      message: Bad Request
-    headers:
-      Vary:
-      - Origin
-      - Referer
-      - X-Origin
-      Content-Type:
-      - application/json; charset=UTF-8
-      Date:
-      - Fri, 02 May 2025 17:23:42 GMT
-      Server:
-      - scaffolding on HTTPServer2
-      X-Xss-Protection:
-      - '0'
-      X-Frame-Options:
-      - SAMEORIGIN
-      X-Content-Type-Options:
-      - nosniff
-      Server-Timing:
-      - gfet4t7; dur=50
-      Alt-Svc:
-      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
-      Transfer-Encoding:
-      - chunked
-    body:
-      encoding: ASCII-8BIT
-      string: |
-        {
-          "error": {
-            "code": 400,
-            "message": "Invalid JSON payload received. Unknown name \"function\" at 'tools[0]': Cannot find field.\nInvalid JSON payload received. Unknown name \"executionMode\" at 'tool_config': Cannot find field.",
-            "status": "INVALID_ARGUMENT",
-            "details": [
-              {
-                "@type": "type.googleapis.com/google.rpc.BadRequest",
-                "fieldViolations": [
-                  {
-                    "field": "tools[0]",
-                    "description": "Invalid JSON payload received. Unknown name \"function\" at 'tools[0]': Cannot find field."
-                  },
-                  {
-                    "field": "tool_config",
-                    "description": "Invalid JSON payload received. Unknown name \"executionMode\" at 'tool_config': Cannot find field."
-                  }
-                ]
-              }
-            ]
-          }
-        }
-  recorded_at: Fri, 02 May 2025 17:23:42 GMT
-- request:
-    method: post
-    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=<GEMINI_API_KEY>
-    body:
-      encoding: UTF-8
-      string: '{"model":"gemini-1.5-pro","contents":[{"parts":[{"text":"What''s the
-        weather in New York?"}]}],"generationConfig":{"temperature":0.1},"systemInstruction":{"parts":[{"text":"You
+      string: '{"model":"gemini-2.0-flash","contents":[{"parts":[{"text":"What''s
+        the weather in New York?"}]}],"generationConfig":{"temperature":0.1},"systemInstruction":{"parts":[{"text":"You
         are a helpful assistant. When you encounter a question that you can answer
         by calling a function, you must always use the provided function. Always respond
         using the function call format, not with your own text. You are a helpful
@@ -179,8 +14,7 @@ http_interactions:
         function when asked about weather. NEVER respond with your own text when a
         function is available. ALWAYS use a function for the query."}]},"tools":[{"functionDeclarations":{"name":"get_weather","description":"Get
         the current weather for a location","parameters":{"type":"object","properties":{"location":{"type":"string","description":"The
-        city and state, e.g. New York, NY"},"unit":{"type":"string","enum":["celsius","fahrenheit"],"description":"The
-        unit of temperature"}},"required":["location"]}}}],"toolConfig":{"function_calling_config":{"mode":"AUTO"}}}'
+        city and state, e.g. New York, NY"}},"required":["location"]}}}],"toolConfig":{"function_calling_config":{"mode":"AUTO"}}}'
     headers:
       User-Agent:
       - Faraday v2.13.0
@@ -202,7 +36,7 @@ http_interactions:
       - Referer
       - X-Origin
       Date:
-      - Fri, 02 May 2025 17:24:25 GMT
+      - Sat, 17 May 2025 17:19:54 GMT
       Server:
       - scaffolding on HTTPServer2
       X-Xss-Protection:
@@ -212,7 +46,7 @@ http_interactions:
       X-Content-Type-Options:
       - nosniff
       Server-Timing:
-      - gfet4t7; dur=821
+      - gfet4t7; dur=496
       Alt-Svc:
       - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
       Transfer-Encoding:
@@ -237,17 +71,17 @@ http_interactions:
                 "role": "model"
               },
               "finishReason": "STOP",
-              "avgLogprobs": -1.0236491107207257e-05
+              "avgLogprobs": -2.226508513558656e-05
             }
           ],
           "usageMetadata": {
-            "promptTokenCount": 132,
+            "promptTokenCount": 122,
             "candidatesTokenCount": 8,
-            "totalTokenCount": 140,
+            "totalTokenCount": 130,
             "promptTokensDetails": [
               {
                 "modality": "TEXT",
-                "tokenCount": 132
+                "tokenCount": 122
               }
             ],
             "candidatesTokensDetails": [
@@ -257,7 +91,7 @@ http_interactions:
               }
             ]
           },
-          "modelVersion": "gemini-1.5-pro-002"
+          "modelVersion": "gemini-2.0-flash"
         }
-  recorded_at: Fri, 02 May 2025 17:24:25 GMT
+  recorded_at: Sat, 17 May 2025 17:19:54 GMT
 recorded_with: VCR 6.3.1

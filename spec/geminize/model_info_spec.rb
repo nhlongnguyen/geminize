@@ -9,8 +9,8 @@ RSpec.describe Geminize::ModelInfo do
       {
         "models" => [
           {
-            "name" => "models/gemini-1.5-pro",
-            "baseModelId" => "gemini-1.5-pro",
+            "name" => "models/gemini-2.0-flash",
+            "baseModelId" => "gemini-2.0-flash",
             "version" => "1.5",
             "displayName" => "Gemini 1.5 Pro",
             "description" => "A powerful multimodal model for generating text and analyzing images",
@@ -87,10 +87,10 @@ RSpec.describe Geminize::ModelInfo do
       expect(model_list.next_page_token).to eq("abc123token")
 
       # Check that models are properly extracted
-      model = model_list.find_by_name("models/gemini-1.5-pro")
+      model = model_list.find_by_name("models/gemini-2.0-flash")
       expect(model).not_to be_nil
       expect(model.display_name).to eq("Gemini 1.5 Pro")
-      expect(model.base_model_id).to eq("gemini-1.5-pro")
+      expect(model.base_model_id).to eq("gemini-2.0-flash")
       expect(model.supported_generation_methods).to contain_exactly("generateContent", "streamGenerateContent")
       expect(model.input_token_limit).to eq(30720)
       expect(model.output_token_limit).to eq(8192)
@@ -130,8 +130,8 @@ RSpec.describe Geminize::ModelInfo do
       {
         "models" => [
           {
-            "name" => "models/gemini-1.5-pro",
-            "baseModelId" => "gemini-1.5-pro",
+            "name" => "models/gemini-2.0-flash",
+            "baseModelId" => "gemini-2.0-flash",
             "displayName" => "Gemini 1.5 Pro"
           },
           {
@@ -170,7 +170,7 @@ RSpec.describe Geminize::ModelInfo do
       expect(all_models.size).to eq(3)
       expect(all_models.next_page_token).to be_nil
       expect(all_models.map { |m| m.name }).to contain_exactly(
-        "models/gemini-1.5-pro", "models/gemini-1.5-flash", "models/embedding-001"
+        "models/gemini-2.0-flash", "models/gemini-1.5-flash", "models/embedding-001"
       )
     end
 
@@ -195,12 +195,12 @@ RSpec.describe Geminize::ModelInfo do
   end
 
   describe "#get_model" do
-    let(:model_name) { "gemini-1.5-pro" }
-    let(:full_model_name) { "models/gemini-1.5-pro" }
+    let(:model_name) { "gemini-2.0-flash" }
+    let(:full_model_name) { "models/gemini-2.0-flash" }
     let(:model_response) do
       {
-        "name" => "models/gemini-1.5-pro",
-        "baseModelId" => "gemini-1.5-pro",
+        "name" => "models/gemini-2.0-flash",
+        "baseModelId" => "gemini-2.0-flash",
         "version" => "1.5",
         "displayName" => "Gemini 1.5 Pro",
         "description" => "A powerful multimodal model for generating text and analyzing images",
@@ -224,7 +224,7 @@ RSpec.describe Geminize::ModelInfo do
       expect(model).to be_a(Geminize::Models::Model)
       expect(model.name).to eq(full_model_name)
       expect(model.id).to eq(model_name)
-      expect(model.base_model_id).to eq("gemini-1.5-pro")
+      expect(model.base_model_id).to eq("gemini-2.0-flash")
       expect(model.version).to eq("1.5")
       expect(model.display_name).to eq("Gemini 1.5 Pro")
       expect(model.description).to eq("A powerful multimodal model for generating text and analyzing images")
@@ -283,7 +283,7 @@ RSpec.describe Geminize::ModelInfo do
   describe "#get_models_by_method" do
     let(:model1) do
       Geminize::Models::Model.new(
-        name: "models/gemini-1.5-pro",
+        name: "models/gemini-2.0-flash",
         supported_generation_methods: ["generateContent", "embedContent"]
       )
     end
@@ -332,15 +332,15 @@ RSpec.describe Geminize::ModelInfo do
   describe "#get_models_by_base_id" do
     let(:model1) do
       Geminize::Models::Model.new(
-        name: "models/gemini-1.5-pro-001",
-        base_model_id: "gemini-1.5-pro"
+        name: "models/gemini-2.0-flash-001",
+        base_model_id: "gemini-2.0-flash"
       )
     end
 
     let(:model2) do
       Geminize::Models::Model.new(
-        name: "models/gemini-1.5-pro-002",
-        base_model_id: "gemini-1.5-pro"
+        name: "models/gemini-2.0-flash-002",
+        base_model_id: "gemini-2.0-flash"
       )
     end
 
@@ -358,7 +358,7 @@ RSpec.describe Geminize::ModelInfo do
     end
 
     it "returns models with the specified base model ID" do
-      result = model_info.get_models_by_base_id("gemini-1.5-pro")
+      result = model_info.get_models_by_base_id("gemini-2.0-flash")
 
       expect(result).to be_a(Geminize::Models::ModelList)
       expect(result.size).to eq(2)
@@ -374,7 +374,7 @@ RSpec.describe Geminize::ModelInfo do
 
     it "passes the force_refresh parameter to list_all_models" do
       expect(model_info).to receive(:list_all_models).with(force_refresh: true).and_return(all_models)
-      model_info.get_models_by_base_id("gemini-1.5-pro", force_refresh: true)
+      model_info.get_models_by_base_id("gemini-2.0-flash", force_refresh: true)
     end
   end
 
@@ -382,7 +382,7 @@ RSpec.describe Geminize::ModelInfo do
     let(:models_response) { {"models" => []} }
     let(:first_page) { {"models" => [], "nextPageToken" => "abc123"} }
     let(:second_page) { {"models" => []} }
-    let(:model_response) { {"name" => "models/gemini-1.5-pro", "displayName" => "Gemini 1.5 Pro"} }
+    let(:model_response) { {"name" => "models/gemini-2.0-flash", "displayName" => "Gemini 1.5 Pro"} }
 
     before do
       # Set up stubs for all the API calls that might happen
@@ -390,12 +390,12 @@ RSpec.describe Geminize::ModelInfo do
       allow(client).to receive(:get).with("models", hash_including(pageToken: nil)).and_return(first_page)
       allow(client).to receive(:get).with("models", hash_including(pageSize: 50, pageToken: nil)).and_return(first_page)
       allow(client).to receive(:get).with("models", hash_including(pageToken: "abc123")).and_return(second_page)
-      allow(client).to receive(:get).with("models/gemini-1.5-pro").and_return(model_response)
+      allow(client).to receive(:get).with("models/gemini-2.0-flash").and_return(model_response)
 
       # Populate the cache
       model_info.list_models
       model_info.list_all_models
-      model_info.get_model("gemini-1.5-pro")
+      model_info.get_model("gemini-2.0-flash")
     end
 
     it "clears all cached model information" do
@@ -403,7 +403,7 @@ RSpec.describe Geminize::ModelInfo do
       expect(client).not_to receive(:get)
       model_info.list_models
       model_info.list_all_models
-      model_info.get_model("gemini-1.5-pro")
+      model_info.get_model("gemini-2.0-flash")
 
       # Reset the expectations after checking cache usage
       RSpec::Mocks.space.proxy_for(client).reset
@@ -431,8 +431,8 @@ RSpec.describe Geminize::ModelInfo do
       allow(client).to receive(:get).with("models", hash_including(pageSize: 50, pageToken: nil)).and_return(first_page)
       allow(client).to receive(:get).with("models", hash_including(pageToken: "abc123")).and_return(second_page)
 
-      expect(client).to receive(:get).with("models/gemini-1.5-pro").and_return(model_response)
-      model_info.get_model("gemini-1.5-pro")
+      expect(client).to receive(:get).with("models/gemini-2.0-flash").and_return(model_response)
+      model_info.get_model("gemini-2.0-flash")
     end
   end
 end

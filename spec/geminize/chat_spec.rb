@@ -25,7 +25,7 @@ RSpec.describe Geminize::Chat do
 
   describe "#send_message" do
     let(:message) { "Hello, how are you?" }
-    let(:model_name) { "gemini-1.5-pro-latest" }
+    let(:model_name) { "gemini-2.0-flash" }
     let(:chat_request) { instance_double(Geminize::Models::ChatRequest, model_name: model_name) }
     let(:chat_response) { instance_double(Geminize::Models::ChatResponse, has_text?: true, text: "I'm doing well, thank you!") }
 
