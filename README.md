@@ -56,7 +56,7 @@ Geminize has built-in support for the [dotenv](https://github.com/bkeepers/doten
 
 ```
 # Gemini API Key
-GOOGLE_AI_API_KEY=your_api_key_here
+GEMINI_API_KEY=your_api_key_here
 
 # API Configuration
 GOOGLE_AI_API_VERSION=v1beta

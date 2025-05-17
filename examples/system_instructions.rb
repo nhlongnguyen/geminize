@@ -10,7 +10,7 @@ require "geminize"
 
 # Configure with your API key
 Geminize.configure do |config|
-  config.api_key = ENV["GOOGLE_AI_API_KEY"] || ENV["GEMINI_API_KEY"]
+  config.api_key = ENV["GEMINI_API_KEY"] || ENV["GEMINI_API_KEY"]
 end
 
 puts "EXAMPLE 1: Basic system instruction with generate_text"
